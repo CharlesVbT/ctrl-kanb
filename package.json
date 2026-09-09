@@ -1,0 +1,20 @@
+{
+  "name": "ctrl-kanb",
+  "version": "6.10.5",
+  "private": true,
+  "description": "Application macOS locale pour piloter des tâches avec Codex et Claude Code.",
+  "scripts": {
+    "build": "./Scripts/package_app.sh",
+    "test": "npm run test:static && npm run test:ui && npm run test:native && npm run test:privacy",
+    "test:static": "node Scripts/xss-scan.js && node Scripts/i18n-scan.js && node Scripts/wiring-audit.js",
+    "test:ui": "node Scripts/smoke-ui.js && node Scripts/test-experience.js && node Scripts/test-conversation.js && node Scripts/test-sync.js",
+    "test:native": "python3 Scripts/test-codex-runner.py && python3 Scripts/test-claude-runner.py && ./Scripts/test-notifications.sh",
+    "test:privacy": "python3 Scripts/privacy-scan.py && python3 Scripts/test-privacy-scan.py"
+  },
+  "devDependencies": {
+    "jsdom": "^26.1.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
