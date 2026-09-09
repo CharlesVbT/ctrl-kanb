@@ -2,9 +2,34 @@
 
 ![Aperçu de CTRL KANB](docs/assets/ctrl-kanb-hero.png)
 
-CTRL KANB est une application macOS locale pour organiser et piloter des tâches avec **Codex** et **Claude Code**. Elle réunit un Kanban, un agenda, le suivi des résultats, les validations humaines et un espace de travail latéral avec chat, terminal et fichiers.
+**Le poste de pilotage macOS pour organiser, planifier et suivre le travail confié à Codex et Claude Code.**
 
-La version actuelle est une première version publique. Elle est conçue pour fonctionner sans serveur CTRL KANB ni compte propre à l’application.
+## Pourquoi CTRL KANB existe
+
+Codex et Claude Code savent accomplir des tâches complexes. Dès que plusieurs projets, conversations, validations et routines s’accumulent, il devient cependant difficile de garder une vision claire du travail en cours.
+
+CTRL KANB est né de ce problème.
+
+Je suis un utilisateur régulier de Codex et de Claude Code, sans être développeur de métier. Les files d’attente existantes ne suffisaient pas à organiser mon travail, et je n’ai trouvé aucune application Kanban qui réunissait les fonctions dont j’avais besoin.
+
+J’ai donc demandé à Codex de m’aider à construire l’application que je cherchais.
+
+Le projet a commencé avec un Kanban capable de suivre les tâches confiées à un agent. Il s’est progressivement enrichi d’un agenda, de tâches programmées, de routines, d’un suivi des conversations, de validations humaines, puis de la prise en charge de Claude Code.
+
+CTRL KANB propose aujourd’hui un espace de travail local qui réunit :
+
+- un Kanban pensé pour le travail avec des agents ;
+- un agenda pour planifier les tâches et les routines ;
+- une vue claire des exécutions, résultats et décisions en attente ;
+- un chat, un terminal et un navigateur de fichiers intégrés ;
+- une prise en charge distincte de Codex et Claude Code ;
+- des données conservées localement sur le Mac.
+
+L’objectif est de construire la couche d’organisation qui manque encore entre l’utilisateur et ses agents. L’architecture pourra ensuite accueillir d’autres moteurs et outils, sans enfermer l’utilisateur dans un seul fournisseur.
+
+CTRL KANB est aussi un projet réalisé avec l’aide intensive de l’IA. Son code est public, ses principaux comportements sont testés et sa documentation décrit clairement son fonctionnement et ses limites.
+
+La version actuelle constitue la première étape publique du projet. Elle fonctionne sans serveur CTRL KANB ni compte propre à l’application.
 
 ## Fonctions principales
 
