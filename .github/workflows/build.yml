@@ -1,0 +1,42 @@
+name: Vérifications
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  macos:
+    runs-on: macos-15
+    steps:
+      - name: Récupérer les sources
+        uses: actions/checkout@v4
+
+      - name: Préparer Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Installer les dépendances de test
+        run: npm ci
+
+      - name: Exécuter les contrôles
+        run: npm test
+
+      - name: Compiler l’application
+        run: npm run build
+
+      - name: Vérifier la signature
+        run: codesign --verify --deep --strict --verbose=2 "dist/CTRL KANB.app"
+
+      - name: Vérifier le lancement
+        run: |
+          open -n "dist/CTRL KANB.app" --args --background
+          sleep 8
+          pgrep -x "CTRL KANB" > /dev/null
+          pkill -x "CTRL KANB" || true

@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; base-uri 'none'; form-action 'none'; object-src 'none'; frame-src 'none'; connect-src 'none'">
+  <meta name="color-scheme" content="light dark">
+  <title>CTRL KANB</title>
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <div id="app">
+    <aside class="sidebar">
+      <div class="brand"><img src="AppIcon.png" alt=""><div class="brand-copy"><strong>CTRL KANB</strong><span>Centre de pilotage IA</span></div><button class="sidebar-toggle" data-action="toggle-sidebar" title="Replier le menu" aria-label="Replier le menu"></button></div>
+      <nav id="sidebar-nav"></nav><div class="sidebar-footer"><div class="sidebar-sync-stack" aria-label="Actualisation des conversations"><button id="sidebar-sync" class="sidebar-sync" data-action="sync" aria-live="polite"></button><button id="sidebar-claude-sync" class="sidebar-sync" data-action="sync-claude" aria-live="polite"></button></div><div id="sidebar-engines" class="sidebar-engines"></div><button class="shortcuts-button" data-action="shortcuts"><span>Raccourcis clavier</span><kbd>?</kbd></button><div class="sidebar-signature"><span data-app-version>Version</span></div></div><div class="sidebar-resizer" data-sidebar-resize title="Glisser pour ajuster · double-clic pour réinitialiser" aria-hidden="true"></div>
+    </aside>
+    <main class="workspace">
+      <header id="workspace-header" class="workspace-header"></header>
+      <div id="board" class="board"></div>
+    </main>
+    <aside id="utility-panel" class="utility-panel" hidden aria-label="Panneau droit"></aside>
+  </div>
+  <div id="modal-root"></div>
+  <div id="toast-root"></div>
+  <script src="i18n.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

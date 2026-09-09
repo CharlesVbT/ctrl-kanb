@@ -1,0 +1,29 @@
+# Compilation
+.build/
+build/
+dist/
+
+# Dépendances et rapports de test
+node_modules/
+.playwright-cli/
+coverage/
+
+# Données locales de CTRL KANB
+board.json
+board.previous.json
+events.jsonl
+scheduler-status.json
+*.lock
+test-board-*.json
+test-board-*.previous.json
+
+# Secrets et configuration locale
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# macOS et éditeurs
+.DS_Store
+*.swp
