@@ -455,6 +455,7 @@
       if (!data.settings.priorities.some(p=>p.id===card.priorityLevelID)) card.priorityLevelID=data.settings.priorities.find(p=>p.id==="normal")?.id||data.settings.priorities[0].id;
       card.categoryAssignments ||= {};
       card.recurrence ||= "none"; card.recurrenceSource ||= "board";
+      if(card.recurrence!=="none"&&card.recurrenceSource!=="codex"&&!card.recurrenceSeriesID){card.recurrenceSeriesID=uid();changed=true;}
       if(!["","pausing","paused"].includes(card.executionState)){card.executionState="";changed=true;}
       if(card.executionState==="pausing"){card.executionState="paused";card.pausedAt=card.pausedAt||now();changed=true;}
       if(card.executionState==="paused"&&card.status!=="running"){card.status="running";changed=true;}
@@ -708,10 +709,10 @@
     const hiddenProjectCount=Math.max(0,unpinnedSpaces.length-shownUnpinned.length),showProjectToggle=!board.settings.sidebarCollapsed&&unpinnedSpaces.length>projectListLimit;
     const projectRow=space=>{
       const group=ordered.filter(item=>Boolean(item.pinned)===Boolean(space.pinned)),groupIndex=group.findIndex(item=>item.id===space.id),expanded=projectIsExpanded(space.id);
-      const tasks=live.filter(card=>card.spaceID===space.id).sort(compareCards),pinnedTasks=tasks.filter(card=>card.pinned),unpinnedTasks=tasks.filter(card=>!card.pinned),showAllTasks=projectTaskLimits.get(space.id)===Infinity;
+      const tasks=live.filter(card=>card.spaceID===space.id).sort((a,b)=>Number(Boolean(b.pinned))-Number(Boolean(a.pinned))||String(b.updatedAt||b.createdAt||"").localeCompare(String(a.updatedAt||a.createdAt||""))),pinnedTasks=tasks.filter(card=>card.pinned),unpinnedTasks=tasks.filter(card=>!card.pinned),showAllTasks=projectTaskLimits.get(space.id)===Infinity;
       const visibleTasks=showAllTasks?tasks:[...pinnedTasks,...unpinnedTasks.slice(0,projectTaskPageSize)],remaining=Math.max(0,unpinnedTasks.length-projectTaskPageSize);
       const taskToggle=remaining?`<button class="project-task-more" data-action="show-more-project-tasks" data-id="${esc(space.id)}">${showAllTasks?`${icon("up")}<span>${t("Réduire la liste")}</span>`:`${icon("down")}<span>${t("Afficher {n} de plus",{n:remaining})}</span>`}</button>`:"";
-      const taskList=expanded?`<div class="project-task-list" aria-label="${t("Tâches de {name}",{name:esc(space.name)})}">${visibleTasks.length?visibleTasks.map(card=>`<div class="project-task-row ${card.pinned?"pinned":""}"><button class="project-task-nav status-${esc(card.status)}" data-action="open-sidebar-task" data-id="${esc(card.id)}" title="${esc(card.title)} — ${esc(statusLabel(card.status))}"><span class="project-task-state"></span><span>${esc(card.title)}</span></button><button class="project-task-pin ${card.pinned?"pinned":""}" data-action="pin-card" data-id="${esc(card.id)}" title="${t(card.pinned?"Désépingler la tâche":"Épingler la tâche")}" aria-label="${t(card.pinned?"Désépingler la tâche":"Épingler la tâche")}" aria-pressed="${Boolean(card.pinned)}">${icon("pin")}</button></div>`).join(""):`<span class="project-task-empty">${t("Aucune tâche dans ce projet")}</span>`}${taskToggle}</div>`:"";
+      const taskList=expanded?`<div class="project-task-list" aria-label="${t("Tâches de {name}",{name:esc(space.name)})}">${visibleTasks.length?visibleTasks.map(card=>`<div class="project-task-row ${card.pinned?"pinned":""}"><button class="project-task-nav status-${esc(card.status)}" data-action="open-sidebar-task" data-id="${esc(card.id)}" title="${esc(card.title)} — ${esc(statusLabel(card.status))}"><span class="project-task-state"></span><span>${esc(card.title)}</span></button><div class="project-task-actions">${card.status==="done"?`<button class="project-task-archive" data-action="archive-card" data-id="${esc(card.id)}" title="${t("Archiver la tâche")}" aria-label="${t("Archiver la tâche")}">${icon("archive")}</button>`:""}<button class="project-task-pin ${card.pinned?"pinned":""}" data-action="pin-card" data-id="${esc(card.id)}" title="${t(card.pinned?"Désépingler la tâche":"Épingler la tâche")}" aria-label="${t(card.pinned?"Désépingler la tâche":"Épingler la tâche")}" aria-pressed="${Boolean(card.pinned)}">${icon("pin")}</button></div></div>`).join(""):`<span class="project-task-empty">${t("Aucune tâche dans ce projet")}</span>`}${taskToggle}</div>`:"";
       return `<div class="project-nav-group ${expanded?"expanded":""}"><div class="project-nav-row ${selection===space.id?"active":""} ${projectMenuID===space.id?"menu-open":""} ${expanded?"expanded":""}" draggable="true" data-project-row="${esc(space.id)}"><button class="project-disclosure" data-action="toggle-project" data-id="${esc(space.id)}" title="${expanded?t("Fermer {name}",{name:esc(space.name)}):t("Ouvrir {name}",{name:esc(space.name)})}" aria-label="${expanded?t("Fermer {name}",{name:esc(space.name)}):t("Ouvrir {name}",{name:esc(space.name)})}" aria-expanded="${expanded}">${icon(expanded?"down":"chevron")}</button><button class="nav-item project-nav-main ${selection === space.id ? "active" : ""}" data-select="${esc(space.id)}" data-project-select="${esc(space.id)}" title="${t("{name} — glisser pour réordonner",{name:esc(space.name)})}"><span class="nav-label">${esc(space.name)}</span></button><button class="project-menu-trigger" data-action="project-menu" data-id="${esc(space.id)}" title="${t("Options de {name}",{name:esc(space.name)})}" aria-label="${t("Options de {name}",{name:esc(space.name)})}" aria-expanded="${projectMenuID===space.id}">${icon("more")}</button>${projectMenuID===space.id?`<div class="project-context-menu"><div class="project-menu-heading"><span class="project-folder-icon" style="--project-color:#${safeHex(space.accentHex)}">${icon("folder")}</span><span><strong>${esc(space.name)}</strong><small>${count(live.filter(card=>card.spaceID===space.id))} tâche(s) active(s) · ${esc(space.rootPath)}</small></span></div><button data-action="edit-space" data-id="${esc(space.id)}">${icon("edit")}<span>${t("Modifier le projet")}</span></button><button data-action="reveal-space" data-id="${esc(space.id)}">${icon("finder")}<span>${t("Afficher dans le Finder")}</span></button><button data-action="toggle-pin-space" data-id="${esc(space.id)}">${icon("pin")}<span>${space.pinned?t("Désépingler"):t("Épingler en haut")}</span></button><div class="project-menu-divider"></div><button data-action="move-space-up" data-id="${esc(space.id)}" ${groupIndex<=0?"disabled":""}>${icon("up")}<span>Monter</span></button><button data-action="move-space-down" data-id="${esc(space.id)}" ${groupIndex<0||groupIndex>=group.length-1?"disabled":""}>${icon("down")}<span>Descendre</span></button><div class="project-menu-divider"></div><button class="menu-danger" data-action="delete-space" data-id="${esc(space.id)}">${icon("trash")}<span>${t("Supprimer le projet…")}</span></button></div>`:""}</div>${taskList}</div>`;
     };
     const projectListHTML=`${pinnedSpaces.map(projectRow).join("")}${pinnedSpaces.length&&shownUnpinned.length?'<div class="project-group-divider"><span>Autres projets</span></div>':""}${shownUnpinned.map(projectRow).join("")}${showProjectToggle?`<button class="projects-more" data-action="toggle-projects" aria-expanded="${projectsExpanded}">${icon(projectsExpanded?"up":"down")}<span>${projectsExpanded?"Réduire la liste":`Afficher ${hiddenProjectCount} projet${hiddenProjectCount>1?"s":""} de plus`}</span></button>`:""}`;
@@ -754,7 +755,25 @@
     if(agendaMode==="week"){const start=startOfWeek(agendaAnchor),end=addDays(start,7);return {start,end,label:`${start.toLocaleDateString(locale(),{day:"numeric",month:"short"})} — ${addDays(end,-1).toLocaleDateString(locale(),{day:"numeric",month:"short",year:"numeric"})}`}}
     const start=startOfMonth(agendaAnchor),end=new Date(start.getFullYear(),start.getMonth()+1,1);return {start,end,label:start.toLocaleDateString(locale(),{month:"long",year:"numeric"})};
   }
-  function agendaEventsInRange(events=agendaEvents()) { const {start,end}=agendaRange(),startKey=dateKey(start),endKey=dateKey(end);return events.filter(event=>event.key>=startKey&&event.key<endKey); }
+  function projectedRecurrenceEvents(start,end){
+    const startKey=dateKey(start),endKey=dateKey(end),visibleCards=baseVisibleCards();
+    const realOccurrences=new Set((board.cards||[]).filter(card=>card.recurrenceSeriesID&&card.scheduledAt).map(card=>`${card.recurrenceSeriesID}:${agendaDateKeyFromValue(card.scheduledAt)}`));
+    const projections=[];
+    for(const card of visibleCards){
+      if(card.archived||card.status==="done"||card.launchMode!=="scheduled"||!card.scheduledAt||!card.recurrence||card.recurrence==="none"||card.recurrenceSource==="codex")continue;
+      let value=nextScheduledAt(card.scheduledAt,card.recurrence),guard=0;
+      while(value&&guard++<5000){
+        const key=agendaDateKeyFromValue(value);if(!key||key>=endKey)break;
+        if(key>=startKey&&!realOccurrences.has(`${card.recurrenceSeriesID||card.id}:${key}`)){
+          const date=agendaDateFromValue(value);
+          projections.push({card,value,date,key,kind:"scheduled",time:agendaTime(value),minuteOfDay:agendaMinuteOfDay(value),duration:Math.max(15,Number(card.durationMinutes)||60),projected:true});
+        }
+        value=nextScheduledAt(value,card.recurrence);
+      }
+    }
+    return projections;
+  }
+  function agendaEventsInRange(events=agendaEvents()) { const {start,end}=agendaRange(),startKey=dateKey(start),endKey=dateKey(end);return events.filter(event=>event.key>=startKey&&event.key<endKey).concat(projectedRecurrenceEvents(start,end)).sort((a,b)=>a.date-b.date||priorityOrder(a.card)-priorityOrder(b.card)); }
   const agendaHourHeight=58;
   const agendaPad=value=>String(value).padStart(2,"0");
   function layoutTimedEvents(events){
@@ -763,13 +782,14 @@
     for(const event of sorted){const start=event.minuteOfDay,end=start+event.duration;if(cluster.length&&start>=clusterEnd)flush();cluster.push({event,start,end,lane:0});clusterEnd=Math.max(clusterEnd,end)}flush();return result;
   }
   function renderAgendaEvent(event,{compact=false,timed=false}={}) {
-    const space=getSpace(event.card.spaceID),positionInQueue=queuePositions.get(event.card.id),runLabel=activeRuns.has(event.card.id)?t("En cours"):positionInQueue?queueLabel(event.card):"",kindLabel=runLabel||(event.kind==="done"?t("Réalisée"):event.kind==="scheduled"?t("Planifiée"):t("Échéance")),locked=event.kind==="done";
+    const projected=Boolean(event.projected),space=getSpace(event.card.spaceID),positionInQueue=projected?0:queuePositions.get(event.card.id),runLabel=projected?"":activeRuns.has(event.card.id)?t("En cours"):positionInQueue?queueLabel(event.card):"",kindLabel=projected?t("Occurrence prévue"):runLabel||(event.kind==="done"?t("Réalisée"):event.kind==="scheduled"?t("Planifiée"):t("Échéance")),locked=event.kind==="done";
     const minuteOfDay=event.minuteOfDay,height=Math.max(28,event.duration/60*agendaHourHeight),top=minuteOfDay/60*agendaHourHeight;
     const lanes=Math.max(1,event.agendaLaneCount||1),lane=Math.max(0,event.agendaLane||0),lanePercent=100/lanes,leftOffset=4-5*lane/lanes,widthSubtract=3+5/lanes;
     const position=timed?`--agenda-top:${top}px;--agenda-height:${height}px;--agenda-left:calc(${lane*lanePercent}% + ${leftOffset}px);--agenda-width:calc(${lanePercent}% - ${widthSubtract}px);`:"";
-    const standardActions=compact?"":`${!locked?`<button data-action="agenda-complete" data-id="${esc(event.card.id)}" title="${t("Marquer comme terminée")}" aria-label="${t("Marquer comme terminée")}">${icon("check")}</button>`:""}${event.kind==="scheduled"&&!activeRuns.has(event.card.id)&&!positionInQueue?`<button data-action="run" data-id="${esc(event.card.id)}" title="${t("Lancer maintenant")}" aria-label="${t("Lancer maintenant")}">${icon("play")}</button>`:""}<button data-action="edit-card" data-id="${esc(event.card.id)}" title="${t("Ouvrir la tâche")}" aria-label="${t("Ouvrir la tâche")}">${icon("edit")}</button>`;
-    const deleteAction=`<button class="agenda-delete-action" data-action="confirm-delete-card" data-origin="agenda" data-id="${esc(event.card.id)}" title="${t("Supprimer la tâche")}" aria-label="${t("Supprimer la tâche")}">${icon("trash")}</button>`;
-    return `<article class="agenda-event ${event.kind} ${compact?"compact":""} ${timed?"timed":""} ${(event.agendaLaneCount||1)>1?"simultaneous":""} ${event.duration<45?"short-event":""} ${locked?"locked":""} ${runLabel?"live-run":""}" style="--event-color:#${safeHex(space?.accentHex)};${position}" data-agenda-card="${esc(event.card.id)}" ${locked?"":'data-agenda-draggable="true"'} title="${locked?t("Historique verrouillé"):t("Glisser pour déplacer")} — ${esc(event.card.title)}"><button class="agenda-event-main" data-action="edit-card" data-id="${esc(event.card.id)}"><span class="agenda-event-dot"></span><span class="agenda-event-copy"><strong>${event.time?`<time>${esc(event.time)}</time>`:""}${esc(event.card.title)}</strong>${compact?"":`<small>${esc(space?.name||"")} · ${esc(kindLabel)}<span class="agenda-duration"> · ${event.duration} min</span></small>`}</span></button><div class="agenda-event-actions">${standardActions}${deleteAction}</div>${timed&&event.kind==="scheduled"&&!activeRuns.has(event.card.id)&&!positionInQueue?`<button class="agenda-resize-handle" data-agenda-resize="${esc(event.card.id)}" title="${t("Modifier la durée")}" aria-label="${t("Modifier la durée")}"></button>`:""}</article>`;
+    const standardActions=compact?"":projected?`<button data-action="edit-card" data-id="${esc(event.card.id)}" title="${t("Ouvrir la routine")}" aria-label="${t("Ouvrir la routine")}">${icon("edit")}</button>`:`${!locked?`<button data-action="agenda-complete" data-id="${esc(event.card.id)}" title="${t("Marquer comme terminée")}" aria-label="${t("Marquer comme terminée")}">${icon("check")}</button>`:""}${event.kind==="scheduled"&&!activeRuns.has(event.card.id)&&!positionInQueue?`<button data-action="run" data-id="${esc(event.card.id)}" title="${t("Lancer maintenant")}" aria-label="${t("Lancer maintenant")}">${icon("play")}</button>`:""}<button data-action="edit-card" data-id="${esc(event.card.id)}" title="${t("Ouvrir la tâche")}" aria-label="${t("Ouvrir la tâche")}">${icon("edit")}</button>`;
+    const deleteAction=projected?"":`<button class="agenda-delete-action" data-action="confirm-delete-card" data-origin="agenda" data-id="${esc(event.card.id)}" title="${t("Supprimer la tâche")}" aria-label="${t("Supprimer la tâche")}">${icon("trash")}</button>`;
+    const title=projected?t("Occurrence future de la routine"):locked?t("Historique verrouillé"):t("Glisser pour déplacer");
+    return `<article class="agenda-event ${event.kind} ${projected?"projected":""} ${compact?"compact":""} ${timed?"timed":""} ${(event.agendaLaneCount||1)>1?"simultaneous":""} ${event.duration<45?"short-event":""} ${locked?"locked":""} ${runLabel?"live-run":""}" style="--event-color:#${safeHex(space?.accentHex)};${position}" data-agenda-card="${esc(event.card.id)}" ${locked||projected?"":'data-agenda-draggable="true"'} title="${title} — ${esc(event.card.title)}"><button class="agenda-event-main" data-action="edit-card" data-id="${esc(event.card.id)}"><span class="agenda-event-dot"></span><span class="agenda-event-copy"><strong>${event.time?`<time>${esc(event.time)}</time>`:""}${esc(event.card.title)}</strong>${compact?"":`<small>${esc(space?.name||"")} · ${esc(kindLabel)}<span class="agenda-duration"> · ${event.duration} min</span></small>`}</span></button>${standardActions||deleteAction?`<div class="agenda-event-actions">${standardActions}${deleteAction}</div>`:""}${timed&&!projected&&event.kind==="scheduled"&&!activeRuns.has(event.card.id)&&!positionInQueue?`<button class="agenda-resize-handle" data-agenda-resize="${esc(event.card.id)}" title="${t("Modifier la durée")}" aria-label="${t("Modifier la durée")}"></button>`:""}</article>`;
   }
   const agendaSlotKey = (date,hour,minute) => `${date}T${agendaPad(hour)}:${agendaPad(minute)}`;
   function defaultAgendaFocusSlot(days){
@@ -819,7 +839,7 @@
   }
   function renderAgenda() {
     const events=agendaEventsInRange();
-    return `<div class="agenda-shell"><div class="agenda-legend"><span><i class="scheduled"></i>${t("Planifiées")}</span><span><i class="done"></i>${t("Réalisées")}</span><span><i class="due"></i>${t("Échéances")}</span><small>${t("Les tâches simultanées sont côte à côte · glisse pour déplacer · tire le bord inférieur pour changer la durée.")}</small></div>${agendaMode==="day"?renderAgendaDay(events):agendaMode==="month"?renderAgendaMonth(events):renderAgendaWeek(events)}</div>`;
+    return `<div class="agenda-shell"><div class="agenda-legend"><span><i class="scheduled"></i>${t("Planifiées")}</span><span><i class="projected"></i>${t("Récurrences à venir")}</span><span><i class="done"></i>${t("Réalisées")}</span><span><i class="due"></i>${t("Échéances")}</span><small>${t("Les occurrences futures sont des aperçus ; seule la prochaine est une tâche exécutable.")}</small></div>${agendaMode==="day"?renderAgendaDay(events):agendaMode==="month"?renderAgendaMonth(events):renderAgendaWeek(events)}</div>`;
   }
   function renderValidationRequest(validation){
     const card=getCard(validation.cardID),space=getSpace(card?.spaceID),conversation=activeConversation(card),detail=validationDetail(validation),question=validation.kind==="input",direct=Boolean(card?.utilityChat);
@@ -1113,23 +1133,25 @@
 
   const recurrenceLabel = value => ({daily:"quotidienne",weekly:"hebdomadaire",monthly:"mensuelle"}[value]||value);
   const scheduleStateLabel = value => ({pending:"en attente",waitingDependency:"dépendances",queued:"en file",launched:"lancée",waitingQuota:"limite Codex",completed:"exécutée",paused:"suspendue",skipped:"créneau manqué",failed:"échec"}[value]||"en attente");
-  function nextDueDate(date, recurrence) {
-    const d = new Date(`${date||today()}T12:00:00`);
+  function advanceRecurrenceDate(date,recurrence){
+    const d=new Date(date);
     if (recurrence === "daily") d.setDate(d.getDate()+1);
     if (recurrence === "weekly") d.setDate(d.getDate()+7);
-    if (recurrence === "monthly") d.setMonth(d.getMonth()+1);
+    if (recurrence === "monthly") {const day=d.getDate();d.setDate(1);d.setMonth(d.getMonth()+1);d.setDate(Math.min(day,new Date(d.getFullYear(),d.getMonth()+1,0).getDate()));}
+    return d;
+  }
+  function nextDueDate(date, recurrence) {
+    const d = advanceRecurrenceDate(new Date(`${date||today()}T12:00:00`),recurrence);
     return d.toLocaleDateString("en-CA");
   }
   function nextScheduledAt(value, recurrence) {
     if(!value)return "";
-    const wall=agendaWallValue(value),d=parseLocalDate(wall.slice(0,10));
-    if(recurrence==="daily")d.setDate(d.getDate()+1);
-    if(recurrence==="weekly")d.setDate(d.getDate()+7);
-    if(recurrence==="monthly")d.setMonth(d.getMonth()+1);
+    const wall=agendaWallValue(value),d=advanceRecurrenceDate(parseLocalDate(wall.slice(0,10)),recurrence);
     return agendaWallToInstant(`${dateKey(d)}T${wall.slice(11,16)}`);
   }
   function createNextOccurrence(card) {
     if (!card.recurrence || card.recurrence === "none" || card.recurrenceSource === "codex" || card.nextOccurrenceCreated) return;
+    card.recurrenceSeriesID ||= uid();
     card.nextOccurrenceCreated = true;
     const copy = structuredClone(card); copy.id=uid(); copy.status="ready"; copy.createdAt=now(); copy.updatedAt=now(); copy.dueDate=nextDueDate(card.dueDate,card.recurrence); copy.scheduledAt=nextScheduledAt(card.scheduledAt,card.recurrence); copy.scheduleState=copy.launchMode==="scheduled"?"pending":"";copy.scheduleNextAttemptAt="";copy.scheduleAttempts=0; copy.priorityNumber=nextPriorityNumber(card.spaceID,card.priorityLevelID); copy.nextOccurrenceCreated=false; copy.archived=false;
     copy.subtasks=(copy.subtasks||[]).map(s=>({...s,id:uid(),done:false})); copy.conversations=[];
@@ -1285,7 +1307,7 @@
       status:existing?.executionState==="paused"?existing.status:(existing?.status||"ready"),priorityLevelID,priority:priorityLevelID,
       priorityNumber:existing&&existing.priorityLevelID===priorityLevelID?existing.priorityNumber:nextPriorityNumber(data.spaceID,priorityLevelID),categoryAssignments,
       agentEngine:engine,model:existing&&engineKey(existing.agentEngine)===engine?existing.model:defaultModelFor(engine),reasoningEffort:existing?.reasoningEffort||defaultEffortFor(engine),
-      runMode:data.runMode||"readOnly",durationMinutes:existing?.durationMinutes||60,dueDate:data.dueDate||existing?.dueDate||"",recurrence,recurrenceSource:"board",
+      runMode:data.runMode||"readOnly",durationMinutes:existing?.durationMinutes||60,dueDate:data.dueDate||existing?.dueDate||"",recurrence,recurrenceSource:"board",recurrenceSeriesID:recurrence!=="none"?(existing?.recurrenceSeriesID||uid()):"",
       launchMode,scheduledAt,missedRunPolicy:existing?.missedRunPolicy||"catchUp",routineName:existing?.routineName||"",notificationMode:normalizeTaskNotification(data.notificationMode),labels:String(data.labels||"").split(",").map(label=>label.trim()).filter(Boolean),
       subtasks:existing?.subtasks||[],dependencies:existing?.dependencies||[],completedAt:existing?.completedAt||"",updatedAt:now()
     };

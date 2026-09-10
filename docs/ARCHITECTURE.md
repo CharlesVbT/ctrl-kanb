@@ -9,6 +9,14 @@
 - `Resources/app.css` : navigation repliable, barres d'actions, interfaces Agenda/Tableau/Flux/Validations/Suivi, Réglages et panneau de conversation.
 - `Sources/CLI/main.m` : commandes déterministes pour l’automatisation locale.
 
+## Détection des agents
+
+Codex et Claude Code sont détectés séparément au chargement. La recherche couvre les bundles macOS connus, Homebrew, les chemins Unix et utilisateur habituels, le `PATH`, puis les répertoires de NVM, fnm, Volta, mise, asdf, Bun et pnpm. Un chemin absolu peut être imposé avec `CTRL_KANB_CODEX_PATH` ou `CTRL_KANB_CLAUDE_PATH`.
+
+La présence d’un exécutable et l’état du compte sont deux informations différentes. Le pont `agentStatus` confirme seulement la présence locale. Le test de connexion lance un aller-retour réel et conserve séparément son résultat pour chaque agent et chaque compte.
+
+L’absence d’un agent ne bloque pas l’autre ni les fonctions locales d’organisation. Elle bloque uniquement les lancements, le chat et les synchronisations qui dépendent de cet agent.
+
 ## Exécution d'une carte
 
 1. Le JavaScript place la carte dans `queued` et transmet une copie au code natif.

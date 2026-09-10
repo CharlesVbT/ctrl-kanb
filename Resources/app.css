@@ -484,6 +484,7 @@ button:disabled { opacity: .42; cursor: not-allowed; }
 .agenda-legend span { display: inline-flex; align-items: center; gap: 6px; color: var(--muted-strong); font-size:calc(10px + var(--font-size-offset)); font-weight: 650; }
 .agenda-legend i, .agenda-event-dot { width: 8px; height: 8px; flex: none; border-radius: 50%; }
 .agenda-legend i.scheduled, .agenda-event.scheduled .agenda-event-dot { background: var(--accent); box-shadow: 0 0 0 3px rgba(47,111,235,.11); }
+.agenda-legend i.projected, .agenda-event.projected .agenda-event-dot { border: 1px solid var(--accent); background: transparent; box-shadow: 0 0 0 3px color-mix(in srgb,var(--accent) 9%,transparent); }
 .agenda-legend i.done, .agenda-event.done .agenda-event-dot { background: var(--success); box-shadow: 0 0 0 3px rgba(35,132,95,.11); }
 .agenda-legend i.due, .agenda-event.due .agenda-event-dot { background: var(--warning); box-shadow: 0 0 0 3px rgba(184,107,22,.11); }
 .agenda-legend small { margin-left: auto; color: var(--muted); font-size:calc(9px + var(--font-size-offset)); }
@@ -495,6 +496,8 @@ button:disabled { opacity: .42; cursor: not-allowed; }
 .agenda-event.pointer-dragging { z-index: 12; cursor: grabbing; }
 .agenda-event.locked { border-color: color-mix(in srgb,var(--success) 48%,var(--n4)); background: var(--n0); }
 .agenda-event.due { border-color: var(--warning); background: color-mix(in srgb, var(--warning) 8%, transparent); }
+.agenda-event.projected { border-style: dashed; color: var(--muted-strong); background: color-mix(in srgb,var(--event-color) 4%,var(--surface)); box-shadow: none; }
+.agenda-event.projected:hover { box-shadow: 0 6px 15px color-mix(in srgb,var(--event-color) 10%,transparent); }
 .agenda-event-main { width: 100%; height: 100%; min-height: inherit; padding: 7px 8px; display: flex; align-items: flex-start; gap: 7px; overflow: hidden; border: 0; color: inherit; background: transparent; text-align: left; }
 .agenda-event-dot { margin-top: 4px; }
 .agenda-event-copy { min-width: 0; flex: 1; }
@@ -2349,7 +2352,7 @@ body.resizing-sidebar .sidebar-resizer{background:var(--surface-3)}
 .project-nav-group,.project-nav-group *{animation:none!important;transition:none!important}
 .project-nav-row.expanded .project-disclosure{color:var(--ink-2)}
 .project-task-list{margin:1px 3px 6px 33px;padding-left:8px;display:grid;gap:1px;border-left:1px solid var(--border)}
-.project-task-row{min-width:0;display:grid;grid-template-columns:minmax(0,1fr) 24px;align-items:center}
+.project-task-row{min-width:0;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center}
 .project-task-nav,.project-task-more{
   width:100%;min-width:0;min-height:28px;padding:5px 7px;display:flex;align-items:center;gap:8px;
   border:0;border-radius:5px;color:var(--ink-3);background:transparent;text-align:left;font-size:calc(11.5px + var(--font-size-offset));
@@ -2357,14 +2360,16 @@ body.resizing-sidebar .sidebar-resizer{background:var(--surface-3)}
 .project-task-nav:hover,.project-task-more:hover{color:var(--ink);background:var(--surface-3)}
 .project-task-nav>span:last-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .project-task-row.pinned .project-task-nav{color:var(--ink-2);font-weight:620}
-.project-task-pin{
+.project-task-actions{display:flex;align-items:center}
+.project-task-pin,.project-task-archive{
   width:24px;height:26px;padding:5px;display:grid;place-items:center;opacity:0;
   border:0;border-radius:5px;color:var(--ink-3);background:transparent;
 }
-.project-task-row:hover .project-task-pin,.project-task-pin:focus-visible,.project-task-pin.pinned{opacity:1}
-.project-task-pin:hover{color:var(--ink);background:var(--surface-3)}
+.project-task-row:hover .project-task-pin,.project-task-row:hover .project-task-archive,.project-task-pin:focus-visible,.project-task-archive:focus-visible,.project-task-pin.pinned{opacity:1}
+.project-task-pin:hover,.project-task-archive:hover{color:var(--ink);background:var(--surface-3)}
+.project-task-archive:hover{color:var(--accent)}
 .project-task-pin.pinned{color:var(--accent)}
-.project-task-pin .ui-icon{width:12px;height:12px}
+.project-task-pin .ui-icon,.project-task-archive .ui-icon{width:12px;height:12px}
 .project-task-state{width:6px;height:6px;flex:none;border-radius:50%;background:var(--ink-3)}
 .project-task-nav.status-running .project-task-state,.project-task-nav.status-queued .project-task-state{background:var(--accent)}
 .project-task-nav.status-review .project-task-state,.project-task-nav.status-needsInput .project-task-state{background:var(--wait)}

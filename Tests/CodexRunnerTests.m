@@ -51,6 +51,22 @@
 
 int main(int argc, const char *argv[]) { @autoreleasepool {
     NSDictionary *environment = NSProcessInfo.processInfo.environment;
+    NSArray<NSString *> *searchDirectories = AgentCommandDirectories();
+    NSArray<NSString *> *expectedDirectories = @[
+        [NSHomeDirectory() stringByAppendingPathComponent:@".local/bin"],
+        [NSHomeDirectory() stringByAppendingPathComponent:@".volta/bin"],
+        [NSHomeDirectory() stringByAppendingPathComponent:@".local/share/mise/shims"],
+        @"/opt/homebrew/bin", @"/usr/local/bin"
+    ];
+    for (NSString *directory in expectedDirectories) if (![searchDirectories containsObject:directory]) {
+        fprintf(stderr, "Agent executable search path missing: %s\n", directory.UTF8String);
+        return 3;
+    }
+    NSString *codexOverride = environment[@"CTRL_KANB_CODEX_PATH"];
+    if (codexOverride.length && ![[FindAgentExecutable(@"codex", @[codexOverride], @[]) stringByStandardizingPath] isEqualToString:codexOverride.stringByStandardizingPath]) {
+        fputs("Codex executable override was not selected\n", stderr);
+        return 3;
+    }
     QueueProbeDelegate *queueProbe = [QueueProbeDelegate new];
     queueProbe.runs = [NSMutableDictionary dictionaryWithDictionary:@{
         @"codex-active":[@{ @"card":@{ @"id":@"codex-active", @"agentEngine":@"codex" } } mutableCopy]

@@ -37,6 +37,7 @@ La version actuelle constitue la première étape publique du projet. Elle fonct
 - deux tableaux protégés : **Classique** pour les tâches ponctuelles et **Routines** pour les tâches récurrentes ;
 - vue **Flux** pour les priorités, les tâches prêtes, les exécutions et les décisions en attente ;
 - agenda Jour, Semaine et Mois avec fuseau horaire, premier jour de semaine et format 12/24 heures configurables ;
+- aperçu des occurrences futures quotidiennes, hebdomadaires ou mensuelles dans l’agenda, sans dupliquer les cartes dans le Kanban ;
 - historique, archivage réversible, restauration et suppression avec confirmation ;
 - suivi des réponses et poursuite d’une conversation existante ;
 - centre de validations pour les commandes, modifications de fichiers et questions des agents ;
@@ -62,6 +63,21 @@ xcode-select --install
 ```
 
 Node.js 20 ou plus récent et Python 3 sont utiles pour le développement et les tests. Ils ne sont pas nécessaires pour utiliser une application déjà compilée.
+
+## Codex, Claude Code ou les deux
+
+Les deux agents sont indépendants. CTRL KANB fonctionne avec **Codex seul**, **Claude Code seul** ou **les deux**. Sans agent installé, le Kanban et l’agenda restent utilisables pour organiser le travail, mais les lancements, le chat et la synchronisation correspondante restent indisponibles.
+
+Au démarrage, l’application cherche séparément les commandes `codex` et `claude` :
+
+- dans les applications officielles qui embarquent Codex ;
+- dans les emplacements Homebrew et Unix habituels ;
+- dans le `PATH` reçu par l’application ;
+- dans les installations utilisateur et les gestionnaires courants : NVM, fnm, Volta, mise, asdf, Bun et pnpm.
+
+**Disponible sur ce Mac** signifie seulement que la commande a été trouvée. **Connexion testée** signifie qu’un aller-retour réel a réussi avec le compte sélectionné. Ces deux états sont affichés séparément dans **Réglages → Agents et modèles**. Le bouton **Actualiser la détection** relance la recherche après une installation.
+
+Pour une installation personnalisée, les variables `CTRL_KANB_CODEX_PATH` et `CTRL_KANB_CLAUDE_PATH` peuvent désigner les exécutables avec des chemins absolus. CTRL KANB utilise ensuite les sessions et identifiants conservés par chaque outil ; il ne copie pas leurs clés dans ses données.
 
 ## Installation depuis les sources
 
@@ -95,6 +111,8 @@ L’application produite localement utilise une signature ad hoc. Une distributi
 5. Créez une tâche dans **Classique** ou configurez une tâche dans **Routines**.
 
 Un état **Connexion testée** signifie qu’un aller-retour réel a réussi à la date affichée. La synchronisation des conversations possède un état séparé pour Codex et Claude Code.
+
+Dans **Routines**, seule la prochaine occurrence est une carte exécutable. L’agenda affiche aussi les répétitions futures en pointillé, semaine après semaine. Valider le passage courant crée la prochaine carte réelle ; modifier la routine met à jour les aperçus suivants.
 
 ## Données et confidentialité
 
