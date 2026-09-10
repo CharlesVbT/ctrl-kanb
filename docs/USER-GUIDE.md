@@ -1,6 +1,6 @@
 # Guide utilisateur
 
-CTRL KANB organise le travail local confié à Codex et Claude Code. Un projet correspond à un dossier de votre ordinateur ; une tâche associe une consigne, un état, un agent et, si nécessaire, une conversation ou un horaire.
+CTRL KANB organise le travail local confié à Codex et Claude. Un projet correspond à un dossier de votre ordinateur ; une tâche associe une consigne, un état, un agent et, si nécessaire, une conversation ou un horaire.
 
 ## Comprendre l’interface
 
@@ -8,7 +8,7 @@ La barre latérale gauche donne accès aux vues globales, aux projets et à l’
 
 Le panneau droit regroupe trois outils liés au projet sélectionné :
 
-- **Chat** pour une conversation directe avec Codex ou Claude Code ;
+- **Chat** pour une conversation directe avec Codex ou Claude ;
 - **Terminal** pour un shell local dans le dossier du projet ;
 - **Fichiers** pour parcourir le dossier, ouvrir un fichier, copier son chemin ou l’ajouter au chat.
 
@@ -46,7 +46,7 @@ Une routine conserve une seule occurrence exécutable. Après validation, CTRL K
 
 ## Files et concurrence
 
-Codex et Claude Code disposent de limites de concurrence séparées dans les réglages. Plusieurs conversations distinctes peuvent avancer en parallèle si la CLI et le compte le permettent.
+Codex et Claude disposent de limites de concurrence séparées dans les réglages. Plusieurs conversations distinctes peuvent avancer en parallèle si la CLI et le compte le permettent.
 
 Deux instructions visant la même conversation sont toujours sérialisées : la seconde attend la fin de la première. Cette règle évite l’erreur de rédacteur actif et protège l’ordre des réponses. Le rang de file affiché vient de CTRL KANB ; le fournisseur peut appliquer en plus ses propres limites.
 
@@ -60,7 +60,7 @@ Flux rassemble les décisions et actions du moment sans reproduire tout le Kanba
 - priorités sans horaire ;
 - éléments prévus aujourd’hui et dans les sept prochains jours.
 
-Les compteurs représentent le nombre de cartes dans chaque bloc. Ils ne représentent pas un quota Codex ou Claude Code.
+Les compteurs représentent le nombre de cartes dans chaque bloc. Ils ne représentent pas un quota Codex ou Claude.
 
 ## Agenda
 
@@ -91,7 +91,7 @@ Une tâche archivée peut être restaurée ou supprimée. La suppression demande
 
 ## Chat du projet
 
-Sélectionnez Codex ou Claude Code, puis le modèle disponible. Le bouton **+** joint des fichiers du projet. Après l’envoi, le champ est vidé et reste prêt pour la consigne suivante.
+Sélectionnez Codex ou Claude, puis le modèle disponible. Le bouton **+** joint des fichiers du projet. Après l’envoi, le champ est vidé et reste prêt pour la consigne suivante.
 
 Chaque nouveau chat reçoit un titre dérivé de son premier message. Vous pouvez changer de conversation ou supprimer la conversation locale depuis la barre d’outils. La suppression retire sa référence et son affichage de CTRL KANB ; elle ne promet pas d’effacer les données conservées par le fournisseur ou la CLI.
 
@@ -112,7 +112,7 @@ Le navigateur de fichiers refuse de sortir du dossier projet, y compris par une 
 
 L’action **Enregistrer sous** crée une copie à l’emplacement choisi ; elle ne déplace pas le fichier original.
 
-## États de Codex et Claude Code
+## États de Codex et Claude
 
 Chaque agent possède ses propres indicateurs :
 

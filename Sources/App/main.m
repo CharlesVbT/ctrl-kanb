@@ -1792,7 +1792,7 @@ static NSDictionary *ClaudeSessionSnapshot(NSDictionary *descriptor) {
         "echo\n"
         "if [ $status -eq 0 ]; then echo \"Connexion terminée. Retourne dans CTRL KANB et relance « Tester la connexion ».\"; else echo \"La connexion a échoué (code $status).\"; fi\n",
         exports,
-        claude ? @"Claude Code" : @"Codex",
+        claude ? @"Claude Code CLI" : @"Codex",
         [NSString stringWithFormat:@"'%@'", [executable stringByReplacingOccurrencesOfString:@"'" withString:@"'\\''"]],
         command];
     NSString *path = [NSTemporaryDirectory() stringByAppendingPathComponent:[NSString stringWithFormat:@"ctrl-kanb-login-%@.command", UUIDString()]];
@@ -1910,7 +1910,7 @@ static NSDictionary *ClaudeSessionSnapshot(NSDictionary *descriptor) {
     NSString *pathError=nil;
     NSString *cwd=[self projectRootForSpaceID:space[@"id"] requestedPath:space[@"rootPath"] error:&pathError];
     BOOL directory=NO;
-    if(!executable){[self failCard:cardID message:L(@"Claude Code est introuvable. Installe la CLI officielle et connecte ton compte dans le terminal.", @"Claude Code was not found. Install the official CLI and sign in from the terminal.") card:card];[self startNextQueued];return;}
+    if(!executable){[self failCard:cardID message:L(@"Claude Code CLI est introuvable. Installe la CLI officielle et connecte ton compte dans le terminal.", @"Claude Code CLI was not found. Install the official CLI and sign in from the terminal.") card:card];[self startNextQueued];return;}
     if(!cwd.length||![NSFileManager.defaultManager fileExistsAtPath:cwd isDirectory:&directory]||!directory){[self failCard:cardID message:pathError?:L(@"Le dossier du projet est introuvable.", @"The project folder was not found.") card:card];[self startNextQueued];return;}
     NSMutableDictionary *storedSpace=[space mutableCopy];
     storedSpace[@"rootPath"]=cwd;
@@ -1942,11 +1942,11 @@ static NSDictionary *ClaudeSessionSnapshot(NSDictionary *descriptor) {
     self.runs[cardID]=context;
     __weak typeof(self) weakSelf=self;
     NSError *error=nil;
-    BOOL launched=[client startWithMessageHandler:^(NSDictionary *message){[weakSelf handleClaudeMessage:message context:context];} terminationHandler:^(int status,NSString *stderrText){if(![context[@"finished"]boolValue])[weakSelf finishRun:context success:NO error:stderrText.length?stderrText:L(@"Claude Code s’est arrêté avant de produire un résultat.", @"Claude Code stopped before producing a result.")];} error:&error];
-    if(!launched){self.runs[cardID]=nil;[self failCard:cardID message:error.localizedDescription?:L(@"Impossible de lancer Claude Code.", @"Claude Code could not be started.") card:card];[self startNextQueued];return;}
+    BOOL launched=[client startWithMessageHandler:^(NSDictionary *message){[weakSelf handleClaudeMessage:message context:context];} terminationHandler:^(int status,NSString *stderrText){if(![context[@"finished"]boolValue])[weakSelf finishRun:context success:NO error:stderrText.length?stderrText:L(@"Claude Code CLI s’est arrêté avant de produire un résultat.", @"Claude Code CLI stopped before producing a result.")];} error:&error];
+    if(!launched){self.runs[cardID]=nil;[self failCard:cardID message:error.localizedDescription?:L(@"Impossible de lancer Claude Code CLI.", @"Claude Code CLI could not be started.") card:card];[self startNextQueued];return;}
     [self sendFunction:@"runnerStarted" object:@{@"cardID":cardID}];
     [client sendMessage:@{@"type":@"control_request",@"request_id":@"ctrl-init",@"request":@{@"subtype":@"initialize"}}];
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW,60*NSEC_PER_SEC),dispatch_get_main_queue(),^{if(![context[@"finished"]boolValue]&&![context[@"initialized"]boolValue])[weakSelf finishRun:context success:NO error:L(@"Claude Code n’a pas répondu à l’initialisation. Vérifie sa connexion dans le terminal.", @"Claude Code did not answer the handshake. Check its connection from the terminal.")];});
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW,60*NSEC_PER_SEC),dispatch_get_main_queue(),^{if(![context[@"finished"]boolValue]&&![context[@"initialized"]boolValue])[weakSelf finishRun:context success:NO error:L(@"Claude Code CLI n’a pas répondu à l’initialisation. Vérifie sa connexion dans le terminal.", @"Claude Code CLI did not answer the handshake. Check its connection from the terminal.")];});
 }
 
 - (void)handleClaudeMessage:(NSDictionary *)message context:(NSMutableDictionary *)context {
@@ -1973,7 +1973,7 @@ static NSDictionary *ClaudeSessionSnapshot(NSDictionary *descriptor) {
         BOOL success=![message[@"is_error"]boolValue]&&[message[@"subtype"]isEqual:@"success"];
         if([message[@"result"]isKindOfClass:NSString.class]&&[message[@"result"]length])context[@"latestSummary"]=message[@"result"];
         NSString *error=nil;
-        if(!success){NSArray *errors=message[@"errors"];error=[errors isKindOfClass:NSArray.class]&&errors.count?[errors componentsJoinedByString:@"\n"]:([context[@"latestSummary"]length]?context[@"latestSummary"]:L(@"Claude Code n’a pas terminé cette exécution.", @"Claude Code did not finish this run."));}
+        if(!success){NSArray *errors=message[@"errors"];error=[errors isKindOfClass:NSArray.class]&&errors.count?[errors componentsJoinedByString:@"\n"]:([context[@"latestSummary"]length]?context[@"latestSummary"]:L(@"Claude Code CLI n’a pas terminé cette exécution.", @"Claude Code CLI did not finish this run."));}
         if(!success&&([error localizedCaseInsensitiveContainsString:@"authenticate"]||[error localizedCaseInsensitiveContainsString:@"token has been revoked"])){error=L(@"La connexion Claude a expiré ou a été révoquée. Dans Terminal, lance « claude auth login », puis relance cette tâche.", @"The Claude connection expired or was revoked. Run \"claude auth login\" in Terminal, then run this task again.");context[@"latestSummary"]=error;}
         [self finishRun:context success:success error:error];
     }else if([type isEqual:@"control_request"]){

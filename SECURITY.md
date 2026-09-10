@@ -31,7 +31,7 @@ Les sujets couverts comprennent notamment :
 - corruption ou remplacement non atomique du tableau ;
 - lancement d’un exécutable d’agent différent de celui détecté ou configuré.
 
-Les failles propres à Codex, Claude Code, WebKit, WebView2, Tauri ou au système d’exploitation doivent aussi être signalées au projet ou fournisseur concerné.
+Les failles propres à Codex CLI, Claude Code CLI, WebKit, WebView2, Tauri ou au système d’exploitation doivent aussi être signalées au projet ou fournisseur concerné.
 
 ## Frontières de confiance
 
@@ -39,7 +39,7 @@ CTRL KANB est une application locale, mais les processus qu’elle lance ne sont
 
 - le navigateur de fichiers reste dans le dossier projet contrôlé ;
 - le terminal intégré démarre dans le projet et reste un shell complet avec les droits du compte utilisateur ;
-- Codex et Claude Code appliquent leurs propres bacs à sable, permissions, instructions et politiques de compte ;
+- Codex CLI et Claude Code CLI appliquent leurs propres bacs à sable, permissions, instructions et politiques de compte ;
 - les fichiers d’instructions tels que `AGENTS.md` ou `CLAUDE.md` peuvent modifier le comportement de l’agent ;
 - le verrou de l’interface ne chiffre pas les fichiers de données ;
 - un export JSON doit être traité comme une donnée privée.
@@ -49,7 +49,7 @@ CTRL KANB est une application locale, mais les processus qu’elle lance ne sont
 - données hors du dépôt et fichiers locaux créés avec des permissions limitées au compte ;
 - verrou interprocessus, validation JSON, écriture atomique et copie `board.previous.json` ;
 - normalisation et contrôle des chemins avant les opérations du navigateur ;
-- contrôle des chemins demandés par Read, Glob et Grep de Claude Code en mode sans modification ;
+- contrôle des chemins demandés par Read, Glob et Grep de Claude Code CLI en mode sans modification ;
 - messages affichés dans la WebView échappés ;
 - actions natives accessibles par une liste fermée et arguments de processus structurés ;
 - sérialisation des instructions visant une même conversation ;

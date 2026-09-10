@@ -22,11 +22,11 @@ Le minimum déclaré par l’application macOS est macOS 14. Windows 11 x64 est 
 | Agent | Version observée | Ce qui a été confirmé | Limite de l’essai |
 |---|---:|---|---|
 | Codex CLI sur macOS | 0.153.4 | détection, démarrage App Server, synchronisation et routage des tâches | les modèles et quotas restent propres au compte connecté |
-| Claude Code sur macOS | 2.1.145 | détection, lecture des sessions, routage et diagnostics d’authentification | une authentification révoquée ou absente exige `claude auth login` |
+| Claude Code CLI sur macOS | 2.1.145 | détection, lecture des sessions, routage et diagnostics d’authentification | une authentification révoquée ou absente exige `claude auth login` |
 | Codex CLI sur Windows | 0.154.0 | détection native, initialisation d’une session avec le modèle choisi et remontée explicite de la limite d’usage | l’essai n’a pas produit de réponse finale faute de quota disponible |
-| Claude Code sur Windows | 2.1.165 | détection native et diagnostic réel du compte | la machine de test n’était pas connectée ; aucune réponse finale réussie n’est revendiquée |
+| Claude Code CLI sur Windows | 2.1.165 | détection native et diagnostic réel du compte | la machine de test n’était pas connectée ; aucune réponse finale réussie n’est revendiquée |
 
-La disponibilité d’un modèle change indépendamment de CTRL KANB. Le mode Claude Code **Automatique** laisse la CLI choisir le modèle autorisé par le compte. Forcer Sonnet, Opus ou Haiku peut produire une erreur valide si ce modèle n’est pas accessible.
+La disponibilité d’un modèle change indépendamment de CTRL KANB. Le mode Claude **Automatique** laisse Claude Code CLI choisir le modèle autorisé par le compte. Forcer Sonnet, Opus ou Haiku peut produire une erreur valide si ce modèle n’est pas accessible.
 
 ## Contrôles couverts
 
@@ -35,7 +35,7 @@ La suite automatisée couvre notamment :
 - migrations, stockage atomique et protection des fichiers précédents ;
 - échappement du contenu affiché et contrat fermé du pont natif ;
 - périmètre du navigateur de fichiers et refus des chemins qui sortent du projet ;
-- files indépendantes Codex et Claude Code, limite de concurrence et sérialisation d’une même conversation ;
+- files indépendantes Codex et Claude, limite de concurrence et sérialisation d’une même conversation ;
 - pause, reprise, échec, quota et restauration après interruption ;
 - synchronisations séparées et horodatées ;
 - agenda, fuseaux horaires, changements d’heure, récurrences et reprises après coupure ;
@@ -50,7 +50,7 @@ Des essais utilisateurs réels ont aussi validé le premier lancement, la créat
 - démarrage depuis le menu Démarrer sans terminal extérieur persistant ;
 - instance unique ;
 - terminal PowerShell intégré dans un chemin contenant des espaces ;
-- détection indépendante de Codex et Claude Code ;
+- détection indépendante de Codex CLI et Claude Code CLI ;
 - fichiers, menu contextuel et contrôle des jonctions ;
 - planification, récurrence et files concurrentes ;
 - moteur en arrière-plan dans la zone de notification et démarrage à la connexion ;

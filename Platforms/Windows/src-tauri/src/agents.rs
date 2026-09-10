@@ -376,7 +376,7 @@ fn command_for(payload: &Value, root: &Path, session: &mut String) -> Result<Com
     let selected = engine(payload);
     let path = executable(&selected).ok_or_else(|| {
         if selected == "claude-code" {
-            "Claude Code est introuvable. Installe la CLI officielle pour Windows."
+            "Claude Code CLI est introuvable. Installe la CLI officielle pour Windows."
         } else {
             "Codex est introuvable. Installe l’application ou la CLI officielle pour Windows."
         }
@@ -998,7 +998,7 @@ fn claude_result_error(message: &Value) -> String {
                 .filter(|value| !value.is_empty())
                 .map(str::to_owned)
         })
-        .unwrap_or_else(|| "Claude Code n’a pas terminé cette exécution.".into())
+        .unwrap_or_else(|| "Claude Code CLI n’a pas terminé cette exécution.".into())
 }
 
 fn handle_message(

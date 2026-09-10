@@ -4,15 +4,15 @@
 
 ![CTRL KANB — visual control center for agent work](docs/assets/ctrl-kanb-banner.png)
 
-**A local control center for organizing, scheduling, and tracking work delegated to Codex and Claude Code on macOS and Windows.**
+**A local control center for organizing, scheduling, and tracking work delegated to Codex and Claude on macOS and Windows.**
 
 > **Project status — 6.11.2 release candidate.** The source runs on macOS and Windows. Core flows are covered by automated checks and real-machine testing. No signed binary has been published yet. Read the [compatibility and validation report](docs/COMPATIBILITY.md) before relying on CTRL KANB for important work.
 
 ## Why CTRL KANB exists
 
-Codex and Claude Code can complete complex tasks, but their queues stop being enough when projects, conversations, approvals, scheduled work, and routines accumulate.
+Codex and Claude can complete complex tasks, but their queues stop being enough when projects, conversations, approvals, scheduled work, and routines accumulate.
 
-CTRL KANB grew out of that gap. **Charles VbT** uses both agents extensively but is not a professional developer. No existing Kanban combined project organization, agent conversations, scheduled tasks, and recurring work in the way he needed. He therefore built this application with intensive help from Codex and Claude Code, then hardened it through interface, functional, and security reviews.
+CTRL KANB grew out of that gap. **Charles VbT** uses both agents extensively but is not a professional developer. No existing Kanban combined project organization, agent conversations, scheduled tasks, and recurring work in the way he needed. He therefore built this application with intensive help from Codex and Claude, then hardened it through interface, functional, and security reviews.
 
 CTRL KANB brings together:
 
@@ -21,7 +21,7 @@ CTRL KANB brings together:
 - a Flow view for priorities, active work, and decisions;
 - result and conversation follow-up;
 - a project chat, terminal, and file browser;
-- independent Codex and Claude Code integration;
+- independent Codex and Claude integration through their local CLIs;
 - local storage with no CTRL KANB account or server.
 
 The architecture may support more engines in the future, provided their permissions, diagnostics, and storage behavior remain explicit.
@@ -46,11 +46,11 @@ Every screenshot below is generated from a fictional presentation dataset. It co
 - Day, Week, and Month calendar views with configurable time zone, week start, and 12/24-hour time;
 - manual tasks, scheduled runs, and daily, weekly, or monthly recurrence;
 - future recurrence previews without duplicating executable cards;
-- separate queues and concurrency limits for Codex and Claude Code;
+- separate queues and concurrency limits for Codex and Claude;
 - serialization of instructions targeting the same conversation;
 - human approval flows for commands, file changes, and agent questions;
 - history, reversible archives, restoration, and confirmed deletion;
-- independent, timestamped Codex and Claude Code conversation sync;
+- independent, timestamped Codex and Claude conversation sync;
 - project chat with model selection, attachments, and multiple conversations;
 - a full local shell: zsh on macOS and PowerShell on Windows;
 - a file browser constrained to the project folder;
@@ -67,10 +67,10 @@ Every screenshot below is generated from a fictional presentation dataset. It co
 | macOS | macOS 14 or later; tested on Apple Silicon; Apple Command Line Tools required to build |
 | Windows | Windows 11 x64 tested; NSIS installer and WebView2 host |
 | Codex | optional; required only for Codex features |
-| Claude Code | optional; required only for Claude Code features |
+| Claude | optional; requires a locally installed and authenticated Claude Code CLI |
 | Offline use | board, calendar, and local data remain available; agents and their sync require their services |
 
-CTRL KANB works with Codex alone, Claude Code alone, both, or neither when used only for local organization. Executable detection, account authentication, and conversation sync freshness are displayed as separate states.
+CTRL KANB works with Codex alone, Claude alone, both, or neither when used only for local organization. Executable detection, account authentication, and conversation sync freshness are displayed as separate states.
 
 The exact versions tested and the remaining limitations are recorded in [COMPATIBILITY.md](docs/COMPATIBILITY.md). That detailed report is currently maintained in French.
 
@@ -123,7 +123,7 @@ The complete installation, update, and removal instructions are in [INSTALLATION
 
 1. Add a project and select its local folder.
 2. Open **Settings → Agents and models**.
-3. Refresh detection, then test Codex and/or Claude Code independently.
+3. Refresh detection, then test Codex and/or Claude independently.
 4. Choose the default agent and models.
 5. Create a task in **Classic** or configure a routine.
 
@@ -134,9 +134,9 @@ Status labels have distinct meanings:
 - **Synchronized** means linked conversations or local sessions were read at the displayed time;
 - **No session** means no matching local conversation was found.
 
-A successful connection test does not guarantee remaining quota or access to every model. Synchronization does not authenticate an account, and Claude Code sync does not send a new prompt.
+A successful connection test does not guarantee remaining quota or access to every model. Synchronization does not authenticate an account, and Claude sync reads local Claude Code CLI sessions and does not send a new prompt.
 
-## Codex and Claude Code detection
+## Codex and Claude detection
 
 At startup, CTRL KANB searches for `codex` and `claude` independently in known application locations, the `PATH` inherited by the app, and common user-level package locations. A graphical app may receive a different `PATH` from an interactive terminal.
 
@@ -230,7 +230,7 @@ These limits are tracked with their evidence level in [COMPATIBILITY.md](docs/CO
 
 ## Independent project
 
-CTRL KANB is an independent project. It is not affiliated with, endorsed by, or sponsored by OpenAI or Anthropic. Codex, OpenAI, Claude, Claude Code, and Anthropic names and logos belong to their respective owners; see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+CTRL KANB is an independent project. It is not affiliated with, endorsed by, or sponsored by OpenAI or Anthropic. The official OpenAI Blossom and Claude symbol are used only to identify their respective integrations in functional controls. Technical copy identifies the local Claude Code CLI when relevant. Third-party names, marks, and assets remain the property of their respective owners; see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 ## License
 

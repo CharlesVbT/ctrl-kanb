@@ -823,7 +823,7 @@ button:disabled { opacity: .42; cursor: not-allowed; }
 .agent-row { min-height: 72px; padding: 12px; display: grid; grid-template-columns: 38px 1fr auto; align-items: center; gap: 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel-soft); }
 .agent-row.future { opacity: .68; }
 .agent-mark { width: 38px; height: 38px; display: grid; place-items: center; overflow: hidden; border: 0; border-radius: 10px; background: transparent; box-shadow: var(--shadow-1); }
-.engine-logo { display: block; width: 38px; height: 38px; flex: none; border-radius: 10px; object-fit: cover; }
+.engine-logo { display: block; width: 38px; height: 38px; flex: none; object-fit: contain; }
 .codex-mark { color: white; border-color: var(--n11); background: var(--n11); }
 .agent-row strong { display: block; font-size:calc(12px + var(--font-size-offset)); }
 .agent-row p { margin: 4px 0 0; color: var(--muted); font-size:calc(10px + var(--font-size-offset)); line-height: 1.4; }
@@ -2137,7 +2137,7 @@ body.resizing-sidebar .sidebar-resizer{background:var(--surface-3)}
 
 /* Un agent externe tient sur une ligne ; son fournisseur et son modele sont
    replies dessous. Ces agents sont optionnels : ils ne doivent pas peser plus
-   lourd que Codex et Claude Code dans la page. */
+   lourd que Codex et Claude dans la page. */
 .acp-agent{border:1px solid var(--border);border-radius:12px;background:var(--surface);overflow:hidden}
 .acp-agent+.acp-agent{margin-top:10px}
 .acp-agent>.account-row{margin:0;border:0;border-radius:0;background:transparent}
@@ -2493,7 +2493,7 @@ body.resizing-utility .utility-panel{transition:none}
 .utility-session-list strong{font-size:calc(11px + var(--font-size-offset));font-weight:580}
 .utility-session-list small{margin-top:3px;color:var(--ink-3);font-size:calc(9.5px + var(--font-size-offset))}
 .utility-session-list .ui-icon{width:14px;height:14px;margin-top:2px;color:var(--ink-3)}
-html[data-theme="dark"] .engine-logo.codex-logo{content:url("Brands/Codex-dark.png")}
+html[data-theme="dark"] .engine-logo.codex-logo{content:url("Brands/OpenAI-white-monoblossom.svg")}
 .utility-chat-transcript{min-height:0;flex:1;padding:17px 14px;overflow-y:auto;overscroll-behavior:contain;background:var(--surface);scrollbar-width:thin;scrollbar-color:var(--border-strong) transparent}
 .utility-message{max-width:100%;margin:0 0 17px}
 .utility-message.user{margin-left:auto}

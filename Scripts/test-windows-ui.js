@@ -17,12 +17,12 @@ state.cards.push({...structuredClone(state.cards[0]),id:'quota-card',title:'Quot
 w.CodexBoard.load(state);w.CodexBoard.securityStatus({lockEnabled:true,biometry:'Windows Hello'});w.CodexBoard.agentStatus({codex:true,claude:true});
 const click=selector=>{const element=d.querySelector(selector);assert.ok(element,selector);element.click();};
 
-assert.ok(d.querySelector('#board').textContent.includes('Claude Code n’est pas connecté.'),'une erreur Claude enregistrée doit être expliquée');
+assert.ok(d.querySelector('#board').textContent.includes('Claude n’est pas connecté.'),'une erreur Claude enregistrée doit être expliquée');
 assert.ok(d.querySelector('#board').textContent.includes('Mets le moteur à jour ou choisis un autre modèle.'),'une incompatibilité de modèle doit indiquer la correction');
 assert.ok(d.querySelector('#board').textContent.includes('Limite d’usage atteinte pour Codex.'),'un ancien message de quota simple doit être nettoyé');
 assert.ok(!d.body.textContent.includes('OAuth access token')&&!d.body.textContent.includes('{"type":"error"')&&!d.body.textContent.includes('Not logged in')&&!d.body.textContent.includes("You've hit your usage limit"),'aucune erreur technique ne doit être affichée');
 w.CodexBoard.runnerFinished({cardID:'failed-card',success:false,exitCode:1,error:JSON.stringify({type:'error',status:429,error:{message:'Usage limit reached'}})});
-assert.ok(d.querySelector('#board').textContent.includes('Limite d’usage atteinte pour Claude Code.'),'une limite d’usage doit être présentée clairement');
+assert.ok(d.querySelector('#board').textContent.includes('Limite d’usage atteinte pour Claude.'),'une limite d’usage doit être présentée clairement');
 assert.ok(!d.querySelector('#board').textContent.includes('status')&&!d.querySelector('#board').textContent.includes('Usage limit'),'le détail technique ne doit pas rester dans la carte');
 assert.equal(state.settings.accountChecks['claude-code:default'].state,'ready','une limite de quota doit confirmer que le compte est reconnu');
 w.CodexBoard.runnerFinished({cardID:'failed-card',success:false,exitCode:1,error:rawClaudeError});
@@ -47,7 +47,7 @@ click('[data-select="settingsView"]');
 const settings=d.querySelector('#board').textContent;
 for(const expected of ['Notifications Windows','Protège l’accès à la fenêtre CTRL KANB sur ce PC.','Windows Hello','%LOCALAPPDATA%\\CTRL KANB Data\\board.json','Application Windows']) assert.ok(settings.includes(expected),expected);
 for(const forbidden of ['Finder','macOS','sur ce Mac','ce Mac','⌘','⌥']) assert.ok(!settings.includes(forbidden),`libellé macOS visible sous Windows: ${forbidden}`);
-assert.ok(settings.includes('Claude Code n’est pas connecté.')&&!settings.includes('OAuth access token'),'les réglages doivent conserver un diagnostic lisible');
+assert.ok(settings.includes('Claude n’est pas connecté.')&&!settings.includes('OAuth access token'),'les réglages doivent conserver un diagnostic lisible');
 
 w.CodexBoard.menuAction({action:'newProject'});
 assert.equal(d.querySelector('[name="rootPath"]').placeholder,'C:\\chemin\\du\\projet');

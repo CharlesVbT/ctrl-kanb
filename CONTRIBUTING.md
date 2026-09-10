@@ -32,7 +32,7 @@ La construction Windows exige Rust MSVC, WebView2 et les outils C++ de Visual St
 - conservez les workflows fixes **Classique** et **Routines** ;
 - supprimer un projet ne doit jamais supprimer son dossier Finder ou Explorateur ;
 - préservez planification, récurrence, comptes et classement lors d’une simplification d’interface ;
-- gardez les files Codex et Claude Code indépendantes et sérialisez une même conversation ;
+- gardez les files Codex et Claude indépendantes et sérialisez une même conversation ;
 - n’élargissez pas le périmètre du terminal, des fichiers ou des agents sans expliquer les permissions ;
 - vérifiez les modes clair et sombre et la grande police pour toute modification visuelle ;
 - rendez les erreurs lisibles dans l’interface au lieu d’afficher une réponse brute de CLI.

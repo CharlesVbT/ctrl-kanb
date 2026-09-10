@@ -31,13 +31,13 @@ const syncMessages=()=>messages.filter(message=>message.action==='syncConversati
 const claudeSyncMessages=()=>messages.filter(message=>message.action==='syncClaudeSessions');
 let checks=0;const test=(label,fn)=>{fn();checks++;console.log('PASS',label)};
 
-test('the manual control explicitly refreshes Codex and Claude Code',()=>{
+test('the manual control explicitly refreshes Codex and Claude',()=>{
   const button=d.querySelector('.header-sync-all');
   assert.ok(button);
   assert.equal(button.textContent.trim(),'');
-  assert.equal(button.getAttribute('aria-label'),'Synchroniser Codex et Claude Code');
+  assert.equal(button.getAttribute('aria-label'),'Synchroniser Codex et Claude');
   button.click();
-  assert.equal(d.querySelector('.toast')?.textContent,'Synchronisation de Codex et Claude Code en cours…');
+  assert.equal(d.querySelector('.toast')?.textContent,'Synchronisation de Codex et Claude en cours…');
   assert.deepEqual(syncMessages().at(-1).threadIDs,[mainID]);
   assert.deepEqual(claudeSyncMessages().at(-1).sessions.map(item=>item.sessionID),[claudeID]);
   assert.equal(d.querySelector('.header-sync-all').disabled,true);
@@ -110,7 +110,7 @@ test('Claude sessions are read separately and update their visible result',()=>{
   w.CodexBoard.claudeSyncStarted({total:1});
   w.CodexBoard.claudeSessionsSynced({sessions:[{sessionID:claudeID,accountID:'claude-code:default',found:true,preview:'Réponse Claude relue',cwd:'/private/tmp/projet',updatedAt:'2026-09-09T12:00:00Z'}],total:1,failed:0,durationMs:12});
   assert.equal(claudeSyncButton().disabled,false);
-  assert.equal(claudeSyncButton().querySelector('.sidebar-sync-engine strong').textContent,'Claude Code');
+  assert.equal(claudeSyncButton().querySelector('.sidebar-sync-engine strong').textContent,'Claude');
   assert.equal(claudeSyncButton().querySelector('.sidebar-sync-state small').textContent,'À jour');
   assert.match(claudeSyncButton().title,/1 session Claude locale relue/);
   assert.equal(state.cards[1].conversations[0].preview,'Réponse Claude relue');

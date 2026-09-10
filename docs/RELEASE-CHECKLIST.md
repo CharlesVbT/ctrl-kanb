@@ -16,7 +16,7 @@ Les contrôles couvrent notamment le premier lancement vide, l’export et la re
 
 - ouvrir l’application sans données existantes ;
 - vérifier que le guide ne crée aucun projet ni aucune tâche ;
-- ajouter un dossier de test, créer une tâche Codex puis une tâche Claude Code ;
+- ajouter un dossier de test, créer une tâche Codex puis une tâche Claude ;
 - exporter les données, modifier une tâche, restaurer l’export et vérifier la copie `board.before-import-*.json` ;
 - parcourir toutes les vues au clavier, agrandir la police et vérifier les thèmes clair et sombre ;
 - supprimer ensuite le profil de test.

@@ -12,7 +12,7 @@ La création rapide demande uniquement les informations nécessaires. Les régla
 
 ## États
 
-Codex et Claude Code disposent chacun d’un état de disponibilité, de connexion et de synchronisation daté. Une animation ou un message temporaire signale une actualisation en cours ; l’interface ne présente jamais un simple état « à jour » comme une preuve de connexion.
+Codex et Claude disposent chacun d’un état de disponibilité, de connexion et de synchronisation daté. Une animation ou un message temporaire signale une actualisation en cours ; l’interface ne présente jamais un simple état « à jour » comme une preuve de connexion.
 
 ## Accessibilité visuelle
 

@@ -53,7 +53,7 @@ $checks = [ordered]@{
   "Outils C++" = Test-VisualCppTools
   "WebView2" = Test-WebView2Runtime
   "Codex" = Find-Command "codex"
-  "Claude Code" = Find-Command "claude"
+  "Claude Code CLI" = Find-Command "claude"
 }
 
 $checks.GetEnumerator() | ForEach-Object {
@@ -90,5 +90,5 @@ if (-not $checks.WebView2) {
 
 rustup default stable-msvc
 npm install
-Write-Host "Socle Windows prêt. Codex et Claude Code restent facultatifs et seront détectés séparément par l’application."
+Write-Host "Socle Windows prêt. Codex et Claude restent facultatifs ; Claude utilise Claude Code CLI. Les deux agents seront détectés séparément par l’application."
 Write-Host "Lancez npm run dev pour ouvrir CTRL KANB."

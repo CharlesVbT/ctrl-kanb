@@ -8,7 +8,7 @@ Utilisez une issue GitHub avec :
 
 - la version de CTRL KANB ;
 - le système et son architecture ;
-- les versions de Codex ou Claude Code concernées ;
+- les versions de Codex CLI ou Claude Code CLI concernées ;
 - les étapes minimales pour reproduire le problème ;
 - le résultat attendu et le résultat observé ;
 - une capture utilisant des projets et contenus fictifs si elle est nécessaire.

@@ -37,11 +37,11 @@ Ne copiez jamais de jeton, de dossier de configuration ou de journal contenant d
 
 Le catalogue dépend du fournisseur, de la version de la CLI, du compte et de la politique de l’organisation. Actualisez la CLI avec sa méthode officielle, puis utilisez un modèle réellement proposé.
 
-Pour Claude Code, choisissez **Automatique** afin de laisser la CLI sélectionner un modèle compatible. Le réglage de profondeur contrôle l’effort demandé quand l’agent et le modèle le prennent en charge ; il ne débloque pas un modèle absent du compte.
+Pour Claude, choisissez **Automatique** afin de laisser la CLI sélectionner un modèle compatible. Le réglage de profondeur contrôle l’effort demandé quand l’agent et le modèle le prennent en charge ; il ne débloque pas un modèle absent du compte.
 
 ## La synchronisation paraît bloquée
 
-La commande d’actualisation traite Codex et Claude Code séparément. L’interface affiche pour chacun une phase et un horodatage.
+La commande d’actualisation traite Codex et Claude séparément. L’interface affiche pour chacun une phase et un horodatage.
 
 - **Disponible** : l’exécutable existe ;
 - **Connexion testée** : une requête réelle a répondu ;
@@ -49,7 +49,7 @@ La commande d’actualisation traite Codex et Claude Code séparément. L’inte
 - **Aucune session** : rien de correspondant n’a été trouvé ;
 - **Échec** : le détail doit être consulté avant une nouvelle tentative.
 
-La synchronisation Claude Code relit les sessions locales et n’envoie pas de nouveau prompt. Une connexion testée et une synchronisation réussie décrivent donc deux opérations différentes.
+La synchronisation Claude relit via Claude Code CLI les sessions locales et n’envoie pas de nouveau prompt. Une connexion testée et une synchronisation réussie décrivent donc deux opérations différentes.
 
 ## « La conversation a déjà un rédacteur actif »
 

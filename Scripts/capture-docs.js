@@ -138,7 +138,7 @@ const demo = String.raw`
     messages: [
       { role: "user", text: tx("Prépare un déroulé court pour présenter le Kanban, l’agenda et les routines.", "Prepare a short walkthrough of the Kanban, calendar, and routines."), at: instant(-1, 10) },
       { role: "assistant", text: tx("Je propose quatre séquences : cadrage du projet, lancement d’une tâche, planification d’une routine, puis relecture du résultat. Chaque séquence tient en moins d’une minute.", "I suggest four steps: frame the project, launch a task, schedule a routine, then review the result. Each step takes less than a minute."), at: instant(-1, 10, 4) },
-      { role: "user", text: tx("Ajoute un passage sur la synchronisation indépendante de Codex et Claude Code.", "Add a section about independent Codex and Claude Code synchronization."), at: instant(-1, 10, 8) },
+      { role: "user", text: tx("Ajoute un passage sur la synchronisation indépendante de Codex et Claude.", "Add a section about independent Codex and Claude synchronization."), at: instant(-1, 10, 8) },
       { role: "assistant", text: tx("Le passage précise les trois états distincts : moteur détecté, connexion testée et conversations synchronisées. Les horodatages restent visibles pour éviter toute ambiguïté.", "The section distinguishes three states: executable detected, connection tested, and conversations synchronized. Timestamps remain visible to avoid ambiguity."), at: instant(-1, 10, 10) }
     ]
   };

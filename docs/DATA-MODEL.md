@@ -76,13 +76,13 @@ Le moteur natif applique d’abord `notificationMode` de la carte, puis les rég
 ## Comptes
 
 - `accounts[]` référence les comptes supplémentaires et leur dossier de configuration séparé ;
-- `activeAccount` conserve le compte choisi indépendamment pour Codex et Claude Code ;
+- `activeAccount` conserve le compte choisi indépendamment pour Codex et Claude ;
 - `accountChecks` conserve, par identifiant de compte, l’état terminal du dernier test (`ready`, `blocked`, `missing` ou `login`), sa date et un éventuel diagnostic.
-- `conversationSyncChecks` conserve séparément le dernier contrôle Codex et Claude Code : état, date, nombre de conversations relues, échecs et durée.
+- `conversationSyncChecks` conserve séparément le dernier contrôle Codex et Claude : état, date, nombre de conversations relues, échecs et durée.
 
 Un état `ready` signifie qu’un aller-retour réel a réussi à la date enregistrée. Il ne remplace pas l’authentification du CLI et ne stocke aucun secret. Les identifiants restent dans `~/.codex`, `~/.claude` ou le dossier séparé du compte. Un état transitoire `running` reste uniquement en mémoire et n’est jamais écrit dans le tableau.
 
-L’actualisation Codex utilise `thread/read`. L’actualisation Claude Code lit sans modification le journal JSONL de chaque session principale sous le dossier `projects` du compte associé. Elle n’envoie aucun prompt et signale une session absente ou illisible au lieu de la déclarer à jour.
+L’actualisation Codex utilise `thread/read`. L’actualisation Claude lit via Claude Code CLI sans modification le journal JSONL de chaque session principale sous le dossier `projects` du compte associé. Elle n’envoie aucun prompt et signale une session absente ou illisible au lieu de la déclarer à jour.
 
 ## Projet
 

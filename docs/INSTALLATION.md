@@ -1,6 +1,6 @@
 # Installer CTRL KANB
 
-CTRL KANB fonctionne sans compte propre. Codex CLI et Claude Code sont facultatifs : installez seulement l’agent que vous souhaitez utiliser. Le Kanban, l’Agenda et les données locales restent utilisables sans eux.
+CTRL KANB fonctionne sans compte propre. Codex et Claude sont facultatifs. Les fonctions Codex nécessitent Codex CLI ; les fonctions Claude nécessitent Claude Code CLI. Installez seulement l’agent que vous souhaitez utiliser. Le Kanban, l’Agenda et les données locales restent utilisables sans eux.
 
 ## État des paquets
 
@@ -93,7 +93,7 @@ Le script PowerShell sert uniquement à la construction. Après installation, CT
 1. Ajoutez un projet et choisissez son dossier local.
 2. Ouvrez **Réglages → Agents et modèles**.
 3. Actualisez la détection.
-4. Testez séparément la connexion de Codex et/ou Claude Code.
+4. Testez séparément la connexion de Codex et/ou Claude.
 5. Créez une première tâche manuelle avant d’activer le planificateur d’arrière-plan.
 
 Un exécutable détecté n’implique pas que son compte soit connecté. Un test réussi n’implique pas qu’un quota ou chaque modèle soit disponible.
@@ -120,6 +120,6 @@ macOS   ~/Library/Application Support/CTRL KANB/
 Windows %LOCALAPPDATA%\CTRL KANB Data\
 ```
 
-Pour une suppression complète, quittez CTRL KANB, vérifiez ou exportez ce que vous voulez conserver, puis supprimez vous-même le dossier correspondant. Cette opération efface le tableau, les réglages, les conversations référencées par l’application et les journaux locaux de CTRL KANB. Elle ne supprime ni les dossiers de projets, ni les comptes gérés par Codex ou Claude Code.
+Pour une suppression complète, quittez CTRL KANB, vérifiez ou exportez ce que vous voulez conserver, puis supprimez vous-même le dossier correspondant. Cette opération efface le tableau, les réglages, les conversations référencées par l’application et les journaux locaux de CTRL KANB. Elle ne supprime ni les dossiers de projets, ni les comptes gérés par Codex CLI ou Claude Code CLI.
 
 Consultez [le guide de dépannage](TROUBLESHOOTING.md) si un agent, un modèle ou le planificateur n’apparaît pas comme prévu.

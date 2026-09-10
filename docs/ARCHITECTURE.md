@@ -13,7 +13,7 @@
 
 ## Détection des agents
 
-Codex et Claude Code sont détectés séparément au chargement. Sur macOS, la recherche couvre les bundles connus, Homebrew, le `PATH` et les gestionnaires utilisateur courants. Sur Windows, elle couvre le `PATH`, l’installation Codex dans `%LOCALAPPDATA%` et les exécutables utilisateur dans `%USERPROFILE%\.local\bin`. Un chemin absolu peut être imposé sur les deux systèmes avec `CTRL_KANB_CODEX_PATH` ou `CTRL_KANB_CLAUDE_PATH`.
+Codex CLI et Claude Code CLI sont détectés séparément au chargement. Sur macOS, la recherche couvre les bundles connus, Homebrew, le `PATH` et les gestionnaires utilisateur courants. Sur Windows, elle couvre le `PATH`, l’installation Codex dans `%LOCALAPPDATA%` et les exécutables utilisateur dans `%USERPROFILE%\.local\bin`. Un chemin absolu peut être imposé sur les deux systèmes avec `CTRL_KANB_CODEX_PATH` ou `CTRL_KANB_CLAUDE_PATH`.
 
 La présence d’un exécutable et l’état du compte sont deux informations différentes. Le pont `agentStatus` confirme seulement la présence locale. Le test de connexion lance un aller-retour réel et conserve séparément son résultat pour chaque agent et chaque compte.
 

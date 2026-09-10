@@ -29,8 +29,8 @@
     "active": true,
     "targets": ["nsis"],
     "category": "Productivity",
-    "shortDescription": "Piloter des tâches Codex et Claude Code",
-    "longDescription": "Kanban, agenda et routines locales pour piloter Codex et Claude Code.",
+    "shortDescription": "Piloter des tâches Codex et Claude",
+    "longDescription": "Kanban, agenda et routines locales pour piloter Codex et Claude.",
     "resources": {
       "../../../LICENSE": "LICENSE",
       "../../../NOTICE": "NOTICE",

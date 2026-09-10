@@ -21,9 +21,9 @@ Un export JSON contient l’organisation complète, y compris les textes, histor
 
 Avant une restauration, CTRL KANB valide le document et crée une copie de l’état courant. L’import ne modifie pas les dossiers de projets.
 
-## Comptes Codex et Claude Code
+## Comptes Codex et Claude
 
-CTRL KANB ne copie aucun mot de passe ou jeton dans son tableau. Les identifiants restent gérés par Codex et Claude Code dans leurs propres dossiers de configuration.
+CTRL KANB ne copie aucun mot de passe ou jeton dans son tableau. Les identifiants restent gérés par Codex CLI et Claude Code CLI dans leurs propres dossiers de configuration.
 
 L’application conserve le compte sélectionné, le chemin du dossier de configuration isolé et le résultat daté du dernier test. Ajouter ou retirer ce raccourci ne connecte, ne déconnecte et n’efface pas automatiquement le compte dans la CLI.
 
@@ -31,7 +31,7 @@ L’application conserve le compte sélectionné, le chemin du dossier de config
 
 Quand vous lancez une tâche ou envoyez un message, CTRL KANB transmet la consigne, les pièces jointes choisies et le contexte autorisé à la CLI officielle installée. Cette CLI communique alors avec son fournisseur selon les conditions, politiques et réglages du compte concerné.
 
-CTRL KANB ne place aucun serveur entre la CLI et son fournisseur. La synchronisation Codex interroge les conversations associées. La synchronisation Claude Code relit les journaux de sessions locaux et n’envoie pas de nouvelle consigne.
+CTRL KANB ne place aucun serveur entre la CLI et son fournisseur. La synchronisation Codex interroge les conversations associées. La synchronisation Claude relit via Claude Code CLI les journaux de sessions locaux et n’envoie pas de nouvelle consigne.
 
 L’installation depuis les sources télécharge les dépendances de compilation depuis leurs registres respectifs. Sur Windows, l’installateur peut demander ou installer WebView2 si le runtime manque. Ces échanges appartiennent aux outils de construction, à Microsoft ou aux agents, pas à une télémétrie CTRL KANB.
 
@@ -39,7 +39,7 @@ L’installation depuis les sources télécharge les dépendances de compilation
 
 Le navigateur de fichiers refuse les chemins qui sortent du projet. Le terminal démarre dans ce dossier mais reste un shell complet : il peut accéder à tout ce que le compte système peut lire ou modifier.
 
-Les tâches suivent le mode d’accès, le bac à sable et les autorisations du moteur choisi. En mode sans modification, CTRL KANB limite Claude Code aux outils Read, Glob et Grep, ignore les autorisations personnelles ou propres au projet, puis refuse leurs demandes de chemin qui sortent du projet. Claude Code peut néanmoins charger ses fichiers d’instructions `CLAUDE.md` et leurs imports selon le fonctionnement de la CLI.
+Les tâches suivent le mode d’accès, le bac à sable et les autorisations du moteur choisi. En mode sans modification, CTRL KANB limite Claude Code CLI aux outils Read, Glob et Grep, ignore les autorisations personnelles ou propres au projet, puis refuse leurs demandes de chemin qui sortent du projet. Claude Code CLI peut néanmoins charger ses fichiers d’instructions `CLAUDE.md` et leurs imports selon le fonctionnement de la CLI.
 
 Ajouter un fichier au chat transmet son contenu ou sa référence à l’agent lors de l’envoi. Supprimer un projet de CTRL KANB ne supprime jamais son dossier. Supprimer une conversation ou une carte retire sa référence locale ; cela ne garantit pas l’effacement des données déjà conservées par la CLI ou son fournisseur.
 

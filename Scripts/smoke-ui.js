@@ -613,11 +613,14 @@ assert(enginesPage.includes("Une même session reste séquentielle"),"La seriali
 assert(enginesPage.includes("Plusieurs sessions dans un même dossier peuvent modifier les mêmes fichiers"),"Le risque de modifier un meme dossier depuis plusieurs sessions Claude n est pas explique.");
 assert(enginesPage.includes("Claude Opus")&&enginesPage.includes("Claude Sonnet")&&enginesPage.includes("Claude Haiku"),"Les modeles Claude n'apparaissent pas dans les reglages.");
 assert(enginesPage.includes("Automatique (recommandé)"),"Claude ne propose pas le routage automatique compatible avec le compte.");
-assert(enginesPage.includes("Automatique laisse Claude Code choisir un modèle disponible pour ce compte."),"Le routage automatique Claude n'est pas explique.");
+assert(enginesPage.includes("Automatique laisse Claude Code CLI choisir un modèle disponible pour ce compte."),"Le routage automatique Claude n'est pas explique.");
 assert(enginesPage.includes("GPT-5.6 Sol"),"Les modeles Codex ont disparu des reglages.");
-assert(enginesPage.includes('class="engine-logo codex-logo" src="Brands/Codex-light.png"'),"Le logo officiel Codex manque dans les reglages.");
-assert(enginesPage.includes('class="engine-logo claude-code-logo" src="Brands/Claude-Code.png"'),"Le logo officiel Claude Code manque dans les reglages.");
-assert(fs.existsSync(`${__dirname}/../Resources/Brands/Codex-light.png`)&&fs.existsSync(`${__dirname}/../Resources/Brands/Codex-dark.png`)&&fs.existsSync(`${__dirname}/../Resources/Brands/Claude-Code.png`),"Les actifs officiels Codex ou Claude Code manquent des ressources.");
+assert(enginesPage.includes('class="engine-logo codex-logo" src="Brands/OpenAI-black-monoblossom.svg"'),"Le Blossom OpenAI officiel manque dans les reglages Codex.");
+assert(enginesPage.includes('class="engine-logo claude-code-logo" src="Brands/Claude-orange.svg"'),"Le symbole Claude officiel manque dans les reglages.");
+assert(enginesPage.includes("Connexion locale via Claude Code CLI"),"La provenance technique de l integration Claude manque dans les reglages.");
+const brandAssets=["OpenAI-black-monoblossom.svg","OpenAI-white-monoblossom.svg","Claude-orange.svg","Anthropic-SDK-LICENSE.txt"];
+assert(brandAssets.every(name=>fs.existsSync(`${__dirname}/../Resources/Brands/${name}`)),"Les actifs de moteurs documentes manquent des ressources.");
+assert(!["Codex-light.png","Codex-dark.png","Claude-Code.png"].some(name=>fs.existsSync(`${__dirname}/../Resources/Brands/${name}`)),"Un ancien logo sans provenance reste embarque.");
 assert(!enginesPage.includes("settings-acp")&&!enginesPage.includes("settings-providers"),"Les agents externes sont encore visibles.");
 
 load([card("claude-route","Route Claude","ready",{agentEngine:"claudeCode",model:"gpt-5.6-sol"})],{defaultModelClaude:"default"});
@@ -756,7 +759,7 @@ assert(!sansProjet.includes('data-action="add-card"'),"Sans projet, le premier p
 assert(sansProjet.includes("sans exemple ni donnée imposée"),"Le premier lancement n'explique pas qu'il part de donnees vides.");
 assert(!sansProjet.includes("Configurer mes espaces")&&!sansProjet.includes("Tester une tâche Codex"),"Le premier lancement montre encore de fausses taches.");
 context.window.CodexBoard.agentStatus({codex:true,claude:false});
-assert(body().includes("Codex · détecté")&&body().includes("Claude Code · introuvable"),"Le premier lancement n'explique pas les agents detectes.");
+assert(body().includes("Codex · détecté")&&body().includes("Claude · introuvable"),"Le premier lancement n'explique pas les agents detectes.");
 
 // Export et restauration restent des actions explicites. La restauration passe
 // par une confirmation avant d ouvrir le selecteur de fichier natif.
@@ -887,7 +890,7 @@ assert(body().includes("Codex queue &middot; #2")||body().includes("Codex queue 
 load([card("q1","File Codex","ready"),card("q2","File Claude","ready",{agentEngine:"claude-code"})]);
 click({surface:"board",select:"global"});
 context.window.CodexBoard.queueUpdated({items:[{cardID:"q1",position:1},{cardID:"q2",position:1}]});
-assert(body().includes("File Codex n°1")&&body().includes("File Claude Code n°1"),
+assert(body().includes("File Codex n°1")&&body().includes("File Claude n°1"),
        `La place en file ne nomme pas le moteur concerne : ${JSON.stringify(body().match(/File[^<"]{0,24}/g))}`);
 context.window.CodexBoard.queueUpdated({items:[{cardID:"q1",position:1,reason:"conversation"},{cardID:"q2",position:1,reason:"conversation"}]});
 assert(body().includes("Même conversation Codex en attente")&&body().includes("Même session Claude en attente"),
@@ -980,8 +983,8 @@ element("#workspace-header .header-primary-actions").innerHTML="";
 context.window.CodexBoard.menuAction({action:"toolsChat"});
 const utilityPanel=()=>element("#utility-panel");
 assert(utilityPanel().hidden===false,"Le menu macOS n'ouvre pas le panneau des outils.");
-assert(utilityPanel().innerHTML.includes('aria-label="Dossier de travail"')&&utilityPanel().innerHTML.includes("Claude Code"),"Le panneau droit ne propose pas le dossier et les deux moteurs.");
-assert(utilityPanel().innerHTML.includes('src="Brands/Codex-light.png"')&&utilityPanel().innerHTML.includes('src="Brands/Claude-Code.png"'),"Le selecteur du chat n affiche pas les logos Codex et Claude Code.");
+assert(utilityPanel().innerHTML.includes('aria-label="Dossier de travail"')&&utilityPanel().innerHTML.includes("Claude"),"Le panneau droit ne propose pas le dossier et les deux moteurs.");
+assert(utilityPanel().innerHTML.includes('src="Brands/OpenAI-black-monoblossom.svg"')&&utilityPanel().innerHTML.includes('src="Brands/Claude-orange.svg"'),"Le selecteur du chat n affiche pas les identifiants visuels documentes des moteurs.");
 assert(utilityPanel().innerHTML.includes('id="utility-chat-model"')&&utilityPanel().innerHTML.includes("GPT-5.6 Sol"),"Le chat direct ne permet pas de choisir son modèle.");
 assert(utilityPanel().innerHTML.includes('data-action="choose-utility-attachments"'),"Le compositeur du chat n'affiche pas le bouton pour joindre des fichiers.");
 assert(!utilityPanel().innerHTML.includes('id="utility-access-mode"')&&!utilityPanel().innerHTML.includes('class="utility-access"'),"Le chat direct affiche encore un choix d acces inutile.");

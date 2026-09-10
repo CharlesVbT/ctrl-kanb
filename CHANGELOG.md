@@ -13,7 +13,7 @@ Ce fichier suit les changements visibles de CTRL KANB. Le projet utilise une num
 ### Ajouté
 
 - hôte Windows Tauri 2 avec installateur NSIS, WebView2, PowerShell intégré et zone de notification ;
-- synchronisation et diagnostics distincts pour Codex et Claude Code ;
+- synchronisation et diagnostics distincts pour Codex et Claude ;
 - chat de projet avec modèles, pièces jointes et gestion des conversations ;
 - terminal et navigateur de fichiers dans le panneau droit ;
 - agenda Jour, Semaine et Mois avec fuseau horaire, premier jour de semaine, format horaire et projection des récurrences ;
@@ -24,7 +24,7 @@ Ce fichier suit les changements visibles de CTRL KANB. Le projet utilise une num
 ### Modifié
 
 - formulaires de tâches simplifiés avec options avancées conservées ;
-- files Codex et Claude Code séparées, avec sérialisation des tours d’une même conversation ;
+- files Codex et Claude séparées, avec sérialisation des tours d’une même conversation ;
 - barre latérale, Flux, Historique, Suivi, Réglages et panneau projet réorganisés ;
 - archivage et suppression accessibles depuis les vues où une tâche apparaît ;
 - détection des CLI adaptée aux installations graphiques macOS et aux emplacements natifs Windows.
