@@ -104,7 +104,30 @@ int main(int argc, const char *argv[]) { @autoreleasepool {
     BOOL conflictSafe=[remoteCard[@"title"]isEqual:@"Remote"]&&[NSFileManager.defaultManager fileExistsAtPath:BoardConflictPath()]&&
         [probe.events filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"event == 'boardSaveConflict'"]].count==1;
     if(!mergeSafe||!conflictSafe){fprintf(stderr,"concurrent board merge failed merge=%d conflict=%d\n",mergeSafe,conflictSafe);return 3;}
+
+    NSDictionary *beforeImport=@{ @"version":@22, @"spaces":@[@{ @"id":@"before", @"name":@"Avant" }], @"cards":@[], @"settings":@{}, @"modifiedAt":@"before-import" };
+    NSData *beforeImportData=[NSJSONSerialization dataWithJSONObject:beforeImport options:0 error:nil];
+    [beforeImportData writeToFile:dataFile atomically:YES];
+    NSError *importError=nil;NSString *importBackup=nil;
+    NSDictionary *future=@{ @"version":@999, @"spaces":@[], @"cards":@[] };
+    NSDictionary *refused=ReplaceBoardSnapshot(future,&importBackup,&importError);
+    BOOL futureSafe=!refused&&importError&&[[NSData dataWithContentsOfFile:dataFile] isEqualToData:beforeImportData];
+    importError=nil;
+    NSDictionary *malformed=@{ @"version":@22, @"spaces":@[@"not-a-project"], @"cards":@[] };
+    BOOL malformedSafe=!ReplaceBoardSnapshot(malformed,NULL,&importError)&&importError&&[[NSData dataWithContentsOfFile:dataFile] isEqualToData:beforeImportData];
+    importError=nil;importBackup=nil;
+    NSDictionary *replacement=@{ @"version":@18, @"spaces":@[@{ @"id":@"after", @"name":@"Après" }], @"cards":@[@{ @"id":@"restored-card", @"spaceID":@"after", @"title":@"Restaurée" }] };
+    NSDictionary *restored=ReplaceBoardSnapshot(replacement,&importBackup,&importError);
+    NSDictionary *onDisk=[NSJSONSerialization JSONObjectWithData:[NSData dataWithContentsOfFile:dataFile] options:0 error:nil];
+    NSDictionary *previousImport=[NSJSONSerialization JSONObjectWithData:[NSData dataWithContentsOfFile:BoardPreviousPath()] options:0 error:nil];
+    NSDictionary *safetyImport=[NSJSONSerialization JSONObjectWithData:[NSData dataWithContentsOfFile:importBackup] options:0 error:nil];
+    BOOL restoreSafe=restored&&!importError&&[onDisk[@"version"] integerValue]==22&&[onDisk[@"spaces"][0][@"id"] isEqual:@"after"]&&
+        [previousImport[@"spaces"][0][@"id"] isEqual:@"before"]&&[safetyImport[@"spaces"][0][@"id"] isEqual:@"before"]&&Permissions(importBackup)==0600;
+    NSMutableDictionary *starter=StarterBoard();
+    BOOL starterSafe=[starter[@"spaces"] count]==0&&[starter[@"cards"] count]==0;
+    if(!futureSafe||!malformedSafe||!restoreSafe||!starterSafe){fprintf(stderr,"backup restore failed future=%d malformed=%d restore=%d starter=%d\n",futureSafe,malformedSafe,restoreSafe,starterSafe);return 3;}
     puts("PASS liens symboliques et chemins restent dans leur périmètre");
     puts("PASS modifications application et CLI fusionnées sans perte silencieuse");
+    puts("PASS restauration validée, sauvegardée et premier lancement vide");
     return 0;
 } }

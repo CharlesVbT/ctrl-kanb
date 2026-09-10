@@ -12,7 +12,9 @@ L’application stocke son tableau, ses réglages, ses états de synchronisation
 
 Ces fichiers peuvent contenir des titres de tâches, des consignes, des réponses, des chemins de dossiers, des identifiants de conversation et des préférences. Le dossier et ses fichiers sont limités au compte macOS de l’utilisateur.
 
-Les sauvegardes `board.previous.json` et le journal `events.jsonl` restent dans ce même dossier. La suppression de l’application ne supprime pas automatiquement ces données.
+La sauvegarde courante `board.previous.json`, les copies créées avant restauration `board.before-import-*.json` et le journal `events.jsonl` restent dans ce même dossier. La suppression de l’application ne supprime pas automatiquement ces données.
+
+Un export JSON contient l’organisation complète, y compris les textes, historiques et chemins de projets ou de comptes configurés. Il ne copie pas le contenu des dossiers de projets ni les secrets de connexion gérés par Codex et Claude Code. Traitez donc tout export comme une donnée privée.
 
 ## Comptes Codex et Claude Code
 

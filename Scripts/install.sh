@@ -59,6 +59,18 @@ if command -v node >/dev/null 2>&1; then
       exit 1
     fi
   done
+  if [[ -d "$PROJECT_DIR/node_modules/jsdom" ]]; then
+    for suite in test-accessibility test-experience test-conversation test-sync test-resilience; do
+      if ! output="$(node "$PROJECT_DIR/Scripts/$suite.js" 2>&1)"; then
+        print -r -- ""
+        print -r -- "Le contrôle « $suite » a échoué ; rien n'a été installé." >&2
+        print -r -- "$output" | tail -20 >&2
+        exit 1
+      fi
+    done
+  else
+    print -r -- "  (tests de parcours étendus disponibles après npm ci)"
+  fi
   print -r -- "  tests passes"
 else
   print -r -- "  (node absent : tests d interface ignores)"

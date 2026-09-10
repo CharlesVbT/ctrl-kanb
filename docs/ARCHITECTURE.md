@@ -38,7 +38,7 @@ Pour chaque conversation liée, CTRL KANB appelle `thread/read` avec les tours. 
 
 ## Stockage
 
-Toutes les écritures utilisent un verrou `flock`, une sérialisation JSON validée, `NSDataWritingAtomic`, une copie `board.previous.json` et une ligne dans `events.jsonl`.
+Toutes les écritures utilisent un verrou `flock`, une sérialisation JSON validée, `NSDataWritingAtomic`, une copie `board.previous.json` et une ligne dans `events.jsonl`. Une restauration validée crée en plus une copie privée horodatée `board.before-import-*.json` avant de remplacer le tableau.
 
 Le verrou empêche deux écritures physiques simultanées. Le futur skill devra néanmoins relire le tableau juste avant chaque mutation pour éviter une modification fondée sur un état ancien.
 
