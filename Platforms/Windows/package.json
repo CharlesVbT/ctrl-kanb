@@ -2,6 +2,8 @@
   "name": "ctrl-kanb-windows-host",
   "version": "6.11.2",
   "private": true,
+  "author": "Charles VbT",
+  "license": "Apache-2.0",
   "scripts": {
     "dev": "tauri dev",
     "check": "cargo check --manifest-path src-tauri/Cargo.toml",

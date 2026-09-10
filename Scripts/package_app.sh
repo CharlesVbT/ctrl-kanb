@@ -35,6 +35,9 @@ APP_DIR="$PROJECT_DIR/dist/CTRL KANB.app"
 /bin/cp "$PROJECT_DIR/Resources/AppIcon.png" "$APP_DIR/Contents/Resources/AppIcon.png"
 /bin/cp "$PROJECT_DIR/Resources/AppIcon.icns" "$APP_DIR/Contents/Resources/AppIcon.icns"
 /bin/cp -R "$PROJECT_DIR/Resources/Brands" "$APP_DIR/Contents/Resources/Brands"
+/bin/cp "$PROJECT_DIR/LICENSE" "$APP_DIR/Contents/Resources/LICENSE"
+/bin/cp "$PROJECT_DIR/NOTICE" "$APP_DIR/Contents/Resources/NOTICE"
+/bin/cp "$PROJECT_DIR/THIRD_PARTY_NOTICES.md" "$APP_DIR/Contents/Resources/THIRD_PARTY_NOTICES.md"
 # Signature ad hoc : les binaires internes d abord, le bundle ensuite.
 # --deep est deprecie par Apple et ne signe pas dans le bon ordre.
 for binary in "$APP_DIR/Contents/Resources/ctrl-kanb" "$APP_DIR/Contents/Resources/ctrl-kanb-wake"; do

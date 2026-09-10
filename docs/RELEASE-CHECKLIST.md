@@ -53,7 +53,7 @@ npm --prefix Platforms/Windows run build
 
 ## Publication
 
-- choisir et ajouter la licence ;
+- vérifier la présence de `LICENSE`, `NOTICE` et des mentions tierces dans le dépôt et dans les paquets macOS/Windows ;
 - vérifier qu’aucune donnée personnelle, clé, jeton ou chemin privé n’est suivi par Git ;
 - mettre à jour la version et les notes de version ;
 - pour une application précompilée, signer avec Developer ID, notariser et vérifier le téléchargement sur un autre Mac ;

@@ -31,6 +31,11 @@
     "category": "Productivity",
     "shortDescription": "Piloter des tâches Codex et Claude Code",
     "longDescription": "Kanban, agenda et routines locales pour piloter Codex et Claude Code.",
+    "resources": {
+      "../../../LICENSE": "LICENSE",
+      "../../../NOTICE": "NOTICE",
+      "../../../THIRD_PARTY_NOTICES.md": "THIRD_PARTY_NOTICES.md"
+    },
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",

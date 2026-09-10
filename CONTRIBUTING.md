@@ -27,3 +27,7 @@ git status --short
 ```
 
 Les captures destinées à la documentation doivent utiliser exclusivement des projets, tâches, chemins et conversations fictifs.
+
+## Licence des contributions
+
+Sauf indication explicite, toute contribution volontairement proposée pour inclusion dans CTRL KANB est fournie sous les conditions de l’[Apache License 2.0](LICENSE), conformément à sa section 5. Un pseudonyme public et une adresse GitHub `noreply` peuvent être utilisés dans l’historique Git ; aucune identité civile n’est exigée dans le dépôt.

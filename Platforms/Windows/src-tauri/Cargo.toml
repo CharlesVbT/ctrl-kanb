@@ -2,7 +2,8 @@
 name = "ctrl-kanb-windows"
 version = "6.11.2"
 description = "Hôte Windows de CTRL KANB"
-authors = ["CTRL KANB contributors"]
+authors = ["Charles VbT"]
+license = "Apache-2.0"
 edition = "2024"
 rust-version = "1.85"
 

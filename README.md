@@ -188,4 +188,6 @@ Les deux hôtes réutilisent la même interface et le même format de données. 
 
 ## Licence
 
-Aucune licence open source n’est incluse pour le moment. Ajoutez une licence avant d’annoncer le projet comme logiciel libre ou d’accepter des contributions externes.
+CTRL KANB est imaginé et piloté par **Charles VbT**. Son code source original et sa documentation sont distribués sous [Apache License 2.0](LICENSE). Les conditions d’attribution figurent dans [NOTICE](NOTICE).
+
+Cette licence permet d’utiliser, modifier et redistribuer le projet, y compris dans un cadre commercial, sous réserve d’en conserver les mentions requises. Elle ne confère aucun droit sur les marques et ressources tierces répertoriées dans [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md), ni le droit de présenter une version modifiée comme une version officielle de CTRL KANB.
