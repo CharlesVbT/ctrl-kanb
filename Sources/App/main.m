@@ -319,6 +319,18 @@ static BOOL IsValidBoard(id object) {
     return [object isKindOfClass:NSDictionary.class] && [object[@"spaces"] isKindOfClass:NSArray.class] && [object[@"cards"] isKindOfClass:NSArray.class];
 }
 
+static BOOL IsValidBoardForImport(id object) {
+    if (!IsValidBoard(object)) return NO;
+    for (NSString *key in @[@"spaces",@"cards",@"utilityChats",@"templates",@"validations"]) {
+        id value=object[key];
+        if (!value) continue;
+        if (![value isKindOfClass:NSArray.class] || [value count] > 100000) return NO;
+        for (id item in value) if (![item isKindOfClass:NSDictionary.class]) return NO;
+    }
+    id settings=object[@"settings"];
+    return !settings || [settings isKindOfClass:NSDictionary.class];
+}
+
 static BOOL SameJSONValue(id left, id right) {
     if (!left && !right) return YES;
     return left && right && [left isEqual:right];
@@ -369,18 +381,69 @@ static void ReleaseBoardLock(int descriptor) {
     if (descriptor >= 0) { flock(descriptor, LOCK_UN); close(descriptor); }
 }
 
+static NSError *BoardTransferError(NSInteger code, NSString *message) {
+    return [NSError errorWithDomain:@"CTRLKANBTransfer" code:code userInfo:@{NSLocalizedDescriptionKey:message ?: @""}];
+}
+
+static NSString *BeforeImportBackupPath(void) {
+    NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
+    formatter.locale = [NSLocale localeWithLocaleIdentifier:@"en_US_POSIX"];
+    formatter.dateFormat = @"yyyyMMdd-HHmmss";
+    NSString *suffix=[UUIDString() substringToIndex:8];
+    NSString *name = [NSString stringWithFormat:@"board.before-import-%@-%@.json", [formatter stringFromDate:NSDate.date], suffix];
+    return [[BoardDataPath() stringByDeletingLastPathComponent] stringByAppendingPathComponent:name];
+}
+
+// Remplacement explicite, distinct de saveBoard: qui fusionne les changements
+// concurrents. La restauration conserve toujours l etat courant avant d ecrire.
+static NSDictionary *ReplaceBoardSnapshot(NSDictionary *imported, NSString **backupPath, NSError **error) {
+    if (!IsValidBoardForImport(imported)) {
+        if (error) *error=BoardTransferError(10,L(@"Ce fichier n’est pas une sauvegarde CTRL KANB valide.", @"This file is not a valid CTRL KANB backup."));
+        return nil;
+    }
+    NSNumber *version = [imported[@"version"] isKindOfClass:NSNumber.class] ? imported[@"version"] : @0;
+    if (version.integerValue > 22) {
+        if (error) *error=BoardTransferError(11,L(@"Cette sauvegarde vient d’une version plus récente de CTRL KANB.", @"This backup comes from a newer version of CTRL KANB."));
+        return nil;
+    }
+    int lock = AcquireBoardLock();
+    if (lock < 0) {
+        if (error) *error=BoardTransferError(12,L(@"Impossible de verrouiller les données avant la restauration.", @"The data could not be locked before restoring."));
+        return nil;
+    }
+    NSString *path=BoardDataPath(), *backup=BeforeImportBackupPath();
+    NSData *current=ReadRegularDataFile(path);
+    id currentObject=current ? [NSJSONSerialization JSONObjectWithData:current options:0 error:nil] : nil;
+    NSError *writeError=nil;
+    if (current.length && !WritePrivateDataFile(current,backup,&writeError)) {
+        ReleaseBoardLock(lock);
+        if (error) *error=writeError ?: BoardTransferError(13,L(@"La copie de sécurité n’a pas pu être créée.", @"The safety copy could not be created."));
+        return nil;
+    }
+    if (current.length && IsValidBoard(currentObject) && !WritePrivateDataFile(current,BoardPreviousPath(),&writeError)) {
+        ReleaseBoardLock(lock);
+        if (error) *error=writeError;
+        return nil;
+    }
+    NSMutableDictionary *snapshot=[imported mutableCopy];
+    snapshot[@"version"]=@22;
+    if (![snapshot[@"settings"] isKindOfClass:NSDictionary.class]) snapshot[@"settings"]=@{};
+    snapshot[@"modifiedAt"]=ISODate();
+    NSData *json=[NSJSONSerialization dataWithJSONObject:snapshot options:NSJSONWritingPrettyPrinted|NSJSONWritingSortedKeys error:&writeError];
+    if (!writeError && !WritePrivateDataFile(json,path,&writeError)) writeError=writeError ?: BoardTransferError(14,L(@"La sauvegarde n’a pas pu être restaurée.", @"The backup could not be restored."));
+    ReleaseBoardLock(lock);
+    if (writeError) { if (error) *error=writeError; return nil; }
+    if (backupPath) *backupPath=current.length ? backup : @"";
+    CachedLanguage=nil;CachedNotificationSettings=nil;
+    AppendBoardEvent(@{ @"type":@"board.imported", @"spaces":@([snapshot[@"spaces"] count]), @"cards":@([snapshot[@"cards"] count]) });
+    return snapshot;
+}
+
 static NSMutableDictionary *StarterBoard(void) {
-    NSString *home = NSHomeDirectory(), *now = ISODate();
-    NSString *primaryID = UUIDString();
-    NSArray *spaces = @[
-        [@{ @"id":primaryID, @"name":L(@"Mon premier projet", @"My first project"), @"rootPath":[home stringByAppendingPathComponent:@"Documents"], @"accentHex":@"6E75FF", @"createdAt":now } mutableCopy]
-    ];
-    NSArray *cards = @[
-        [@{ @"id":UUIDString(), @"spaceID":primaryID, @"boardPresetID":@"classic", @"title":L(@"Configurer mes espaces", @"Set up my projects"), @"prompt":L(@"Inspecte ce workspace et propose les trois premières tâches concrètes à ajouter au Kanban. Ne modifie aucun fichier.", @"Inspect this workspace and propose the first three concrete tasks to add to the board. Do not change any file."), @"status":@"ready", @"priority":@"normal", @"runMode":@"readOnly", @"createdAt":now, @"updatedAt":now } mutableCopy],
-        [@{ @"id":UUIDString(), @"spaceID":primaryID, @"boardPresetID":@"classic", @"title":L(@"Tester une tâche Codex", @"Try a Codex task"), @"prompt":L(@"Inspecte le projet, lis ses instructions locales et résume son état actuel ainsi que le prochain petit chantier utile. Ne modifie rien.", @"Inspect the project, read its local instructions and summarise its current state plus the next small useful piece of work. Change nothing."), @"status":@"backlog", @"priority":@"normal", @"runMode":@"readOnly", @"createdAt":now, @"updatedAt":now } mutableCopy],
-        [@{ @"id":UUIDString(), @"spaceID":primaryID, @"boardPresetID":@"classic", @"title":L(@"Préparer le pilotage par skill", @"Prepare skill-driven control"), @"prompt":L(@"Analyse les interfaces disponibles pour piloter ce Kanban depuis Codex et propose un contrat de commandes stable.", @"Review the available interfaces for driving this board from Codex and propose a stable command contract."), @"status":@"backlog", @"priority":@"normal", @"runMode":@"readOnly", @"createdAt":now, @"updatedAt":now } mutableCopy]
-    ];
-    return [@{ @"version":@22, @"spaces":spaces, @"cards":cards, @"utilityChats":@[], @"validations":@[], @"settings":@{ @"maxConcurrency":@2, @"maxConcurrencyCodex":@2, @"maxConcurrencyClaude":@1, @"autoSync":@YES, @"backgroundSchedulerEnabled":@NO, @"autoArchiveCompletedDays":@0, @"defaultModel":@"gpt-5.6-sol", @"defaultEffort":@"medium", @"defaultEffortCodex":@"medium", @"defaultEffortClaude":@"medium", @"sidebarCollapsed":@NO, @"defaultBoardPreset":@"classic", @"activePresetByScope":@{}, @"accounts":@[], @"activeAccount":@{}, @"accountChecks":@{}, @"conversationSyncChecks":@{}, @"agendaMode":@"week", @"agendaTimeZone":@"auto", @"agendaWeekStart":@"auto", @"agendaHourCycle":@"auto", @"theme":@"auto", @"themePalette":@"graphite", @"inAppNotifications":@"all", @"systemNotificationsEnabled":@YES, @"notificationWhen":@"background", @"notificationEvents":@{ @"taskComplete":@YES, @"taskFailed":@YES, @"approval":@YES, @"chatReply":@YES, @"scheduleIssue":@YES }, @"utilityPanelOpen":@NO, @"utilityPanelWidth":@390, @"utilityTab":@"chat", @"utilityAgent":@"codex", @"utilitySpaceID":@"", @"utilityCustomPath":@"" }, @"modifiedAt":now } mutableCopy];
+    NSString *now = ISODate();
+    // Un premier lancement doit appartenir a l utilisateur. Aucun dossier
+    // arbitraire ni aucune fausse tache ne sont injectes dans ses donnees.
+    return [@{ @"version":@22, @"spaces":@[], @"cards":@[], @"utilityChats":@[], @"validations":@[], @"settings":@{ @"maxConcurrency":@2, @"maxConcurrencyCodex":@2, @"maxConcurrencyClaude":@1, @"autoSync":@YES, @"backgroundSchedulerEnabled":@NO, @"autoArchiveCompletedDays":@0, @"defaultModel":@"gpt-5.6-sol", @"defaultEffort":@"medium", @"defaultEffortCodex":@"medium", @"defaultEffortClaude":@"medium", @"sidebarCollapsed":@NO, @"defaultBoardPreset":@"classic", @"activePresetByScope":@{}, @"accounts":@[], @"activeAccount":@{}, @"accountChecks":@{}, @"conversationSyncChecks":@{}, @"agendaMode":@"week", @"agendaTimeZone":@"auto", @"agendaWeekStart":@"auto", @"agendaHourCycle":@"auto", @"theme":@"auto", @"themePalette":@"graphite", @"inAppNotifications":@"all", @"systemNotificationsEnabled":@YES, @"notificationWhen":@"background", @"notificationEvents":@{ @"taskComplete":@YES, @"taskFailed":@YES, @"approval":@YES, @"chatReply":@YES, @"scheduleIssue":@YES }, @"utilityPanelOpen":@NO, @"utilityPanelWidth":@390, @"utilityTab":@"chat", @"utilityAgent":@"codex", @"utilitySpaceID":@"", @"utilityCustomPath":@"" }, @"modifiedAt":now } mutableCopy];
 }
 
 // Verrou de l application. L etat « verrouille » vit dans le trousseau, pas dans
@@ -435,6 +498,8 @@ static BOOL SetAppLockEnabled(BOOL enabled) {
 - (BOOL)shouldDeliverNotificationCategory:(NSString *)category card:(NSDictionary *)card;
 - (void)notifyTitle:(NSString *)title message:(NSString *)message category:(NSString *)category card:(NSDictionary *)card;
 - (void)sendCurrentBoardToWeb;
+- (void)exportBoard;
+- (void)importBoard;
 @end
 
 @implementation CodexBoardDelegate
@@ -694,6 +759,8 @@ static BOOL SetAppLockEnabled(BOOL enabled) {
     else if ([action isEqualToString:@"setAppearance"]) [self setInterfaceAppearance:[body[@"mode"] isKindOfClass:NSString.class] ? body[@"mode"] : @"light"];
     else if ([action isEqualToString:@"copyText"] && [body[@"text"] isKindOfClass:NSString.class]) { [NSPasteboard.generalPasteboard clearContents]; [NSPasteboard.generalPasteboard setString:body[@"text"] forType:NSPasteboardTypeString]; }
     else if ([action isEqualToString:@"chooseFolder"]) [self chooseFolder];
+    else if ([action isEqualToString:@"exportBoard"]) [self exportBoard];
+    else if ([action isEqualToString:@"importBoard"]) [self importBoard];
     else if ([action isEqualToString:@"chooseUtilityFolder"]) [self chooseUtilityFolder];
     else if ([action isEqualToString:@"chooseUtilityAttachments"]) [self chooseUtilityAttachments];
     else if ([action isEqualToString:@"setConcurrency"]) {
@@ -1247,6 +1314,53 @@ static BOOL SetAppLockEnabled(BOOL enabled) {
     panel.allowsMultipleSelection = NO;
     [panel beginSheetModalForWindow:self.window completionHandler:^(NSModalResponse result) {
         if (result == NSModalResponseOK && panel.URL.path) [self sendFunction:@"folderChosen" object:@{ @"path":panel.URL.path }];
+    }];
+}
+
+- (void)exportBoard {
+    NSDictionary *snapshot=[self loadBoard];
+    if (!IsValidBoard(snapshot)) { [self sendFunction:@"nativeError" object:@{ @"message":L(@"Les données actuelles ne peuvent pas être exportées.", @"The current data cannot be exported.") }]; return; }
+    NSSavePanel *panel=NSSavePanel.savePanel;
+    panel.allowedContentTypes=@[UTTypeJSON];
+    panel.canCreateDirectories=YES;
+    panel.title=L(@"Exporter une sauvegarde CTRL KANB", @"Export a CTRL KANB backup");
+    panel.prompt=L(@"Exporter", @"Export");
+    NSDateFormatter *formatter=[[NSDateFormatter alloc] init];formatter.locale=[NSLocale localeWithLocaleIdentifier:@"en_US_POSIX"];formatter.dateFormat=@"yyyy-MM-dd-HHmm";
+    panel.nameFieldStringValue=[NSString stringWithFormat:@"CTRL-KANB-backup-%@.json",[formatter stringFromDate:NSDate.date]];
+    [panel beginSheetModalForWindow:self.window completionHandler:^(NSModalResponse result) {
+        if (result!=NSModalResponseOK || !panel.URL) return;
+        NSError *error=nil;
+        NSData *json=[NSJSONSerialization dataWithJSONObject:snapshot options:NSJSONWritingPrettyPrinted|NSJSONWritingSortedKeys error:&error];
+        if (!error) [json writeToURL:panel.URL options:NSDataWritingAtomic error:&error];
+        if (error) [self sendFunction:@"nativeError" object:@{ @"message":error.localizedDescription ?: L(@"L’export a échoué.", @"Export failed.") }];
+        else [self sendFunction:@"boardExported" object:@{ @"path":panel.URL.path ?: @"" }];
+    }];
+}
+
+- (void)importBoard {
+    BOOL agentActivity = self.conversationClient.running || self.syncClient.running || self.detailClient.running;
+    if (self.runs.count || self.pendingRuns.count || self.terminals.count || agentActivity) {
+        [self sendFunction:@"nativeError" object:@{ @"message":L(@"Arrête les tâches, chats et terminaux actifs avant de restaurer une sauvegarde.", @"Stop active tasks, chats and terminals before restoring a backup.") }];
+        return;
+    }
+    NSOpenPanel *panel=NSOpenPanel.openPanel;
+    panel.allowedContentTypes=@[UTTypeJSON];
+    panel.canChooseFiles=YES;panel.canChooseDirectories=NO;panel.allowsMultipleSelection=NO;
+    panel.title=L(@"Restaurer une sauvegarde CTRL KANB", @"Restore a CTRL KANB backup");
+    panel.prompt=L(@"Restaurer", @"Restore");
+    [panel beginSheetModalForWindow:self.window completionHandler:^(NSModalResponse result) {
+        if (result!=NSModalResponseOK || !panel.URL) return;
+        NSError *error=nil;
+        NSNumber *fileSize=nil;
+        [panel.URL getResourceValue:&fileSize forKey:NSURLFileSizeKey error:&error];
+        if (!error && fileSize.unsignedLongLongValue > 32ULL*1024ULL*1024ULL) error=BoardTransferError(15,L(@"Cette sauvegarde dépasse la limite de 32 Mo.", @"This backup exceeds the 32 MB limit."));
+        NSData *data=!error ? [NSData dataWithContentsOfURL:panel.URL options:0 error:&error] : nil;
+        id imported=!error&&data ? [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingMutableContainers error:&error] : nil;
+        NSString *backupPath=nil;
+        NSDictionary *restored=!error ? ReplaceBoardSnapshot(imported,&backupPath,&error) : nil;
+        if (!restored) { [self sendFunction:@"nativeError" object:@{ @"message":error.localizedDescription ?: L(@"La restauration a échoué.", @"Restore failed.") }]; return; }
+        self.lastPresentedBoard=restored;
+        [self sendFunction:@"boardImported" object:@{ @"board":restored, @"message":backupPath.length ? L(@"Sauvegarde restaurée. L’état précédent a été conservé dans le dossier de données.", @"Backup restored. The previous state was kept in the data folder.") : L(@"Sauvegarde restaurée.", @"Backup restored.") }];
     }];
 }
 

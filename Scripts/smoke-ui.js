@@ -738,6 +738,23 @@ click({select:"global"});
 const sansProjet = body();
 assert(sansProjet.includes('data-action="add-space"'),"Sans projet, le premier pas ne propose pas d'en creer un.");
 assert(!sansProjet.includes('data-action="add-card"'),"Sans projet, le premier pas propose quand meme une tache.");
+assert(sansProjet.includes("sans exemple ni donnée imposée"),"Le premier lancement n'explique pas qu'il part de donnees vides.");
+assert(!sansProjet.includes("Configurer mes espaces")&&!sansProjet.includes("Tester une tâche Codex"),"Le premier lancement montre encore de fausses taches.");
+context.window.CodexBoard.agentStatus({codex:true,claude:false});
+assert(body().includes("Codex · détecté")&&body().includes("Claude Code · introuvable"),"Le premier lancement n'explique pas les agents detectes.");
+
+// Export et restauration restent des actions explicites. La restauration passe
+// par une confirmation avant d ouvrir le selecteur de fichier natif.
+load([card("t1","Carte","ready")]);
+click({select:"settingsView"});
+click({action:"export-data"});
+assert(bridgeMessages.at(-1)?.action==="exportBoard","Le bouton Exporter n appelle pas l export natif.");
+click({action:"confirm-import-data"});
+assert(modal().includes('id="import-data-form"')&&modal().includes('name="confirm"'),"La restauration ne demande pas de confirmation.");
+listeners.submit({target:{id:"import-data-form",dataset:{},formValues:{confirm:"on"}},preventDefault(){}});
+assert(bridgeMessages.at(-1)?.action==="importBoard","La restauration confirmee n ouvre pas le selecteur natif.");
+context.window.CodexBoard.boardExported({path:"/private/tmp/CTRL-KANB-backup.json"});
+assert(lastToast().includes("CTRL-KANB-backup.json"),"L export reussi n est pas confirme.");
 
 // Des qu une carte existe, le tableau reprend sa place.
 load([card("t1","Carte","ready")]);

@@ -47,6 +47,8 @@ La version actuelle constitue la première étape publique du projet. Elle fonct
 - synchronisation explicite des conversations Codex et Claude Code ;
 - comptes séparés par agent, sans copie des identifiants dans le tableau ;
 - thèmes clairs et sombres, palettes de couleurs et taille de police réglable ;
+- premier lancement guidé, sans projet ni tâche d’exemple imposés ;
+- export JSON et restauration avec copie de sécurité automatique ;
 - raccourcis macOS, palette de commandes avec `⌘ K` et panneaux redimensionnables ;
 - planificateur macOS facultatif, livré désactivé.
 
@@ -105,7 +107,7 @@ L’application produite localement utilise une signature ad hoc. Une distributi
 ## Première configuration
 
 1. Ajoutez un projet et choisissez son dossier.
-2. Ouvrez **Réglages → Agents et comptes**.
+2. Ouvrez **Réglages → Agents et modèles**, puis **Comptes** si vous utilisez plusieurs connexions.
 3. Vérifiez la disponibilité et la connexion de Codex et/ou Claude Code.
 4. Choisissez l’agent utilisé par défaut et le niveau d’effort souhaité.
 5. Créez une tâche dans **Classique** ou configurez une tâche dans **Routines**.
@@ -123,6 +125,8 @@ Les données de CTRL KANB restent dans :
 ```
 
 Le dépôt ne contient pas ce dossier. Les identifiants Codex et Claude Code restent dans les dossiers gérés par leurs outils respectifs. CTRL KANB ne contient aucun service de télémétrie et ne stocke pas de clé d’API dans son tableau.
+
+Dans **Réglages → Données**, vous pouvez exporter l’organisation complète dans un fichier JSON. Une restauration remplace les données visibles après confirmation et conserve automatiquement une copie privée de l’état précédent. L’export contient les briefs, résultats, historiques et chemins configurés dans l’application ; il ne contient ni les fichiers des projets ni les secrets de connexion gérés par les agents.
 
 Une consigne envoyée à Codex ou Claude Code suit ensuite les règles de confidentialité du service choisi. Consultez [PRIVACY.md](PRIVACY.md) pour le détail des données locales, des échanges externes et des journaux.
 
@@ -152,6 +156,7 @@ Documentation technique :
 - [Modèle de données](docs/DATA-MODEL.md)
 - [Moteur macOS facultatif](docs/BACKGROUND-ENGINE.md)
 - [Revue de l’interface](docs/UI-REVIEW.md)
+- [Contrôles avant publication](docs/RELEASE-CHECKLIST.md)
 - [Politique de sécurité](SECURITY.md)
 
 ## Limites connues
