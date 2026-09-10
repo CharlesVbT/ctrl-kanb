@@ -1,11 +1,11 @@
 // Run with jsdom 26.1.0 available on NODE_PATH (test dependency only).
 const fs=require('fs'),path=require('path'),assert=require('node:assert/strict');
 const {JSDOM,VirtualConsole}=require('jsdom');
-const root=path.join(__dirname,'..'),messages=[],errors=[];
+const root=path.join(__dirname,'..'),messages=[],errors=[],timers=[];
 const consoleSink=new VirtualConsole();consoleSink.on('jsdomError',error=>errors.push(error));
 const dom=new JSDOM(fs.readFileSync(path.join(root,'Resources/index.html'),'utf8'),{url:'https://ctrl-kanb.windows',runScripts:'outside-only',pretendToBeVisual:true,virtualConsole:consoleSink});
 const w=dom.window,d=w.document;
-w.structuredClone=structuredClone;w.setInterval=()=>0;w.setTimeout=()=>0;w.requestAnimationFrame=callback=>callback();
+w.structuredClone=structuredClone;w.setInterval=()=>0;w.setTimeout=(callback,delay)=>{timers.push({callback,delay});return timers.length};w.requestAnimationFrame=callback=>callback();
 w.CTRL_KANB_PLATFORM='windows';
 w.ctrlKanbNative={postMessage:message=>messages.push(structuredClone(message))};
 w.eval(fs.readFileSync(path.join(root,'Resources/i18n.js'),'utf8'));
@@ -23,6 +23,21 @@ w.CodexBoard.runnerFinished({cardID:'failed-card',success:false,exitCode:1,error
 assert.ok(d.querySelector('#board').textContent.includes('Limite d’usage atteinte pour Claude Code.'),'une limite d’usage doit être présentée clairement');
 assert.ok(!d.querySelector('#board').textContent.includes('status')&&!d.querySelector('#board').textContent.includes('Usage limit'),'le détail technique ne doit pas rester dans la carte');
 
+const timerStart=timers.length,past=new Date(Date.now()-60000).toISOString();
+w.CodexBoard.boardImported({board:{version:22,spaces:[state.spaces[0]],cards:[{...structuredClone(state.cards[0]),id:'imported-schedule',status:'queued',launchMode:'scheduled',scheduledAt:past,scheduleState:'pending',scheduleNextAttemptAt:past,recurrence:'weekly'}],utilityChats:[{id:'imported-chat',spaceID:'project',status:'running',executionState:'active',messages:[]}],templates:[],validations:[],settings:{...state.settings,backgroundSchedulerEnabled:true}},message:''});
+for(const timer of timers.slice(timerStart).filter(item=>item.delay===1000))timer.callback();
+const importedSave=messages.filter(message=>message.action==='save').at(-1)?.data;
+assert.equal(messages.some(message=>message.action==='run'&&message.cardID==='imported-schedule'),false,'une tâche importée ne doit jamais partir automatiquement');
+assert.equal(importedSave.settings.backgroundSchedulerEnabled,false,'le moteur de fond importé doit être désactivé');
+assert.equal(importedSave.cards[0].scheduleState,'paused','une programmation importée doit être mise en pause');
+assert.equal(importedSave.cards[0].recurrence,'weekly','la récurrence doit être conservée pour une reprise manuelle');
+assert.equal(importedSave.utilityChats[0].status,'ready','un chat importé ne doit pas rester marqué actif');
+
+w.CodexBoard.menuAction({action:'importData'});
+assert.ok(d.querySelector('#modal-root').textContent.includes('les tâches programmées seront restaurées en pause'),'la confirmation doit expliquer la neutralisation');
+click('[data-action="close-modal"]');
+
+w.CodexBoard.load(state);w.CodexBoard.securityStatus({lockEnabled:true,biometry:'Windows Hello'});w.CodexBoard.agentStatus({codex:true,claude:true});
 click('[data-select="settingsView"]');
 const settings=d.querySelector('#board').textContent;
 for(const expected of ['Notifications Windows','Protège l’accès à la fenêtre CTRL KANB sur ce PC.','Windows Hello','%LOCALAPPDATA%\\CTRL KANB Data\\board.json','Application Windows']) assert.ok(settings.includes(expected),expected);

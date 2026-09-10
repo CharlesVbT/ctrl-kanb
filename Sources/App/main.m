@@ -394,6 +394,46 @@ static NSString *BeforeImportBackupPath(void) {
     return [[BoardDataPath() stringByDeletingLastPathComponent] stringByAppendingPathComponent:name];
 }
 
+static NSMutableDictionary *NeutralizeImportedSnapshot(NSDictionary *imported) {
+    NSMutableDictionary *snapshot=[imported mutableCopy];
+    NSMutableDictionary *settings=[snapshot[@"settings"] isKindOfClass:NSDictionary.class] ? [snapshot[@"settings"] mutableCopy] : [NSMutableDictionary dictionary];
+    settings[@"backgroundSchedulerEnabled"]=@NO;
+    snapshot[@"settings"]=settings;
+
+    NSMutableArray *cards=[NSMutableArray array];
+    for (id value in [snapshot[@"cards"] isKindOfClass:NSArray.class] ? snapshot[@"cards"] : @[]) {
+        NSMutableDictionary *card=[value isKindOfClass:NSDictionary.class] ? [value mutableCopy] : nil;
+        if (!card) continue;
+        NSString *status=[card[@"status"] isKindOfClass:NSString.class] ? card[@"status"] : @"";
+        if ([status isEqualToString:@"queued"] || [status isEqualToString:@"running"]) card[@"status"]=@"ready";
+        [card removeObjectForKey:@"executionState"];
+        [card removeObjectForKey:@"pausedAt"];
+        BOOL scheduled=[card[@"launchMode"] isEqual:@"scheduled"];
+        BOOL finished=[status isEqualToString:@"done"] || [card[@"archived"] boolValue];
+        if (scheduled && !finished) {
+            card[@"scheduleState"]=@"paused";
+            card[@"scheduleNextAttemptAt"]=@"";
+            card[@"scheduleTriggeredAt"]=@"";
+            card[@"scheduleAttempts"]=@0;
+            card[@"scheduleNote"]=L(@"Programmation suspendue après restauration. Reprends-la quand tu l’as vérifiée.", @"Schedule paused after restoration. Resume it after you have reviewed it.");
+        }
+        [cards addObject:card];
+    }
+    snapshot[@"cards"]=cards;
+
+    NSMutableArray *chats=[NSMutableArray array];
+    for (id value in [snapshot[@"utilityChats"] isKindOfClass:NSArray.class] ? snapshot[@"utilityChats"] : @[]) {
+        NSMutableDictionary *chat=[value isKindOfClass:NSDictionary.class] ? [value mutableCopy] : nil;
+        if (!chat) continue;
+        NSString *status=[chat[@"status"] isKindOfClass:NSString.class] ? chat[@"status"] : @"";
+        if ([status isEqualToString:@"queued"] || [status isEqualToString:@"running"]) chat[@"status"]=@"ready";
+        [chat removeObjectForKey:@"executionState"];
+        [chats addObject:chat];
+    }
+    snapshot[@"utilityChats"]=chats;
+    return snapshot;
+}
+
 // Remplacement explicite, distinct de saveBoard: qui fusionne les changements
 // concurrents. La restauration conserve toujours l etat courant avant d ecrire.
 static NSDictionary *ReplaceBoardSnapshot(NSDictionary *imported, NSString **backupPath, NSError **error) {
@@ -425,9 +465,8 @@ static NSDictionary *ReplaceBoardSnapshot(NSDictionary *imported, NSString **bac
         if (error) *error=writeError;
         return nil;
     }
-    NSMutableDictionary *snapshot=[imported mutableCopy];
+    NSMutableDictionary *snapshot=NeutralizeImportedSnapshot(imported);
     snapshot[@"version"]=@22;
-    if (![snapshot[@"settings"] isKindOfClass:NSDictionary.class]) snapshot[@"settings"]=@{};
     snapshot[@"modifiedAt"]=ISODate();
     NSData *json=[NSJSONSerialization dataWithJSONObject:snapshot options:NSJSONWritingPrettyPrinted|NSJSONWritingSortedKeys error:&writeError];
     if (!writeError && !WritePrivateDataFile(json,path,&writeError)) writeError=writeError ?: BoardTransferError(14,L(@"La sauvegarde n’a pas pu être restaurée.", @"The backup could not be restored."));
@@ -1359,8 +1398,9 @@ static BOOL SetAppLockEnabled(BOOL enabled) {
         NSString *backupPath=nil;
         NSDictionary *restored=!error ? ReplaceBoardSnapshot(imported,&backupPath,&error) : nil;
         if (!restored) { [self sendFunction:@"nativeError" object:@{ @"message":error.localizedDescription ?: L(@"La restauration a échoué.", @"Restore failed.") }]; return; }
+        [self setBackgroundSchedulerEnabled:NO];
         self.lastPresentedBoard=restored;
-        [self sendFunction:@"boardImported" object:@{ @"board":restored, @"message":backupPath.length ? L(@"Sauvegarde restaurée. L’état précédent a été conservé dans le dossier de données.", @"Backup restored. The previous state was kept in the data folder.") : L(@"Sauvegarde restaurée.", @"Backup restored.") }];
+        [self sendFunction:@"boardImported" object:@{ @"board":restored, @"message":backupPath.length ? L(@"Sauvegarde restaurée. L’état précédent a été conservé. Les programmations sont en pause jusqu’à leur reprise manuelle.", @"Backup restored. The previous state was kept. Schedules are paused until you resume them manually.") : L(@"Sauvegarde restaurée. Les programmations sont en pause jusqu’à leur reprise manuelle.", @"Backup restored. Schedules are paused until you resume them manually.") }];
     }];
 }
 
