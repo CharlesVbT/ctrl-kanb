@@ -214,7 +214,7 @@ fn write(
 
 fn stop(payload: &Value, manager: &TerminalManager) -> Result<Vec<NativeMessage>, String> {
     let id = value(payload, "terminalID");
-    let Some(mut session) = manager
+    let Some(session) = manager
         .sessions
         .lock()
         .map_err(|_| "Le terminal est indisponible.")?
@@ -222,7 +222,9 @@ fn stop(payload: &Value, manager: &TerminalManager) -> Result<Vec<NativeMessage>
     else {
         return Ok(Vec::new());
     };
-    session.killer.kill().map_err(|error| error.to_string())?;
+    // Dropping the session stops its child before releasing ConPTY. The
+    // Windows backend can report os error 0 after a successful explicit kill.
+    drop(session);
     Ok(Vec::new())
 }
 
