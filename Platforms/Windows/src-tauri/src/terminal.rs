@@ -161,10 +161,18 @@ fn start(
     let wait_id = id.clone();
     let wait_sessions = manager.sessions.clone();
     thread::spawn(move || {
-        let (exit_code, status_message) = match child.wait() {
+        let (mut exit_code, mut status_message) = match child.wait() {
             Ok(status) => (status.exit_code() as i64, String::new()),
             Err(error) => (-1, error.to_string()),
         };
+        let stopped_by_user = wait_sessions
+            .lock()
+            .map(|sessions| !sessions.contains_key(&wait_id))
+            .unwrap_or(false);
+        if stopped_by_user {
+            exit_code = 0;
+            status_message.clear();
+        }
         emit(
             &wait_app,
             "terminalStopped",
