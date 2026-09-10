@@ -1,6 +1,8 @@
 (() => {
   const tauri = window.__TAURI__;
   if (!tauri?.core?.invoke) return;
+  window.CTRL_KANB_PLATFORM = "windows";
+  document.documentElement?.setAttribute?.("data-platform", "windows");
 
   const pending = [];
   const dispatch = message => {

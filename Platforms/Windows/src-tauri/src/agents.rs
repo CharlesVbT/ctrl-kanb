@@ -39,6 +39,7 @@ struct RunContext {
     card: Value,
     space: Value,
     mode: String,
+    auto_approve: bool,
     created: bool,
     force_new: bool,
     recovered: bool,
@@ -142,12 +143,36 @@ pub fn availability() -> Value {
     json!({"codex":executable("codex").is_some(),"claude":executable("claude-code").is_some()})
 }
 
+fn expanded_account_home(home: &str) -> PathBuf {
+    let value = home.trim();
+    for (token, variable) in [
+        ("%LOCALAPPDATA%", "LOCALAPPDATA"),
+        ("%USERPROFILE%", "USERPROFILE"),
+    ] {
+        if value
+            .get(..token.len())
+            .is_some_and(|prefix| prefix.eq_ignore_ascii_case(token))
+            && let Some(root) = env::var_os(variable)
+        {
+            return PathBuf::from(root).join(value[token.len()..].trim_start_matches(['/', '\\']));
+        }
+    }
+    if let Some(rest) = value
+        .strip_prefix("~/")
+        .or_else(|| value.strip_prefix("~\\"))
+        && let Some(root) = env::var_os("USERPROFILE").or_else(|| env::var_os("HOME"))
+    {
+        return PathBuf::from(root).join(rest);
+    }
+    PathBuf::from(value)
+}
+
 fn apply_account(command: &mut Command, engine: &str, home: &str) -> Result<(), String> {
     command.env_remove("CLAUDECODE");
     if home.trim().is_empty() {
         return Ok(());
     }
-    let path = PathBuf::from(home);
+    let path = expanded_account_home(home);
     fs::create_dir_all(&path).map_err(|error| error.to_string())?;
     command.env(
         if engine == "claude-code" {
@@ -184,6 +209,47 @@ fn request_root(app: &AppHandle, payload: &Value) -> Result<PathBuf, String> {
     let flat =
         json!({"spaceID":string(payload,"/space/id"),"rootPath":string(payload,"/space/rootPath")});
     platform::verified_root(app, &flat)
+}
+
+fn path_stays_in_project(raw: &str, root: &Path) -> bool {
+    let requested = Path::new(raw);
+    let candidate = if requested.is_absolute() {
+        requested.to_path_buf()
+    } else {
+        root.join(requested)
+    };
+    let Ok(root) = fs::canonicalize(root) else {
+        return false;
+    };
+    let Ok(candidate) = fs::canonicalize(candidate) else {
+        return false;
+    };
+    candidate == root || candidate.starts_with(root)
+}
+
+fn claude_read_input_stays_in_project(tool: &str, input: &Value, root: &Path) -> bool {
+    if tool == "Glob" {
+        let pattern = input.get("pattern").and_then(Value::as_str).unwrap_or("");
+        let pattern_path = Path::new(pattern);
+        if pattern.is_empty()
+            || pattern.starts_with('~')
+            || pattern_path.is_absolute()
+            || pattern_path
+                .components()
+                .any(|component| component == std::path::Component::ParentDir)
+        {
+            return false;
+        }
+    }
+    let key = if tool == "Read" { "file_path" } else { "path" };
+    let Some(raw) = input
+        .get(key)
+        .and_then(Value::as_str)
+        .filter(|value| !value.is_empty())
+    else {
+        return tool != "Read";
+    };
+    path_stays_in_project(raw, root)
 }
 
 fn active_counts(inner: &Inner, selected: &str) -> usize {
@@ -404,6 +470,10 @@ fn launch(manager: &AgentManager, payload: Value, app: &AppHandle) -> Result<(),
         card: payload["card"].clone(),
         space: payload["space"].clone(),
         mode: string(&payload, "/mode"),
+        auto_approve: payload
+            .get("autoApprove")
+            .and_then(Value::as_bool)
+            .unwrap_or(false),
         created: conversation(&payload).is_none(),
         force_new: payload
             .get("newConversation")
@@ -435,8 +505,8 @@ fn launch(manager: &AgentManager, payload: Value, app: &AppHandle) -> Result<(),
         );
     }
     emit(app, "runnerStarted", json!({"cardID":card_id}));
-    if selected == "codex" {
-        initialize_codex(&context)?;
+    let initialized = if selected == "codex" {
+        initialize_codex(&context)
     } else {
         if let Ok(ctx) = context.lock() {
             emit(
@@ -453,7 +523,17 @@ fn launch(manager: &AgentManager, payload: Value, app: &AppHandle) -> Result<(),
         send_line(
             &stdin,
             &json!({"type":"control_request","request_id":"ctrl-init","request":{"subtype":"initialize"}}),
-        )?;
+        )
+    };
+    if let Err(error) = initialized {
+        if let Ok(mut inner) = manager.inner.lock() {
+            inner.runs.remove(&card_id);
+        }
+        if let Ok(mut ctx) = context.lock() {
+            ctx.finished = true;
+        }
+        kill_process(pid);
+        return Err(error);
     }
 
     let reader_manager = manager.clone();
@@ -545,7 +625,12 @@ fn send_context(context: &Arc<Mutex<RunContext>>, value: &Value) -> Result<(), S
 fn start_codex_thread(context: &Arc<Mutex<RunContext>>) -> Result<(), String> {
     let ctx = context.lock().map_err(|_| "Agent indisponible.")?;
     let resume = !ctx.force_new && !ctx.thread_id.is_empty();
-    let mut params = json!({"cwd":ctx.space["rootPath"],"approvalPolicy":"on-request","approvalsReviewer":"user","sandbox":if ctx.mode=="workspaceWrite"{"workspace-write"}else{"read-only"}});
+    let reviewer = if ctx.auto_approve {
+        "auto_review"
+    } else {
+        "user"
+    };
+    let mut params = json!({"cwd":ctx.space["rootPath"],"approvalPolicy":"on-request","approvalsReviewer":reviewer,"sandbox":if ctx.mode=="workspaceWrite"{"workspace-write"}else{"read-only"}});
     if resume {
         params["threadId"] = json!(ctx.thread_id);
         params["excludeTurns"] = json!(true);
@@ -623,7 +708,12 @@ fn handle_codex(
             } else {
                 json!({"type":"readOnly","networkAccess":false})
             };
-            let mut params = json!({"threadId":ctx.thread_id,"input":[{"type":"text","text":ctx.card.get("prompt").and_then(Value::as_str).unwrap_or(""),"text_elements":[]}],"cwd":ctx.space["rootPath"],"approvalPolicy":"on-request","approvalsReviewer":"user","sandboxPolicy":sandbox});
+            let reviewer = if ctx.auto_approve {
+                "auto_review"
+            } else {
+                "user"
+            };
+            let mut params = json!({"threadId":ctx.thread_id,"input":[{"type":"text","text":ctx.card.get("prompt").and_then(Value::as_str).unwrap_or(""),"text_elements":[]}],"cwd":ctx.space["rootPath"],"approvalPolicy":"on-request","approvalsReviewer":reviewer,"sandboxPolicy":sandbox});
             if let Some(model) = ctx
                 .card
                 .get("model")
@@ -813,8 +903,31 @@ fn handle_claude(
         }
         if let Ok(mut ctx) = context.lock() {
             let request = message["request"].clone();
-            ctx.pending.insert(request_id.clone(), request.clone());
             let tool = string(message, "/request/tool_name");
+            let input = request.get("input").cloned().unwrap_or_else(|| json!({}));
+            if ctx.mode == "readOnly"
+                && (!["Read", "Glob", "Grep"].contains(&tool.as_str())
+                    || !claude_read_input_stays_in_project(
+                        &tool,
+                        &input,
+                        Path::new(ctx.space["rootPath"].as_str().unwrap_or("")),
+                    ))
+            {
+                let stdin = ctx.stdin.clone();
+                let card_id = ctx.card_id.clone();
+                drop(ctx);
+                let _ = send_line(
+                    &stdin,
+                    &json!({"type":"control_response","response":{"subtype":"success","request_id":request_id,"response":{"behavior":"deny","message":"Lecture refusée : le chemin demandé sort du dossier du projet."}}}),
+                );
+                emit(
+                    app,
+                    "runnerEvent",
+                    json!({"cardID":card_id,"message":"Lecture refusée : le chemin demandé sort du dossier du projet."}),
+                );
+                return;
+            }
+            ctx.pending.insert(request_id.clone(), request.clone());
             let question = tool == "AskUserQuestion";
             let kind = if question {
                 "input"
@@ -826,7 +939,7 @@ fn handle_claude(
             emit(
                 app,
                 "approvalRequested",
-                json!({"cardID":ctx.card_id,"requestID":request_id,"kind":kind,"params":{"cwd":ctx.space["rootPath"],"tool":tool,"input":request["input"],"questions":request["input"]["questions"]},"agentEngine":"claude-code","mode":ctx.mode,"threadID":ctx.thread_id}),
+                json!({"cardID":ctx.card_id,"requestID":request_id,"kind":kind,"params":{"cwd":ctx.space["rootPath"],"tool":tool,"input":input,"questions":request["input"]["questions"]},"agentEngine":"claude-code","mode":ctx.mode,"threadID":ctx.thread_id}),
             );
         }
     } else if kind == "control_cancel_request" {
@@ -880,9 +993,17 @@ fn finish(
     } else {
         return;
     };
-    if let Ok(mut inner) = manager.inner.lock() {
-        inner.runs.remove(&card_id);
+    let pid = if let Ok(mut inner) = manager.inner.lock() {
+        let pid = inner.runs.remove(&card_id).map(|run| run.pid);
         inner.starting.remove(&card_id);
+        pid
+    } else {
+        None
+    };
+    if let Some(pid) = pid {
+        // Codex App Server reste sinon en attente sur stdin après la fin du tour.
+        // Fermer tout l'arbre évite les auteurs fantômes et libère la conversation.
+        kill_process(pid);
     }
     let mut result = json!({"cardID":card_id,"success":success,"exitCode":if success{0}else{1},"threadID":thread_id,"summary":summary});
     if let Some(error) = error.filter(|v| !v.is_empty()) {
@@ -1154,21 +1275,20 @@ fn probe(payload: &Value, app: &AppHandle) -> Result<Vec<NativeMessage>, String>
     thread::spawn(move || {
         let mut command = Command::new(path);
         if engine_name == "claude-code" {
-            command
-                .args([
-                    "--print",
-                    "--output-format",
-                    "json",
-                    "--model",
-                    "haiku",
-                    "--disable-slash-commands",
-                    "--strict-mcp-config",
-                    "--mcp-config",
-                    "{\"mcpServers\":{}}",
-                    "--tools",
-                    "",
-                ])
-                .stdin(Stdio::piped());
+            command.args([
+                "--print",
+                "--output-format",
+                "json",
+                "--model",
+                "haiku",
+                "--disable-slash-commands",
+                "--strict-mcp-config",
+                "--mcp-config",
+                "{\"mcpServers\":{}}",
+                "--tools",
+                "",
+                "Reponds uniquement par le mot pong.",
+            ]);
         } else {
             command.args([
                 "exec",
@@ -1266,4 +1386,59 @@ pub fn handle(
         "agentLogin" => login(payload),
         _ => return None,
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn payload(id: &str, conversation: &str) -> Value {
+        json!({
+            "card":{"id":id,"agentEngine":"claude-code","conversationID":conversation},
+            "space":{"id":"space","rootPath":"C:\\workspace"}
+        })
+    }
+
+    #[test]
+    fn a_conversation_stays_sequential_while_other_sessions_can_start() {
+        let mut inner = Inner {
+            runs: HashMap::new(),
+            starting: HashMap::new(),
+            queue: VecDeque::new(),
+            max_codex: 2,
+            max_claude: 2,
+        };
+        inner.starting.insert(
+            "first".into(),
+            ("claude-code".into(), Some("claude-code:session-a".into())),
+        );
+        assert!(!can_start(&inner, &payload("second", "session-a")));
+        assert!(can_start(&inner, &payload("third", "session-b")));
+    }
+
+    #[test]
+    fn claude_read_only_rejects_paths_outside_the_project() {
+        let root = env::temp_dir().join(format!("ctrl-kanb-agent-test-{}", Uuid::new_v4()));
+        let outside = env::temp_dir().join(format!("ctrl-kanb-outside-{}", Uuid::new_v4()));
+        fs::create_dir_all(&root).unwrap();
+        fs::write(root.join("inside.txt"), "ok").unwrap();
+        fs::write(&outside, "no").unwrap();
+        assert!(claude_read_input_stays_in_project(
+            "Read",
+            &json!({"file_path":root.join("inside.txt")}),
+            &root,
+        ));
+        assert!(!claude_read_input_stays_in_project(
+            "Read",
+            &json!({"file_path":outside}),
+            &root,
+        ));
+        assert!(!claude_read_input_stays_in_project(
+            "Glob",
+            &json!({"pattern":"../outside/**"}),
+            &root,
+        ));
+        let _ = fs::remove_file(&outside);
+        let _ = fs::remove_dir_all(&root);
+    }
 }
