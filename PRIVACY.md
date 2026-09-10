@@ -1,6 +1,6 @@
 # Confidentialité
 
-CTRL KANB est une application macOS locale. Ce document décrit les données qu’elle conserve et les situations dans lesquelles un contenu quitte le Mac.
+CTRL KANB est une application locale. La version distribuable actuelle cible macOS et une préversion Windows est en préparation. Ce document décrit les données qu’elle conserve et les situations dans lesquelles un contenu quitte l’ordinateur.
 
 ## Données enregistrées localement
 
@@ -10,7 +10,13 @@ L’application stocke son tableau, ses réglages, ses états de synchronisation
 ~/Library/Application Support/CTRL KANB/
 ```
 
-Ces fichiers peuvent contenir des titres de tâches, des consignes, des réponses, des chemins de dossiers, des identifiants de conversation et des préférences. Le dossier et ses fichiers sont limités au compte macOS de l’utilisateur.
+La préversion Windows utilise :
+
+```text
+%LOCALAPPDATA%\CTRL KANB Data\
+```
+
+Ces fichiers peuvent contenir des titres de tâches, des consignes, des réponses, des chemins de dossiers, des identifiants de conversation et des préférences. Le dossier et ses fichiers sont limités au compte de l’utilisateur du système.
 
 La sauvegarde courante `board.previous.json`, les copies créées avant restauration `board.before-import-*.json` et le journal `events.jsonl` restent dans ce même dossier. La suppression de l’application ne supprime pas automatiquement ces données.
 

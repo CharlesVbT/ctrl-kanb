@@ -84,7 +84,7 @@ const fireInterval = delay => { for (const entry of intervals) if (entry.delay =
 let checks = 0;
 const assert = (condition,message) => {checks += 1; if(!condition)throw new Error(message);};
 const occurrences = (value,fragment) => (value.match(new RegExp(fragment,"g"))||[]).length;
-const stylesheet = fs.readFileSync(`${__dirname}/../Resources/app.css`,"utf8");
+const stylesheet = fs.readFileSync(`${__dirname}/../Resources/app.css`,"utf8").replace(/\r\n?/g,"\n");
 const actionColor = stylesheet.match(/--action-primary:(#[0-9a-f]{6})/i)?.[1];
 const actionInk = stylesheet.match(/--action-primary-ink:(#[0-9a-f]{6})/i)?.[1];
 const darkThemeBlock=stylesheet.match(/:root\[data-theme="dark"\]\{([\s\S]*?)\n\}/)?.[1]||"";

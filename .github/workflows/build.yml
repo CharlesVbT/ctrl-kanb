@@ -40,3 +40,33 @@ jobs:
           sleep 8
           pgrep -x "CTRL KANB" > /dev/null
           pkill -x "CTRL KANB" || true
+
+  windows:
+    runs-on: windows-latest
+    steps:
+      - name: Récupérer les sources
+        uses: actions/checkout@v4
+
+      - name: Préparer Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Contrôler l’interface partagée
+        shell: pwsh
+        run: |
+          npm ci
+          npm run test:static
+          npm run test:ui
+
+      - name: Contrôler l’hôte Windows
+        shell: pwsh
+        run: |
+          rustup default stable-msvc
+          npm ci --prefix Platforms/Windows
+          npm --prefix Platforms/Windows run check
+
+      - name: Construire l’installateur Windows
+        shell: pwsh
+        run: npm --prefix Platforms/Windows run build
