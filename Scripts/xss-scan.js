@@ -76,6 +76,7 @@ const modal = () => element("#modal-root").innerHTML;
 // ---------------------------------------------------------------------------
 const PAYLOAD = `<img src=x onerror=INJECTION>`;
 const BREAKOUT = `" onmouseover=INJECTION x="`;
+const CSS_PAYLOAD = `fff;display:none`;
 const poison = field => `${field}${PAYLOAD}${BREAKOUT}`;
 
 const iso2 = offset => new Date(Date.now()+offset*86400000).toISOString();
@@ -83,7 +84,7 @@ const badSpace = {id:"space-1", name:poison("Projet"), rootPath:poison("/tmp/p")
 const badPriorities = [{id:"urgent",name:poison("Urgente"),code:"U",color:"E5525E",weight:0},
                        {id:"normal",name:poison("Normale"),code:"N",color:"6E75FF",weight:1}];
 const badTaxonomy = [{id:"objective",name:poison("Objectif"),kind:"objective",multiple:false,
-  values:[{id:"v1",name:poison("Valeur"),color:"6E75FF"}]}];
+  values:[{id:"v1",name:poison("Valeur"),color:CSS_PAYLOAD}]}];
 
 const badCard = (id,status,extra={}) => ({
   id, spaceID:"space-1", boardPresetID:"classic", title:poison("Tache"), prompt:poison("Consigne"),
@@ -152,6 +153,7 @@ for (const [label, html] of surfaces) {
   const raw = [...html.matchAll(/<img src=x onerror=INJECTION>|" onmouseover=INJECTION x="/g)];
   if (raw.length) { leaks += raw.length; console.log(`FUITE  ${label} — ${raw.length} occurrence(s) non echappee(s)`); }
   else console.log(`ok     ${label}`);
+  if (html.includes(`#${CSS_PAYLOAD}`)) { leaks += 1; console.log(`FUITE CSS  ${label} — couleur non valide injectee`); }
 }
 console.log(`\n${leaks} injection(s) exploitables sur ${surfaces.length} surfaces`);
 process.exit(leaks ? 1 : 0);

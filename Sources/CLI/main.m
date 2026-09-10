@@ -2,6 +2,8 @@
 #import <sys/file.h>
 #import <fcntl.h>
 #import <unistd.h>
+#import <sys/stat.h>
+#import <errno.h>
 
 static NSString *DataPath(void) {
     NSString *override = NSProcessInfo.processInfo.environment[@"CTRL_KANB_DATA_FILE"];
@@ -10,11 +12,32 @@ static NSString *DataPath(void) {
     return [support stringByAppendingPathComponent:@"CTRL KANB/board.json"];
 }
 
-static int LockData(void) {
+static BOOL EnsurePrivateDataDirectory(void) {
     NSString *folder = DataPath().stringByDeletingLastPathComponent;
-    [NSFileManager.defaultManager createDirectoryAtPath:folder withIntermediateDirectories:YES attributes:@{ NSFilePosixPermissions:@(0700) } error:nil];
+    struct stat info;
+    if (lstat(folder.fileSystemRepresentation, &info) != 0) {
+        if (errno != ENOENT || ![NSFileManager.defaultManager createDirectoryAtPath:folder withIntermediateDirectories:YES attributes:@{ NSFilePosixPermissions:@(0700) } error:nil]) return NO;
+        if (lstat(folder.fileSystemRepresentation, &info) != 0) return NO;
+    }
+    if (!S_ISDIR(info.st_mode) || S_ISLNK(info.st_mode)) return NO;
+    return chmod(folder.fileSystemRepresentation, 0700) == 0;
+}
+
+static BOOL RegularFileOrMissing(NSString *path) {
+    struct stat info;
+    if (lstat(path.fileSystemRepresentation, &info) != 0) return errno == ENOENT;
+    return S_ISREG(info.st_mode) && !S_ISLNK(info.st_mode);
+}
+
+static BOOL SecureRegularFile(NSString *path) {
+    struct stat info;
+    return lstat(path.fileSystemRepresentation, &info) == 0 && S_ISREG(info.st_mode) && chmod(path.fileSystemRepresentation, 0600) == 0;
+}
+
+static int LockData(void) {
+    if (!EnsurePrivateDataDirectory()) return -1;
     NSString *lockPath = [DataPath() stringByAppendingString:@".lock"];
-    int descriptor = open(lockPath.fileSystemRepresentation, O_CREAT | O_RDWR, 0600);
+    int descriptor = open(lockPath.fileSystemRepresentation, O_CREAT | O_RDWR | O_NOFOLLOW, 0600);
     if (descriptor >= 0 && flock(descriptor, LOCK_EX) != 0) { close(descriptor); return -1; }
     return descriptor;
 }
@@ -22,26 +45,23 @@ static int LockData(void) {
 static void UnlockData(int descriptor) { if (descriptor >= 0) { flock(descriptor, LOCK_UN); close(descriptor); } }
 
 static NSMutableDictionary *LoadBoard(void) {
-    int lock = LockData();
+    if (!RegularFileOrMissing(DataPath())) return nil;
     NSData *data = [NSData dataWithContentsOfFile:DataPath()];
     NSMutableDictionary *board = data ? [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingMutableContainers error:nil] : nil;
-    UnlockData(lock);
     return board;
 }
 
 static BOOL SaveBoard(NSMutableDictionary *board) {
     NSString *path = DataPath();
-    int lock = LockData();
-    if (lock < 0) return NO;
+    NSString *previous = [[path stringByDeletingPathExtension] stringByAppendingString:@".previous.json"];
+    if (!RegularFileOrMissing(path) || !RegularFileOrMissing(previous)) return NO;
     board[@"modifiedAt"] = [[NSISO8601DateFormatter new] stringFromDate:[NSDate date]];
     board[@"version"] = @22;
     NSData *data = [NSJSONSerialization dataWithJSONObject:board options:NSJSONWritingPrettyPrinted | NSJSONWritingSortedKeys error:nil];
     NSData *current = [NSData dataWithContentsOfFile:path];
-    NSString *previous = [[path stringByDeletingPathExtension] stringByAppendingString:@".previous.json"];
-    if (current) { [current writeToFile:previous options:NSDataWritingAtomic error:nil]; [NSFileManager.defaultManager setAttributes:@{ NSFilePosixPermissions:@(0600) } ofItemAtPath:previous error:nil]; }
+    if (current && (![current writeToFile:previous options:NSDataWritingAtomic error:nil] || !SecureRegularFile(previous))) return NO;
     BOOL success = [data writeToFile:path options:NSDataWritingAtomic error:nil];
-    if (success) [NSFileManager.defaultManager setAttributes:@{ NSFilePosixPermissions:@(0600) } ofItemAtPath:path error:nil];
-    UnlockData(lock);
+    if (success) success = SecureRegularFile(path);
     return success;
 }
 
@@ -94,12 +114,22 @@ static void Help(void) {
 int main(int argc, const char *argv[]) {
     @autoreleasepool {
         NSMutableArray<NSString *> *args = [NSMutableArray array];
-        for (int i = 1; i < argc; i++) [args addObject:[NSString stringWithUTF8String:argv[i]]];
+        for (int i = 1; i < argc; i++) {
+            NSString *argument = [NSString stringWithUTF8String:argv[i]];
+            if (!argument) { fputs("Erreur : un argument n'est pas en UTF-8 valide.\n", stderr); return 1; }
+            [args addObject:argument];
+        }
         NSString *command = args.firstObject;
         if (!command || [@[@"help", @"--help", @"-h"] containsObject:command]) { Help(); return 0; }
         if ([command isEqualToString:@"data-path"]) { puts(DataPath().UTF8String); return 0; }
-        NSMutableDictionary *board = LoadBoard();
-        if (!board) { fputs("Erreur : lance d'abord CTRL KANB pour initialiser les données.\n", stderr); return 1; }
+        // Une commande d'ecriture est une transaction complete. Garder le meme
+        // verrou de la lecture jusqu'a la sauvegarde evite que deux CLI partent
+        // du meme tableau et s'ecrasent silencieusement.
+        int dataLock = LockData();
+        if (dataLock < 0) { fputs("Erreur : impossible de verrouiller les données.\n", stderr); return 1; }
+        @try {
+            NSMutableDictionary *board = LoadBoard();
+            if (!board) { fputs("Erreur : lance d'abord CTRL KANB pour initialiser les données.\n", stderr); return 1; }
 
         if ([command isEqualToString:@"spaces"]) {
             for (NSDictionary *space in board[@"spaces"]) printf("%.8s\t%s\t%s\n", [space[@"id"] UTF8String], [space[@"name"] UTF8String], [space[@"rootPath"] UTF8String]);
@@ -195,6 +225,9 @@ int main(int argc, const char *argv[]) {
         } else {
             fputs("Erreur : commande inconnue ou incomplète. Utilise ctrl-kanb help.\n", stderr);
             return 1;
+            }
+        } @finally {
+            UnlockData(dataLock);
         }
     }
     return 0;

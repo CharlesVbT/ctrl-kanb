@@ -3,6 +3,7 @@
 #import <fcntl.h>
 #import <unistd.h>
 #import <errno.h>
+#import <sys/stat.h>
 
 static NSString *EnvValue(NSString *name) {
     NSDictionary *env = NSProcessInfo.processInfo.environment;
@@ -21,9 +22,27 @@ static NSString *SchedulerStatusPath(void) {
     return [[BoardDataPath() stringByDeletingLastPathComponent] stringByAppendingPathComponent:@"scheduler-status.json"];
 }
 
+static BOOL EnsurePrivateDataDirectory(void) {
+    NSString *folder = BoardDataPath().stringByDeletingLastPathComponent;
+    struct stat info;
+    if (lstat(folder.fileSystemRepresentation, &info) != 0) {
+        if (errno != ENOENT || ![NSFileManager.defaultManager createDirectoryAtPath:folder withIntermediateDirectories:YES attributes:@{ NSFilePosixPermissions:@(0700) } error:nil]) return NO;
+        if (lstat(folder.fileSystemRepresentation, &info) != 0) return NO;
+    }
+    if (!S_ISDIR(info.st_mode) || S_ISLNK(info.st_mode)) return NO;
+    return chmod(folder.fileSystemRepresentation, 0700) == 0;
+}
+
+static BOOL RegularFileOrMissing(NSString *path) {
+    struct stat info;
+    if (lstat(path.fileSystemRepresentation, &info) != 0) return errno == ENOENT;
+    return S_ISREG(info.st_mode) && !S_ISLNK(info.st_mode);
+}
+
 static BOOL ApplicationProcessIsRunning(void) {
+    if (!EnsurePrivateDataDirectory()) return [NSRunningApplication runningApplicationsWithBundleIdentifier:@"app.ctrlkanb.macos"].count > 0;
     NSString *lockPath = [[BoardDataPath() stringByDeletingLastPathComponent] stringByAppendingPathComponent:@"engine.lock"];
-    int descriptor = open(lockPath.fileSystemRepresentation, O_CREAT | O_RDWR, 0600);
+    int descriptor = open(lockPath.fileSystemRepresentation, O_CREAT | O_RDWR | O_NOFOLLOW, 0600);
     if (descriptor < 0) return [NSRunningApplication runningApplicationsWithBundleIdentifier:@"app.ctrlkanb.macos"].count > 0;
     if (flock(descriptor, LOCK_EX | LOCK_NB) != 0) {
         close(descriptor);
@@ -46,12 +65,18 @@ static void WriteStatus(NSString *state, NSString *message, NSError *error) {
     } mutableCopy];
     if (error.localizedDescription.length) status[@"error"] = error.localizedDescription;
     NSString *folder = SchedulerStatusPath().stringByDeletingLastPathComponent;
-    [NSFileManager.defaultManager createDirectoryAtPath:folder withIntermediateDirectories:YES attributes:nil error:nil];
+    if (!EnsurePrivateDataDirectory()) return;
+    if (!RegularFileOrMissing(SchedulerStatusPath())) return;
     NSData *json = [NSJSONSerialization dataWithJSONObject:status options:NSJSONWritingPrettyPrinted | NSJSONWritingSortedKeys error:nil];
-    [json writeToFile:SchedulerStatusPath() options:NSDataWritingAtomic error:nil];
+    if (![json writeToFile:SchedulerStatusPath() options:NSDataWritingAtomic error:nil]) return;
+    struct stat statusInfo;
+    if (lstat(SchedulerStatusPath().fileSystemRepresentation, &statusInfo) == 0 && S_ISREG(statusInfo.st_mode))
+        chmod(SchedulerStatusPath().fileSystemRepresentation, 0600);
 }
 
 static NSDictionary *LoadBoard(void) {
+    if (!EnsurePrivateDataDirectory()) return nil;
+    if (!RegularFileOrMissing(BoardDataPath())) return nil;
     NSData *data = [NSData dataWithContentsOfFile:BoardDataPath()];
     id object = data ? [NSJSONSerialization JSONObjectWithData:data options:0 error:nil] : nil;
     return [object isKindOfClass:NSDictionary.class] ? object : nil;

@@ -20,9 +20,13 @@ with tempfile.TemporaryDirectory(prefix='ctrl-kanb-native-test-') as tmp:
   if found:
    assert snapshot['preview']=='Réponse Claude relue' and snapshot['cwd']=='/private/tmp/projet',snapshot
   print('PASS',name)
- cases=[('model and effort',{'TEST_MODEL':'opus','TEST_EFFORT':'xhigh'}),('permission accept',{}),('permission refuse',{'TEST_DECISION':'decline'}),('readonly blocks write',{'TEST_MODE':'readOnly'}),('question',{'TEST_QUESTION':'1'}),('resume',{'TEST_SESSION':'87654321-1234-4234-8234-123456789abc'}),('process failure',{'TEST_CRASH':'1'}),('cancel',{'TEST_STOP':'1'}),('bad session',{'TEST_SESSION':'invalid'})]
+ project_root=pathlib.Path(tmp)/'workspace';project_root.mkdir();inside=project_root/'inside.txt';inside.write_text('inside')
+ outside=pathlib.Path(tmp)/'outside.txt';outside.write_text('outside')
+ board_file=pathlib.Path(tmp)/'board.json'
+ board_file.write_text(json.dumps({'version':22,'spaces':[{'id':'test-space','name':'Projet test','rootPath':str(project_root)}],'cards':[],'settings':{}},ensure_ascii=False))
+ cases=[('model and effort',{'TEST_MODEL':'opus','TEST_EFFORT':'xhigh'}),('permission accept',{}),('permission refuse',{'TEST_DECISION':'decline'}),('readonly blocks write',{'TEST_MODE':'readOnly'}),('readonly allows project read',{'TEST_MODE':'readOnly','TEST_CWD':str(project_root),'TEST_READ_PATH':str(inside)}),('readonly blocks outside read',{'TEST_MODE':'readOnly','TEST_CWD':str(project_root),'TEST_READ_PATH':str(outside),'TEST_EXPECT_DENY':'1'}),('readonly blocks escaping glob',{'TEST_MODE':'readOnly','TEST_CWD':str(project_root),'TEST_GLOB_PATTERN':'../outside/**','TEST_EXPECT_DENY':'1'}),('question',{'TEST_QUESTION':'1'}),('resume',{'TEST_SESSION':'87654321-1234-4234-8234-123456789abc'}),('process failure',{'TEST_CRASH':'1'}),('cancel',{'TEST_STOP':'1'}),('bad session',{'TEST_SESSION':'invalid'})]
  for name,extra in cases:
-  env={**os.environ,'CTRL_KANB_CLAUDE_EXECUTABLE':str(p/'Tests/fake-claude.py'),**extra}
+  env={**os.environ,'CTRL_KANB_CLAUDE_EXECUTABLE':str(p/'Tests/fake-claude.py'),'CTRL_KANB_DATA_FILE':str(board_file),'TEST_CWD':str(project_root),**extra}
   run=subprocess.run([str(binary)],env=env,capture_output=True,text=True,timeout=20,check=True)
   result=json.loads(run.stdout);assert result['complete'],name
   associations=[x['data'] for x in result['events'] if x['event']=='conversationAssociated']
@@ -40,7 +44,7 @@ with tempfile.TemporaryDirectory(prefix='ctrl-kanb-native-test-') as tmp:
   ('same Claude session stays sequential',{'TEST_QUEUE_PAIR':'1','TEST_SESSION':'87654321-1234-4234-8234-123456789abc'},'sequential'),
  ]
  for name,extra,mode in pair_cases:
-  env={**os.environ,'CTRL_KANB_CLAUDE_EXECUTABLE':str(p/'Tests/fake-claude.py'),**extra}
+  env={**os.environ,'CTRL_KANB_CLAUDE_EXECUTABLE':str(p/'Tests/fake-claude.py'),'CTRL_KANB_DATA_FILE':str(board_file),'TEST_CWD':str(project_root),**extra}
   run=subprocess.run([str(binary)],env=env,capture_output=True,text=True,timeout=20,check=True)
   result=json.loads(run.stdout);assert result['complete'],name
   lifecycle=[(x['event'],x['data'].get('cardID')) for x in result['events'] if x['event'] in ['runnerStarted','runnerFinished']]
@@ -50,4 +54,4 @@ with tempfile.TemporaryDirectory(prefix='ctrl-kanb-native-test-') as tmp:
   if mode=='parallel':assert starts[1]<finishes[0],(name,lifecycle)
   else:assert starts[0]<finishes[0]<starts[1]<finishes[1],(name,lifecycle)
   print('PASS',name)
- print('13 native scenarios passed')
+ print('16 native scenarios passed')

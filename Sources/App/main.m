@@ -6,8 +6,10 @@
 #import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
 #import "AppServerClient.h"
 #import <sys/file.h>
+#import <sys/stat.h>
 #import <fcntl.h>
 #import <unistd.h>
+#import <errno.h>
 
 static NSString *ISODate(void) {
     return [[[NSISO8601DateFormatter alloc] init] stringFromDate:[NSDate date]];
@@ -37,6 +39,48 @@ static NSString *BoardDataPath(void) {
     return [support stringByAppendingPathComponent:@"CTRL KANB/board.json"];
 }
 
+static BOOL EnsurePrivateDirectoryAtPath(NSString *folder) {
+    if (!folder.length) return NO;
+    struct stat info;
+    if (lstat(folder.fileSystemRepresentation, &info) != 0) {
+        if (errno != ENOENT || ![NSFileManager.defaultManager createDirectoryAtPath:folder withIntermediateDirectories:YES attributes:@{ NSFilePosixPermissions:@(0700) } error:nil]) return NO;
+        if (lstat(folder.fileSystemRepresentation, &info) != 0) return NO;
+    }
+    if (!S_ISDIR(info.st_mode) || S_ISLNK(info.st_mode)) return NO;
+    return chmod(folder.fileSystemRepresentation, 0700) == 0;
+}
+
+static BOOL BoardDataDirectoryIsReal(void) {
+    NSString *folder = BoardDataPath().stringByDeletingLastPathComponent;
+    struct stat info;
+    return lstat(folder.fileSystemRepresentation, &info) == 0 && S_ISDIR(info.st_mode) && !S_ISLNK(info.st_mode);
+}
+
+static BOOL PathIsInsideRoot(NSString *requestedPath, NSString *rootPath) {
+    if (![requestedPath isKindOfClass:NSString.class] || !requestedPath.length || !rootPath.length) return NO;
+    NSString *root = [[[rootPath stringByExpandingTildeInPath] stringByStandardizingPath] stringByResolvingSymlinksInPath];
+    NSString *candidate = [requestedPath stringByExpandingTildeInPath];
+    if (!candidate.isAbsolutePath) candidate = [root stringByAppendingPathComponent:candidate];
+    candidate = [[candidate stringByStandardizingPath] stringByResolvingSymlinksInPath];
+    return [candidate isEqualToString:root] || [candidate hasPrefix:[root stringByAppendingString:@"/"]];
+}
+
+static BOOL ClaudeReadInputStaysInProject(NSString *tool, NSDictionary *input, NSString *rootPath) {
+    if ([tool isEqualToString:@"Glob"]) {
+        NSString *pattern = [input[@"pattern"] isKindOfClass:NSString.class] ? input[@"pattern"] : @"";
+        // Glob interprete son motif comme un chemin. Sans ce controle, un motif
+        // absolu ou contenant ".." pourrait sortir du dossier sans champ path.
+        if (!pattern.length || pattern.isAbsolutePath || [pattern hasPrefix:@"~"] ||
+            [pattern.pathComponents containsObject:@".."]) return NO;
+    }
+    NSString *key = [tool isEqualToString:@"Read"] ? @"file_path" : @"path";
+    id rawPath = input[key];
+    // Glob et Grep sans chemin utilisent leur repertoire de travail, deja fixe
+    // sur le projet. Read doit toujours designer explicitement un fichier.
+    if (![rawPath isKindOfClass:NSString.class] || ![rawPath length]) return ![tool isEqualToString:@"Read"];
+    return PathIsInsideRoot(rawPath, rootPath);
+}
+
 static NSString *BoardPreviousPath(void) {
     return [[BoardDataPath() stringByDeletingPathExtension] stringByAppendingString:@".previous.json"];
 }
@@ -45,13 +89,41 @@ static NSString *BoardEventsPath(void) {
     return [[BoardDataPath() stringByDeletingLastPathComponent] stringByAppendingPathComponent:@"events.jsonl"];
 }
 
+static NSString *BoardConflictPath(void) {
+    return [[BoardDataPath() stringByDeletingPathExtension] stringByAppendingString:@".conflict.json"];
+}
+
 static void SecureDataFile(NSString *path);
+
+static NSData *ReadRegularDataFile(NSString *path) {
+    struct stat info;
+    if (lstat(path.fileSystemRepresentation, &info) != 0 || !S_ISREG(info.st_mode)) return nil;
+    return [NSData dataWithContentsOfFile:path];
+}
+
+static BOOL RegularFileOrMissing(NSString *path) {
+    struct stat info;
+    if (lstat(path.fileSystemRepresentation, &info) != 0) return errno == ENOENT;
+    return S_ISREG(info.st_mode) && !S_ISLNK(info.st_mode);
+}
+
+static BOOL WritePrivateDataFile(NSData *data, NSString *path, NSError **error) {
+    if (!data || !RegularFileOrMissing(path)) {
+        if (error) *error=[NSError errorWithDomain:@"CTRLKANBData" code:1 userInfo:@{NSLocalizedDescriptionKey:@"Refus d’écrire dans un lien symbolique ou un fichier spécial."}];
+        return NO;
+    }
+    if (![data writeToFile:path options:NSDataWritingAtomic error:error]) return NO;
+    SecureDataFile(path);
+    struct stat info;
+    return lstat(path.fileSystemRepresentation,&info)==0 && S_ISREG(info.st_mode);
+}
 
 // Le journal d evenements sert au diagnostic : c est lui qui permet de dire, apres
 // coup, si l application s est arretee normalement ou si elle a ete tuee. Un
 // « app.launched » sans « app.terminating » correspondant signifie qu elle n a pas
 // eu la main pour se fermer.
 static void AppendBoardEvent(NSDictionary *fields) {
+    if (!BoardDataDirectoryIsReal()) return;
     NSMutableDictionary *event = [fields mutableCopy];
     event[@"at"] = ISODate();
     NSData *data = [NSJSONSerialization dataWithJSONObject:event options:0 error:nil];
@@ -59,15 +131,21 @@ static void AppendBoardEvent(NSDictionary *fields) {
     NSMutableData *line = [data mutableCopy];
     [line appendData:[@"\n" dataUsingEncoding:NSUTF8StringEncoding]];
     NSString *path = BoardEventsPath();
-    if (![NSFileManager.defaultManager fileExistsAtPath:path]) {
-        [NSData.data writeToFile:path atomically:YES];
-        SecureDataFile(path);
+    // O_NOFOLLOW empeche un lien events.jsonl plante dans le dossier de donnees
+    // de detourner le journal vers un fichier situe ailleurs sur le Mac.
+    int descriptor = open(path.fileSystemRepresentation, O_WRONLY | O_APPEND | O_CREAT | O_NOFOLLOW, 0600);
+    if (descriptor < 0) return;
+    fchmod(descriptor, 0600);
+    const uint8_t *bytes = line.bytes;
+    NSUInteger remaining = line.length;
+    while (remaining > 0) {
+        ssize_t written = write(descriptor, bytes, remaining);
+        if (written < 0 && errno == EINTR) continue;
+        if (written <= 0) break;
+        bytes += written;
+        remaining -= (NSUInteger)written;
     }
-    NSFileHandle *handle = [NSFileHandle fileHandleForWritingAtPath:path];
-    if (!handle) return;
-    [handle seekToEndOfFile];
-    [handle writeData:line];
-    [handle closeFile];
+    close(descriptor);
 }
 
 static NSString *SchedulerStatusPath(void) {
@@ -78,7 +156,9 @@ static NSString *SchedulerStatusPath(void) {
 // Ces fichiers restent lisibles par le seul compte de l utilisateur.
 static void SecureDataFile(NSString *path) {
     if (!path.length) return;
-    [NSFileManager.defaultManager setAttributes:@{ NSFilePosixPermissions:@(0600) } ofItemAtPath:path error:nil];
+    struct stat info;
+    if (lstat(path.fileSystemRepresentation, &info) != 0 || !S_ISREG(info.st_mode)) return;
+    chmod(path.fileSystemRepresentation, 0600);
 }
 
 // NSDataWritingAtomic ecrit dans un fichier temporaire puis renomme :
@@ -86,20 +166,21 @@ static void SecureDataFile(NSString *path) {
 static void SecureFolderTree(NSString *folder) {
     if (!folder.length) return;
     NSFileManager *files = NSFileManager.defaultManager;
-    BOOL directory = NO;
-    if (![files fileExistsAtPath:folder isDirectory:&directory] || !directory) return;
-    [files setAttributes:@{ NSFilePosixPermissions:@(0700) } ofItemAtPath:folder error:nil];
+    struct stat folderInfo;
+    if (lstat(folder.fileSystemRepresentation, &folderInfo) != 0 || !S_ISDIR(folderInfo.st_mode)) return;
+    chmod(folder.fileSystemRepresentation, 0700);
     for (NSString *name in [files contentsOfDirectoryAtPath:folder error:nil]) {
         NSString *path = [folder stringByAppendingPathComponent:name];
-        BOOL isFolder = NO;
-        [files fileExistsAtPath:path isDirectory:&isFolder];
-        if (isFolder) { SecureFolderTree(path); continue; }
-        SecureDataFile(path);
+        struct stat childInfo;
+        if (lstat(path.fileSystemRepresentation, &childInfo) != 0 || S_ISLNK(childInfo.st_mode)) continue;
+        if (S_ISDIR(childInfo.st_mode)) { SecureFolderTree(path); continue; }
+        if (S_ISREG(childInfo.st_mode)) chmod(path.fileSystemRepresentation, 0600);
     }
 }
 
 static void SecureDataDirectory(void) {
-    SecureFolderTree(BoardDataPath().stringByDeletingLastPathComponent);
+    NSString *folder = BoardDataPath().stringByDeletingLastPathComponent;
+    if (EnsurePrivateDirectoryAtPath(folder)) SecureFolderTree(folder);
 }
 
 static NSString *SchedulerLabel(void) {
@@ -120,9 +201,9 @@ static int EngineProcessLockDescriptor = -1;
 
 static BOOL AcquireEngineProcessLock(void) {
     NSString *folder = BoardDataPath().stringByDeletingLastPathComponent;
-    [NSFileManager.defaultManager createDirectoryAtPath:folder withIntermediateDirectories:YES attributes:@{ NSFilePosixPermissions:@(0700) } error:nil];
+    if (!EnsurePrivateDirectoryAtPath(folder)) return NO;
     NSString *lockPath = [folder stringByAppendingPathComponent:@"engine.lock"];
-    EngineProcessLockDescriptor = open(lockPath.fileSystemRepresentation, O_CREAT | O_RDWR, 0600);
+    EngineProcessLockDescriptor = open(lockPath.fileSystemRepresentation, O_CREAT | O_RDWR | O_NOFOLLOW, 0600);
     if (EngineProcessLockDescriptor < 0) return NO;
     if (flock(EngineProcessLockDescriptor, LOCK_EX | LOCK_NB) != 0) {
         close(EngineProcessLockDescriptor);
@@ -147,7 +228,7 @@ static void ReleaseEngineProcessLock(void) {
 static NSString *CachedLanguage = nil;
 
 static void RefreshAppLanguage(void) {
-    NSData *data = [NSData dataWithContentsOfFile:BoardDataPath()];
+    NSData *data = ReadRegularDataFile(BoardDataPath());
     id board = data ? [NSJSONSerialization JSONObjectWithData:data options:0 error:nil] : nil;
     NSString *value = [board isKindOfClass:NSDictionary.class] ? board[@"settings"][@"language"] : nil;
     if ([value isEqualToString:@"fr"] || [value isEqualToString:@"en"]) { CachedLanguage = value; return; }
@@ -162,7 +243,7 @@ static NSDictionary *CachedNotificationSettings = nil;
 
 static NSDictionary *NotificationConfiguration(void) {
     if (CachedNotificationSettings) return CachedNotificationSettings;
-    NSData *data = [NSData dataWithContentsOfFile:BoardDataPath()];
+    NSData *data = ReadRegularDataFile(BoardDataPath());
     id board = data ? [NSJSONSerialization JSONObjectWithData:data options:0 error:nil] : nil;
     NSDictionary *settings = [board isKindOfClass:NSDictionary.class] && [board[@"settings"] isKindOfClass:NSDictionary.class] ? board[@"settings"] : @{};
     NSString *legacy = [settings[@"notifications"] isKindOfClass:NSString.class] ? settings[@"notifications"] : @"all";
@@ -187,11 +268,48 @@ static BOOL IsValidBoard(id object) {
     return [object isKindOfClass:NSDictionary.class] && [object[@"spaces"] isKindOfClass:NSArray.class] && [object[@"cards"] isKindOfClass:NSArray.class];
 }
 
+static BOOL SameJSONValue(id left, id right) {
+    if (!left && !right) return YES;
+    return left && right && [left isEqual:right];
+}
+
+static NSArray *MergeIdentifiedCollection(NSArray *base, NSArray *incoming, NSArray *current, BOOL *conflict) {
+    NSMutableDictionary *baseByID=[NSMutableDictionary dictionary],*incomingByID=[NSMutableDictionary dictionary],*currentByID=[NSMutableDictionary dictionary];
+    for (NSDictionary *item in base ?: @[]) if ([item[@"id"] isKindOfClass:NSString.class]) baseByID[item[@"id"]]=item;
+    for (NSDictionary *item in incoming ?: @[]) if ([item[@"id"] isKindOfClass:NSString.class]) incomingByID[item[@"id"]]=item;
+    for (NSDictionary *item in current ?: @[]) if ([item[@"id"] isKindOfClass:NSString.class]) currentByID[item[@"id"]]=item;
+    NSMutableOrderedSet *identifiers=[NSMutableOrderedSet orderedSet];
+    for (NSDictionary *item in incoming ?: @[]) if ([item[@"id"] isKindOfClass:NSString.class]) [identifiers addObject:item[@"id"]];
+    for (NSDictionary *item in current ?: @[]) if ([item[@"id"] isKindOfClass:NSString.class]) [identifiers addObject:item[@"id"]];
+    for (NSDictionary *item in base ?: @[]) if ([item[@"id"] isKindOfClass:NSString.class]) [identifiers addObject:item[@"id"]];
+    NSMutableArray *merged=[NSMutableArray array];
+    for (NSString *identifier in identifiers) {
+        id ancestor=baseByID[identifier],local=incomingByID[identifier],remote=currentByID[identifier],chosen=nil;
+        if (SameJSONValue(local, remote)) chosen=local;
+        else if (SameJSONValue(local, ancestor)) chosen=remote;
+        else if (SameJSONValue(remote, ancestor)) chosen=local;
+        else { if (conflict) *conflict=YES; return nil; }
+        if (chosen) [merged addObject:chosen];
+    }
+    return merged;
+}
+
+static NSDictionary *MergeBoardSnapshots(NSDictionary *base, NSDictionary *incoming, NSDictionary *current, BOOL *conflict) {
+    if (!IsValidBoard(base) || !IsValidBoard(incoming) || !IsValidBoard(current)) { if (conflict) *conflict=YES; return nil; }
+    NSMutableDictionary *merged=[incoming mutableCopy];
+    NSArray *spaces=MergeIdentifiedCollection(base[@"spaces"],incoming[@"spaces"],current[@"spaces"],conflict);
+    if (conflict && *conflict) return nil;
+    NSArray *cards=MergeIdentifiedCollection(base[@"cards"],incoming[@"cards"],current[@"cards"],conflict);
+    if (conflict && *conflict) return nil;
+    merged[@"spaces"]=spaces;merged[@"cards"]=cards;
+    return merged;
+}
+
 static int AcquireBoardLock(void) {
     NSString *folder = BoardDataPath().stringByDeletingLastPathComponent;
-    [NSFileManager.defaultManager createDirectoryAtPath:folder withIntermediateDirectories:YES attributes:@{ NSFilePosixPermissions:@(0700) } error:nil];
+    if (!EnsurePrivateDirectoryAtPath(folder)) return -1;
     NSString *lockPath = [BoardDataPath() stringByAppendingString:@".lock"];
-    int descriptor = open(lockPath.fileSystemRepresentation, O_CREAT | O_RDWR, 0600);
+    int descriptor = open(lockPath.fileSystemRepresentation, O_CREAT | O_RDWR | O_NOFOLLOW, 0600);
     if (descriptor >= 0 && flock(descriptor, LOCK_EX) != 0) { close(descriptor); return -1; }
     return descriptor;
 }
@@ -259,11 +377,13 @@ static BOOL SetAppLockEnabled(BOOL enabled) {
 @property(nonatomic, strong) NSView *lockView;
 @property(nonatomic) BOOL locked;
 @property(nonatomic) BOOL unlockPending;
+@property(nonatomic, strong) NSDictionary *lastPresentedBoard;
 - (void)sendNotificationAuthorizationStatus;
 - (void)requestNotificationAuthorization;
 - (void)openNotificationSettings;
 - (BOOL)shouldDeliverNotificationCategory:(NSString *)category card:(NSDictionary *)card;
 - (void)notifyTitle:(NSString *)title message:(NSString *)message category:(NSString *)category card:(NSDictionary *)card;
+- (void)sendCurrentBoardToWeb;
 @end
 
 @implementation CodexBoardDelegate
@@ -490,7 +610,7 @@ static BOOL SetAppLockEnabled(BOOL enabled) {
     NSDictionary *info = NSBundle.mainBundle.infoDictionary;
     [self sendFunction:@"appInfo" object:@{ @"version":info[@"CFBundleShortVersionString"] ?: @"",
                                             @"build":info[@"CFBundleVersion"] ?: @"" }];
-    [self sendFunction:@"load" object:[self loadBoard]];
+    [self sendCurrentBoardToWeb];
     [self sendNotificationAuthorizationStatus];
 }
 
@@ -508,7 +628,7 @@ static BOOL SetAppLockEnabled(BOOL enabled) {
     if (![message.body isKindOfClass:NSDictionary.class]) return;
     NSDictionary *body = (NSDictionary *)message.body;
     NSString *action = body[@"action"];
-    if ([action isEqualToString:@"ready"]) { if (self.locked) return; [self sendFunction:@"load" object:[self loadBoard]]; [self sendBackgroundSchedulerStatusWithError:nil]; [self sendNotificationAuthorizationStatus]; [self sendActiveRuns]; }
+    if ([action isEqualToString:@"ready"]) { if (self.locked) return; [self sendCurrentBoardToWeb]; [self sendBackgroundSchedulerStatusWithError:nil]; [self sendNotificationAuthorizationStatus]; [self sendActiveRuns]; }
     else if ([action isEqualToString:@"save"] && [body[@"data"] isKindOfClass:NSDictionary.class]) [self saveBoard:body[@"data"]];
     else if ([action isEqualToString:@"agentStatus"]) [self sendFunction:@"agentStatus" object:@{@"codex":@([self codexExecutable]!=nil),@"claude":@([self claudeExecutable]!=nil)}];
     else if ([action isEqualToString:@"agentProbe"])
@@ -886,10 +1006,11 @@ static BOOL SetAppLockEnabled(BOOL enabled) {
 
 - (NSMutableDictionary *)loadBoard {
     int lock = AcquireBoardLock();
-    NSData *data = [NSData dataWithContentsOfFile:BoardDataPath()];
+    if (lock < 0) return StarterBoard();
+    NSData *data = ReadRegularDataFile(BoardDataPath());
     id object = data ? [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingMutableContainers error:nil] : nil;
     if (IsValidBoard(object)) { ReleaseBoardLock(lock); return object; }
-    NSData *previousData = [NSData dataWithContentsOfFile:BoardPreviousPath()];
+    NSData *previousData = ReadRegularDataFile(BoardPreviousPath());
     id previous = previousData ? [NSJSONSerialization JSONObjectWithData:previousData options:NSJSONReadingMutableContainers error:nil] : nil;
     ReleaseBoardLock(lock);
     if (IsValidBoard(previous)) {
@@ -901,26 +1022,61 @@ static BOOL SetAppLockEnabled(BOOL enabled) {
     return starter;
 }
 
+- (void)sendCurrentBoardToWeb {
+    NSDictionary *board=[self loadBoard];
+    self.lastPresentedBoard=board;
+    [self sendFunction:@"load" object:board];
+}
+
 - (void)saveBoard:(NSDictionary *)board {
+    if (!IsValidBoard(board)) {
+        [self sendFunction:@"nativeError" object:@{ @"message":L(@"Le tableau reçu est incomplet et n’a pas été enregistré.", @"The received board is incomplete and was not saved.") }];
+        return;
+    }
     NSString *path = BoardDataPath();
     int lock = AcquireBoardLock();
     if (lock < 0) { [self sendFunction:@"nativeError" object:@{ @"message":L(@"Impossible de verrouiller les données du Kanban.", @"The board data could not be locked.") }]; return; }
-    NSMutableDictionary *snapshot = [board mutableCopy];
+    NSData *current = ReadRegularDataFile(path);
+    id currentObject = current ? [NSJSONSerialization JSONObjectWithData:current options:NSJSONReadingMutableContainers error:nil] : nil;
+    BOOL conflict=NO,didMerge=NO;
+    NSDictionary *candidate=board;
+    BOOL basedOnCurrent=IsValidBoard(currentObject)&&SameJSONValue(board[@"modifiedAt"],currentObject[@"modifiedAt"]);
+    if (IsValidBoard(currentObject) && !basedOnCurrent && !SameJSONValue(currentObject, self.lastPresentedBoard)) {
+        if (IsValidBoard(self.lastPresentedBoard)) { candidate=MergeBoardSnapshots(self.lastPresentedBoard,board,currentObject,&conflict);didMerge=!conflict; }
+        else conflict=YES;
+    }
+    if (conflict || !candidate) {
+        NSData *recovery=[NSJSONSerialization dataWithJSONObject:board options:NSJSONWritingPrettyPrinted|NSJSONWritingSortedKeys error:nil];
+        WritePrivateDataFile(recovery,BoardConflictPath(),nil);
+        ReleaseBoardLock(lock);
+        self.lastPresentedBoard=currentObject;
+        [self sendFunction:@"boardSaveConflict" object:@{
+            @"board":currentObject ?: @{},
+            @"message":L(@"Le tableau a été modifié en même temps. La version la plus récente a été rechargée et ta modification a été conservée dans board.conflict.json.", @"The board was changed at the same time. The latest version was reloaded and your change was preserved in board.conflict.json.")
+        }];
+        return;
+    }
+    NSMutableDictionary *snapshot = [candidate mutableCopy];
     snapshot[@"version"] = @22;
     if (![snapshot[@"settings"] isKindOfClass:NSDictionary.class]) snapshot[@"settings"] = @{ @"maxConcurrency":@2, @"maxConcurrencyCodex":@2, @"maxConcurrencyClaude":@1, @"autoSync":@YES };
     snapshot[@"modifiedAt"] = ISODate();
     CachedLanguage = nil; CachedNotificationSettings = nil;   // les reglages peuvent venir de changer
     NSError *error = nil;
     NSData *json = [NSJSONSerialization dataWithJSONObject:snapshot options:NSJSONWritingPrettyPrinted | NSJSONWritingSortedKeys error:&error];
-    NSData *current = [NSData dataWithContentsOfFile:path];
-    id currentObject = current ? [NSJSONSerialization JSONObjectWithData:current options:0 error:nil] : nil;
-    if (!error && IsValidBoard(currentObject)) { [current writeToFile:BoardPreviousPath() options:NSDataWritingAtomic error:nil]; SecureDataFile(BoardPreviousPath()); }
-    if (!error) { [json writeToFile:path options:NSDataWritingAtomic error:&error]; SecureDataFile(path); }
+    if (!error && IsValidBoard(currentObject)) WritePrivateDataFile(current,BoardPreviousPath(),&error);
+    if (!error) WritePrivateDataFile(json,path,&error);
     if (!error) {
         AppendBoardEvent(@{ @"type":@"board.saved", @"spaces":@([snapshot[@"spaces"] count]), @"cards":@([snapshot[@"cards"] count]) });
     }
     ReleaseBoardLock(lock);
     if (error) [self sendFunction:@"nativeError" object:@{ @"message":error.localizedDescription }];
+    else {
+        self.lastPresentedBoard=snapshot;
+        if (didMerge) [self sendFunction:@"boardMerged" object:@{
+            @"board":snapshot,
+            @"message":L(@"Les changements faits en parallèle ont été réunis.", @"Concurrent changes were merged.")
+        }];
+    }
 }
 
 - (BOOL)runLaunchctlArguments:(NSArray<NSString *> *)arguments error:(NSString **)errorMessage {
@@ -1082,9 +1238,13 @@ static BOOL SetAppLockEnabled(BOOL enabled) {
     NSDictionary *env = NSProcessInfo.processInfo.environment;
     NSMutableArray<NSString *> *candidates = [NSMutableArray array];
     if ([EnvValue(@"CODEX_PATH") length]) [candidates addObject:EnvValue(@"CODEX_PATH")];
-    for (NSString *directory in [env[@"PATH"] componentsSeparatedByString:@":"]) [candidates addObject:[directory stringByAppendingPathComponent:@"codex"]];
     [candidates addObjectsFromArray:@[@"/Applications/ChatGPT.app/Contents/Resources/codex", @"/Applications/Codex.app/Contents/Resources/codex", @"/opt/homebrew/bin/codex", @"/usr/local/bin/codex", [NSHomeDirectory() stringByAppendingPathComponent:@".local/bin/codex"]]];
-    for (NSString *candidate in candidates) if ([NSFileManager.defaultManager isExecutableFileAtPath:candidate]) return candidate;
+    for (NSString *directory in [env[@"PATH"] componentsSeparatedByString:@":"])
+        if (directory.isAbsolutePath) [candidates addObject:[directory stringByAppendingPathComponent:@"codex"]];
+    for (NSString *candidate in candidates) {
+        NSString *absolute = [[candidate stringByExpandingTildeInPath] stringByStandardizingPath];
+        if (absolute.isAbsolutePath && [NSFileManager.defaultManager isExecutableFileAtPath:absolute]) return absolute;
+    }
     return nil;
 }
 
@@ -1158,19 +1318,23 @@ static BOOL SetAppLockEnabled(BOOL enabled) {
     NSString *engine = request[@"card"][@"agentEngine"] ?: @"";
     if ([@[@"claude-code",@"claudeCode"] containsObject:engine]) { [self startClaudeRequest:request];return; }
     NSDictionary *card = request[@"card"], *space = request[@"space"];
-    NSString *cardID = card[@"id"], *rootPath = space[@"rootPath"], *executable = [self codexExecutable];
+    NSString *cardID = card[@"id"], *executable = [self codexExecutable];
+    NSString *pathError=nil;
+    NSString *rootPath=[self projectRootForSpaceID:space[@"id"] requestedPath:space[@"rootPath"] error:&pathError];
     if (!cardID.length || self.runs[cardID]) return;
     if (!executable) { [self failCard:cardID message:L(@"Commande codex introuvable.", @"The codex command was not found.") card:card]; [self startNextQueued]; return; }
     BOOL isDirectory = NO;
-    if (![NSFileManager.defaultManager fileExistsAtPath:rootPath isDirectory:&isDirectory] || !isDirectory) {
-        [self failCard:cardID message:[NSString stringWithFormat:L(@"Dossier introuvable : %@", @"Folder not found: %@"), rootPath ?: @""] card:card]; [self startNextQueued]; return;
+    if (!rootPath.length || ![NSFileManager.defaultManager fileExistsAtPath:rootPath isDirectory:&isDirectory] || !isDirectory) {
+        [self failCard:cardID message:pathError?:[NSString stringWithFormat:L(@"Dossier introuvable : %@", @"Folder not found: %@"), rootPath ?: @""] card:card]; [self startNextQueued]; return;
     }
+    NSMutableDictionary *storedSpace=[space mutableCopy];storedSpace[@"rootPath"]=rootPath;space=storedSpace;
 
     AppServerClient *client = [[AppServerClient alloc] initWithExecutable:executable];
     client.extraEnvironment = AccountEnvironment(@"codex", [request[@"accountHome"] isKindOfClass:NSString.class] ? request[@"accountHome"] : @"");
     NSMutableDictionary *context = [@{ @"client":client, @"cardID":cardID, @"card":card, @"space":space,
         @"mode":request[@"mode"] ?: @"readOnly", @"autoApprove":@([request[@"autoApprove"] boolValue]),
-        @"forceNew":@([request[@"newConversation"] boolValue]), @"finished":@NO, @"latestSummary":@"" } mutableCopy];
+        @"forceNew":@([request[@"newConversation"] boolValue]), @"finished":@NO, @"latestSummary":@"",
+        @"permissions":[NSMutableDictionary dictionary] } mutableCopy];
     NSString *conversationKey = [self conversationKeyForRequest:request];
     if (conversationKey.length) context[@"conversationKey"] = conversationKey;
     self.runs[cardID] = context;
@@ -1549,10 +1713,15 @@ static NSDictionary *ClaudeSessionSnapshot(NSDictionary *descriptor) {
 
 - (void)startClaudeRequest:(NSDictionary *)request {
     NSDictionary *card=request[@"card"],*space=request[@"space"];
-    NSString *cardID=card[@"id"],*cwd=space[@"rootPath"],*executable=[self claudeExecutable];
+    NSString *cardID=card[@"id"],*executable=[self claudeExecutable];
+    NSString *pathError=nil;
+    NSString *cwd=[self projectRootForSpaceID:space[@"id"] requestedPath:space[@"rootPath"] error:&pathError];
     BOOL directory=NO;
     if(!executable){[self failCard:cardID message:L(@"Claude Code est introuvable. Installe la CLI officielle et connecte ton compte dans le terminal.", @"Claude Code was not found. Install the official CLI and sign in from the terminal.") card:card];[self startNextQueued];return;}
-    if(!cwd.length||![NSFileManager.defaultManager fileExistsAtPath:cwd isDirectory:&directory]||!directory){[self failCard:cardID message:L(@"Le dossier du projet est introuvable.", @"The project folder was not found.") card:card];[self startNextQueued];return;}
+    if(!cwd.length||![NSFileManager.defaultManager fileExistsAtPath:cwd isDirectory:&directory]||!directory){[self failCard:cardID message:pathError?:L(@"Le dossier du projet est introuvable.", @"The project folder was not found.") card:card];[self startNextQueued];return;}
+    NSMutableDictionary *storedSpace=[space mutableCopy];
+    storedSpace[@"rootPath"]=cwd;
+    space=storedSpace;
     BOOL readOnly=![request[@"mode"] isEqual:@"workspaceWrite"];
     NSString *model=[card[@"model"] isKindOfClass:NSString.class]?card[@"model"]:@"sonnet";
     if([model hasPrefix:@"gpt-"]||!model.length)model=@"sonnet";
@@ -1561,7 +1730,7 @@ static NSDictionary *ClaudeSessionSnapshot(NSDictionary *descriptor) {
     NSString *sessionName=[card[@"title"] isKindOfClass:NSString.class]&&[card[@"title"] length]?card[@"title"]:L(@"Tâche CTRL KANB", @"CTRL KANB task");
     NSMutableArray *args=[@[@"--print",@"--verbose",@"--input-format",@"stream-json",@"--output-format",@"stream-json",@"--permission-prompt-tool",@"stdio",@"--permission-mode",@"default",@"--model",model,@"--effort",effort,@"--name",sessionName,@"--strict-mcp-config",@"--mcp-config",@"{\"mcpServers\":{}}"] mutableCopy];
     // Analysis exposes only built-in reading tools. Permissions are not an OS sandbox.
-    if(readOnly)[args addObjectsFromArray:@[@"--tools",@"Read,Glob,Grep",@"--disable-slash-commands"]];
+    if(readOnly)[args addObjectsFromArray:@[@"--setting-sources",@"",@"--tools",@"Read,Glob,Grep",@"--disable-slash-commands"]];
     NSString *session=card[@"conversationID"];
     if(session.length&&![request[@"newConversation"] boolValue]){
         if(![[NSUUID alloc]initWithUUIDString:session]){[self failCard:cardID message:L(@"L’identifiant de session Claude est invalide.", @"That Claude session id is not valid.") card:card];[self startNextQueued];return;}
@@ -1619,8 +1788,16 @@ static NSDictionary *ClaudeSessionSnapshot(NSDictionary *descriptor) {
         if(![request[@"subtype"]isEqual:@"can_use_tool"]){[client sendMessage:@{@"type":@"control_response",@"response":@{@"subtype":@"error",@"request_id":requestID,@"error":L(@"Cette demande n’est pas prise en charge par CTRL KANB.", @"CTRL KANB does not support this request.")}}];return;}
         context[@"permissions"][requestID]=request;
         NSString *tool=request[@"tool_name"]?:@"Outil";NSDictionary *input=[request[@"input"]isKindOfClass:NSDictionary.class]?request[@"input"]:@{};
-        if([context[@"mode"]isEqual:@"readOnly"]&&![@[@"Read",@"Glob",@"Grep"]containsObject:tool]){
-            [self respondToClaudeRequest:@{@"requestID":requestID,@"result":@{@"decision":@"decline"},@"cardID":cardID} context:context];return;
+        if([context[@"mode"]isEqual:@"readOnly"]){
+            if(![@[@"Read",@"Glob",@"Grep"]containsObject:tool] ||
+               !ClaudeReadInputStaysInProject(tool, input, context[@"space"][@"rootPath"])){
+                [self sendFunction:@"runnerEvent" object:@{
+                    @"cardID":cardID,
+                    @"message":L(@"Lecture refusée : le chemin demandé sort du dossier du projet.", @"Read denied: the requested path is outside the project folder.")
+                }];
+                [self respondToClaudeRequest:@{@"requestID":requestID,@"result":@{@"decision":@"decline"},@"cardID":cardID} context:context];
+                return;
+            }
         }
         BOOL question=[tool isEqual:@"AskUserQuestion"];
         NSMutableDictionary *params=[@{@"cwd":context[@"space"][@"rootPath"],@"tool":tool,@"input":input}mutableCopy];
@@ -1826,14 +2003,19 @@ static NSDictionary *ClaudeSessionSnapshot(NSDictionary *descriptor) {
         BOOL success = [status isEqualToString:@"completed"];
         [self finishRun:context success:success error:success ? nil : (turnError[@"message"] ?: [NSString stringWithFormat:@"Tour Codex : %@", status])];
     } else if (message[@"id"] && [method hasSuffix:@"requestApproval"]) {
+        context[@"permissions"][message[@"id"]] = message;
         [self sendFunction:@"approvalRequested" object:@{ @"cardID":context[@"cardID"], @"requestID":message[@"id"], @"kind":[method containsString:@"fileChange"] ? @"file" : @"command", @"params":params, @"agentEngine":context[@"card"][@"agentEngine"] ?: @"codex", @"mode":context[@"mode"] ?: @"readOnly", @"autoApprove":context[@"autoApprove"] ?: @NO, @"threadID":context[@"threadID"] ?: @"" }];
         [self notifyTitle:L(@"Autorisation Codex requise", @"Codex needs approval") message:context[@"card"][@"title"] ?: L(@"Une tâche attend votre validation.", @"A task is waiting for your approval.") category:@"approval" card:context[@"card"]];
     } else if (message[@"id"] && [method isEqualToString:@"item/tool/requestUserInput"]) {
+        context[@"permissions"][message[@"id"]] = message;
         [self sendFunction:@"approvalRequested" object:@{ @"cardID":context[@"cardID"], @"requestID":message[@"id"], @"kind":@"input", @"params":params, @"agentEngine":context[@"card"][@"agentEngine"] ?: @"codex", @"mode":context[@"mode"] ?: @"readOnly", @"autoApprove":context[@"autoApprove"] ?: @NO, @"threadID":context[@"threadID"] ?: @"" }];
         [self notifyTitle:L(@"Codex attend une réponse", @"Codex is waiting for an answer") message:context[@"card"][@"title"] ?: L(@"Une tâche a besoin de votre réponse.", @"A task needs your answer.") category:@"approval" card:context[@"card"]];
     } else if ([method isEqualToString:@"serverRequest/resolved"]) {
         NSMutableDictionary *resolved = [@{ @"cardID":context[@"cardID"] } mutableCopy];
-        if (params[@"requestId"]) resolved[@"requestID"] = params[@"requestId"];
+        if (params[@"requestId"]) {
+            resolved[@"requestID"] = params[@"requestId"];
+            [context[@"permissions"] removeObjectForKey:params[@"requestId"]];
+        }
         [self sendFunction:@"requestResolved" object:resolved];
     }
 }
@@ -1842,17 +2024,20 @@ static NSDictionary *ClaudeSessionSnapshot(NSDictionary *descriptor) {
     NSMutableDictionary *context = self.runs[body[@"cardID"]];
     if([context[@"engine"] isEqual:@"claude-code"]){[self respondToClaudeRequest:body context:context];return;}
     AppServerClient *client = context[@"client"];
+    id requestID = body[@"requestID"];
+    NSDictionary *pendingRequest = requestID ? context[@"permissions"][requestID] : nil;
     // Le tour peut avoir disparu sans prevenir : sans retour, l interface
     // affichait « Action autorisee » alors que la reponse n allait nulle part.
-    if (!client || !body[@"requestID"] || ![body[@"result"] isKindOfClass:NSDictionary.class]) {
+    if (!client || !pendingRequest || ![body[@"result"] isKindOfClass:NSDictionary.class]) {
         [self sendFunction:@"requestUnresolved" object:@{
             @"cardID":body[@"cardID"] ?: @"",
             @"requestID":body[@"requestID"] ?: @""
         }];
         return;
     }
-    [client sendMessage:@{ @"id":body[@"requestID"], @"result":body[@"result"] }];
-    [self sendFunction:@"requestResolved" object:@{ @"cardID":body[@"cardID"] ?: @"", @"requestID":body[@"requestID"] }];
+    [client sendMessage:@{ @"id":requestID, @"result":body[@"result"] }];
+    [context[@"permissions"] removeObjectForKey:requestID];
+    [self sendFunction:@"requestResolved" object:@{ @"cardID":body[@"cardID"] ?: @"", @"requestID":requestID }];
 }
 
 - (void)sendActiveRuns {
