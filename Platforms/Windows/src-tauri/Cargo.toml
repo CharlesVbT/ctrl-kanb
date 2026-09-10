@@ -1,6 +1,6 @@
 [package]
 name = "ctrl-kanb-windows"
-version = "6.11.0"
+version = "6.11.1"
 description = "Hôte Windows de CTRL KANB"
 authors = ["CTRL KANB contributors"]
 edition = "2024"

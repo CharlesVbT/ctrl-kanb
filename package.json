@@ -1,6 +1,6 @@
 {
   "name": "ctrl-kanb",
-  "version": "6.11.0",
+  "version": "6.11.1",
   "private": true,
   "description": "Application locale pour piloter des tâches avec Codex et Claude Code.",
   "scripts": {

@@ -10,14 +10,24 @@ w.CTRL_KANB_PLATFORM='windows';
 w.ctrlKanbNative={postMessage:message=>messages.push(structuredClone(message))};
 w.eval(fs.readFileSync(path.join(root,'Resources/i18n.js'),'utf8'));
 w.eval(fs.readFileSync(path.join(root,'Resources/app.js'),'utf8'));
-const state={version:22,spaces:[{id:'project',name:'Projet Windows',rootPath:'C:\\Users\\Test\\Projet',accentHex:'527A9A'}],cards:[],utilityChats:[],templates:[],validations:[],settings:{autoSync:false,backgroundSchedulerEnabled:false,maxConcurrencyCodex:2,maxConcurrencyClaude:1,accounts:[],activeAccount:{},accountChecks:{},conversationSyncChecks:{},language:'fr'},modifiedAt:new Date().toISOString()};
+const rawClaudeError=JSON.stringify({type:'error',status:401,error:{message:'OAuth access token has been revoked. Run claude auth login.'}});
+const state={version:22,spaces:[{id:'project',name:'Projet Windows',rootPath:'C:\\Users\\Test\\Projet',accentHex:'527A9A'}],cards:[{id:'failed-card',spaceID:'project',boardPresetID:'classic',title:'Tâche à reprendre',prompt:'Vérifier le projet',status:'needsInput',priorityLevelID:'normal',priorityNumber:1,labels:[],subtasks:[],dependencies:[],categoryAssignments:{},agentEngine:'claude-code',launchMode:'manual',recurrence:'none',runMode:'workspaceWrite',conversations:[],lastRun:{exitCode:1,summary:rawClaudeError},createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()}],utilityChats:[],templates:[],validations:[],settings:{autoSync:false,backgroundSchedulerEnabled:false,maxConcurrencyCodex:2,maxConcurrencyClaude:1,accounts:[],activeAccount:{},accountChecks:{'claude-code:default':{engine:'claude-code',account:'claude-code:default',state:'blocked',detail:rawClaudeError,at:new Date().toISOString()}},conversationSyncChecks:{},language:'fr'},modifiedAt:new Date().toISOString()};
+state.cards.push({...structuredClone(state.cards[0]),id:'model-card',title:'Moteur à actualiser',priorityNumber:2,agentEngine:'codex',lastRun:{exitCode:1,summary:JSON.stringify({type:'error',status:400,error:{message:"The 'gpt-5.6-sol' model requires a newer version of Codex. Please upgrade to the latest app or CLI and try again."}})}});
 w.CodexBoard.load(state);w.CodexBoard.securityStatus({lockEnabled:true,biometry:'Windows Hello'});w.CodexBoard.agentStatus({codex:true,claude:true});
 const click=selector=>{const element=d.querySelector(selector);assert.ok(element,selector);element.click();};
+
+assert.ok(d.querySelector('#board').textContent.includes('Claude Code n’est pas connecté.'),'une erreur Claude enregistrée doit être expliquée');
+assert.ok(d.querySelector('#board').textContent.includes('Mets le moteur à jour ou choisis un autre modèle.'),'une incompatibilité de modèle doit indiquer la correction');
+assert.ok(!d.body.textContent.includes('OAuth access token')&&!d.body.textContent.includes('{"type":"error"'),'aucune erreur structurée ne doit être affichée');
+w.CodexBoard.runnerFinished({cardID:'failed-card',success:false,exitCode:1,error:JSON.stringify({type:'error',status:429,error:{message:'Usage limit reached'}})});
+assert.ok(d.querySelector('#board').textContent.includes('Limite d’usage atteinte pour Claude Code.'),'une limite d’usage doit être présentée clairement');
+assert.ok(!d.querySelector('#board').textContent.includes('status')&&!d.querySelector('#board').textContent.includes('Usage limit'),'le détail technique ne doit pas rester dans la carte');
 
 click('[data-select="settingsView"]');
 const settings=d.querySelector('#board').textContent;
 for(const expected of ['Notifications Windows','Protège l’accès à la fenêtre CTRL KANB sur ce PC.','Windows Hello','%LOCALAPPDATA%\\CTRL KANB Data\\board.json','Application Windows']) assert.ok(settings.includes(expected),expected);
 for(const forbidden of ['Finder','macOS','sur ce Mac','ce Mac','⌘','⌥']) assert.ok(!settings.includes(forbidden),`libellé macOS visible sous Windows: ${forbidden}`);
+assert.ok(settings.includes('Claude Code n’est pas connecté.')&&!settings.includes('OAuth access token'),'les réglages doivent conserver un diagnostic lisible');
 
 w.CodexBoard.menuAction({action:'newProject'});
 assert.equal(d.querySelector('[name="rootPath"]').placeholder,'C:\\chemin\\du\\projet');

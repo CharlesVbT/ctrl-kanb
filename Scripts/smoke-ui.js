@@ -380,7 +380,8 @@ assert(agents().includes("Connexion testée"),"Le dernier test disparait apres r
 
 context.window.CodexBoard.agentProbeResult({engine:"claude-code",state:"blocked",detail:"La connexion Claude a expiré ou a été révoquée.",at:iso(0)});
 assert(agents().includes("À reconnecter"),"Une sonde en echec n'est pas signalee.");
-assert(agents().includes("révoquée"),"Le motif exact du refus du moteur n'est pas restitue.");
+assert(agents().includes("Réglages → Agents et modèles"),"Une connexion expirée n'indique pas comment rétablir Claude Code.");
+assert(!agents().includes("révoquée"),"Le détail technique de connexion est encore exposé.");
 // Le resultat d un moteur ne doit pas ecraser celui de l autre.
 assert(agents().includes("Connexion testée"),"Le resultat de la sonde Codex est perdu quand Claude repond.");
 
