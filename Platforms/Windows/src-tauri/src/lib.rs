@@ -245,6 +245,12 @@ pub fn run() {
         tray::TrayIconBuilder,
     };
     tauri::Builder::default()
+        .plugin(tauri_plugin_single_instance::init(
+            |app, _arguments, _cwd| {
+                let manager = app.state::<security::SecurityManager>();
+                let _ = security::unlock_and_show(app, &manager);
+            },
+        ))
         .plugin(tauri_plugin_notification::init())
         .manage(AppState::default())
         .manage(terminal::TerminalManager::default())
