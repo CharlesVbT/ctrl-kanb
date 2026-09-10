@@ -38,7 +38,17 @@ fn shell() -> CommandBuilder {
     #[cfg(target_os = "windows")]
     {
         let mut command = CommandBuilder::new("powershell.exe");
-        command.args(["-NoLogo", "-NoProfile", "-NoExit"]);
+        // The app renders its own prompt and submits complete command lines.
+        // Script input avoids PowerShell's cursor-position handshake, which a
+        // line-oriented embedded terminal cannot answer like a full emulator.
+        command.args([
+            "-NoLogo",
+            "-NoProfile",
+            "-NonInteractive",
+            "-NoExit",
+            "-Command",
+            "-",
+        ]);
         command.env("TERM", "xterm-256color");
         command
     }
