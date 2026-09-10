@@ -65,7 +65,9 @@ jobs:
         run: |
           rustup default stable-msvc
           npm ci --prefix Platforms/Windows
-          npm --prefix Platforms/Windows run check
+          cargo fmt --manifest-path Platforms/Windows/src-tauri/Cargo.toml --check
+          cargo clippy --manifest-path Platforms/Windows/src-tauri/Cargo.toml --all-targets -- -D warnings
+          cargo test --manifest-path Platforms/Windows/src-tauri/Cargo.toml
 
       - name: Construire l’installateur Windows
         shell: pwsh

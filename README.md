@@ -2,7 +2,7 @@
 
 ![Aperçu de CTRL KANB](docs/assets/ctrl-kanb-hero.png)
 
-**Le poste de pilotage macOS pour organiser, planifier et suivre le travail confié à Codex et Claude Code.**
+**Le poste de pilotage local pour macOS et Windows qui organise, planifie et suit le travail confié à Codex et Claude Code.**
 
 ## Pourquoi CTRL KANB existe
 
@@ -23,7 +23,7 @@ CTRL KANB propose aujourd’hui un espace de travail local qui réunit :
 - une vue claire des exécutions, résultats et décisions en attente ;
 - un chat, un terminal et un navigateur de fichiers intégrés ;
 - une prise en charge distincte de Codex et Claude Code ;
-- des données conservées localement sur le Mac.
+- des données conservées localement sur l’ordinateur.
 
 L’objectif est de construire la couche d’organisation qui manque encore entre l’utilisateur et ses agents. L’architecture pourra ensuite accueillir d’autres moteurs et outils, sans enfermer l’utilisateur dans un seul fournisseur.
 
@@ -33,7 +33,7 @@ La version actuelle constitue la première étape publique du projet. Elle fonct
 
 ## Fonctions principales
 
-- plusieurs projets associés à des dossiers du Mac ;
+- plusieurs projets associés à des dossiers locaux ;
 - deux tableaux protégés : **Classique** pour les tâches ponctuelles et **Routines** pour les tâches récurrentes ;
 - vue **Flux** pour les priorités, les tâches prêtes, les exécutions et les décisions en attente ;
 - agenda Jour, Semaine et Mois avec fuseau horaire, premier jour de semaine et format 12/24 heures configurables ;
@@ -43,28 +43,21 @@ La version actuelle constitue la première étape publique du projet. Elle fonct
 - centre de validations pour les commandes, modifications de fichiers et questions des agents ;
 - chat latéral Codex ou Claude Code avec choix du modèle, pièces jointes et conversations séparées ;
 - navigateur de fichiers limité au dossier sélectionné ;
-- terminal zsh démarrant dans ce dossier, avec les droits complets du compte macOS ;
+- terminal intégré démarrant dans ce dossier : zsh sur macOS, PowerShell sur Windows ;
 - synchronisation explicite des conversations Codex et Claude Code ;
 - comptes séparés par agent, sans copie des identifiants dans le tableau ;
 - thèmes clairs et sombres, palettes de couleurs et taille de police réglable ;
 - premier lancement guidé, sans projet ni tâche d’exemple imposés ;
 - export JSON et restauration avec copie de sécurité automatique ;
-- raccourcis macOS, palette de commandes avec `⌘ K` et panneaux redimensionnables ;
-- planificateur macOS facultatif, livré désactivé.
+- raccourcis natifs, palette de commandes avec `⌘ K` sur macOS ou `Ctrl K` sur Windows, et panneaux redimensionnables ;
+- planificateur facultatif, livré désactivé, avec reprise après relance.
 
-## Prérequis
+## Prérequis d’utilisation
 
-- macOS 14 Sonoma ou une version plus récente ;
-- les outils de développement Apple en ligne de commande ;
+- macOS 14 Sonoma ou une version plus récente, ou Windows 11 x64 ;
 - Codex et/ou Claude Code installés et connectés si vous souhaitez exécuter des tâches avec ces agents.
 
-Installez les outils Apple si nécessaire :
-
-```sh
-xcode-select --install
-```
-
-Node.js 20 ou plus récent et Python 3 sont utiles pour le développement et les tests. Ils ne sont pas nécessaires pour utiliser une application déjà compilée.
+L’installateur Windows prend en charge WebView2. Node.js, Python, Rust et les outils de développement ne sont nécessaires que pour construire ou tester l’application depuis les sources.
 
 ## Codex, Claude Code ou les deux
 
@@ -74,14 +67,15 @@ Au démarrage, l’application cherche séparément les commandes `codex` et `cl
 
 - dans les applications officielles qui embarquent Codex ;
 - dans les emplacements Homebrew et Unix habituels ;
+- dans les emplacements Windows officiels et utilisateur connus ;
 - dans le `PATH` reçu par l’application ;
 - dans les installations utilisateur et les gestionnaires courants : NVM, fnm, Volta, mise, asdf, Bun et pnpm.
 
-**Disponible sur ce Mac** signifie seulement que la commande a été trouvée. **Connexion testée** signifie qu’un aller-retour réel a réussi avec le compte sélectionné. Ces deux états sont affichés séparément dans **Réglages → Agents et modèles**. Le bouton **Actualiser la détection** relance la recherche après une installation.
+**Disponible sur cet ordinateur** signifie seulement que la commande a été trouvée. **Connexion testée** signifie qu’un aller-retour réel a réussi avec le compte sélectionné. Ces deux états sont affichés séparément dans **Réglages → Agents et modèles**. Le bouton **Actualiser la détection** relance la recherche après une installation.
 
 Pour une installation personnalisée, les variables `CTRL_KANB_CODEX_PATH` et `CTRL_KANB_CLAUDE_PATH` peuvent désigner les exécutables avec des chemins absolus. CTRL KANB utilise ensuite les sessions et identifiants conservés par chaque outil ; il ne copie pas leurs clés dans ses données.
 
-## Installation depuis les sources
+## Construction macOS depuis les sources
 
 ```sh
 git clone <url-du-depot> ctrl-kanb
@@ -104,6 +98,19 @@ open "dist/CTRL KANB.app"
 
 L’application produite localement utilise une signature ad hoc. Une distribution binaire publique devra être signée avec un certificat Developer ID et notariée pour éviter les avertissements Gatekeeper.
 
+## Construction Windows depuis les sources
+
+Depuis PowerShell, avec Git, Node.js, Rust MSVC, WebView2 et les outils C++ de Visual Studio installés :
+
+```powershell
+git clone <url-du-depot> ctrl-kanb
+cd ctrl-kanb\Platforms\Windows
+.\setup.ps1
+.\build.ps1
+```
+
+L’installateur NSIS est créé dans `Platforms\Windows\src-tauri\target\release\bundle\nsis`. Une construction publique devra recevoir une signature Authenticode ; l’installateur local non signé reste utilisable avec l’avertissement de sécurité Windows habituel.
+
 ## Première configuration
 
 1. Ajoutez un projet et choisissez son dossier.
@@ -118,10 +125,11 @@ Dans **Routines**, seule la prochaine occurrence est une carte exécutable. L’
 
 ## Données et confidentialité
 
-Les données de CTRL KANB restent dans :
+Les données de CTRL KANB restent dans le profil de l’utilisateur :
 
 ```text
-~/Library/Application Support/CTRL KANB/
+macOS   ~/Library/Application Support/CTRL KANB/
+Windows %LOCALAPPDATA%\CTRL KANB Data\
 ```
 
 Le dépôt ne contient pas ce dossier. Les identifiants Codex et Claude Code restent dans les dossiers gérés par leurs outils respectifs. CTRL KANB ne contient aucun service de télémétrie et ne stocke pas de clé d’API dans son tableau.
@@ -146,6 +154,7 @@ Structure du dépôt :
 Resources/  Interface, icônes et ressources de marque
 Scripts/    Construction, installation et contrôles
 Sources/    Application macOS, helper et CLI
+Platforms/  Hôte Windows Tauri et scripts PowerShell
 Tests/      Doubles de test et scénarios natifs
 docs/       Architecture, modèle de données et revue UI
 ```
@@ -153,20 +162,20 @@ docs/       Architecture, modèle de données et revue UI
 Documentation technique :
 
 - [Architecture](docs/ARCHITECTURE.md)
-- [Plan et état du portage Windows](docs/WINDOWS-PORT.md)
+- [État et validation de la version Windows](docs/WINDOWS-PORT.md)
 - [Modèle de données](docs/DATA-MODEL.md)
 - [Moteur macOS facultatif](docs/BACKGROUND-ENGINE.md)
 - [Revue de l’interface](docs/UI-REVIEW.md)
 - [Contrôles avant publication](docs/RELEASE-CHECKLIST.md)
 - [Politique de sécurité](SECURITY.md)
 
-La version distribuable actuelle cible macOS. Le socle de la préversion Windows vit dans `Platforms/Windows` et réutilise la même interface ; son avancement et ses limites sont détaillés dans le plan de portage.
+Les deux hôtes réutilisent la même interface et le même format de données. Les paquets produits localement restent non signés tant que la chaîne de publication macOS et Windows n’a pas reçu ses certificats.
 
 ## Limites connues
 
-- le Mac doit être allumé pour lancer une tâche programmée ;
+- l’ordinateur doit être allumé et la session utilisateur ouverte pour lancer une tâche programmée ;
 - les demandes de validation en cours ne survivent pas à l’arrêt du processus d’agent ;
-- la signature ad hoc convient à une compilation locale, pas à une distribution binaire fluide ;
+- la signature ad hoc macOS et l’installateur Windows non signé conviennent aux essais locaux, pas à une distribution binaire fluide ;
 - les logos Codex et Claude Code restent la propriété de leurs détenteurs respectifs.
 
 ## Licence

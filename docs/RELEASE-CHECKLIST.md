@@ -31,10 +31,30 @@ Les contrôles couvrent notamment le premier lancement vide, l’export et la re
 
 Ces essais doivent utiliser un dossier et des comptes dédiés au test. Un résultat observé doit être daté dans la note de version ; une absence d’essai reste indiquée comme telle.
 
+## Contrôles Windows
+
+```powershell
+npm ci
+npm run test:static
+npm run test:ui
+cargo fmt --manifest-path Platforms/Windows/src-tauri/Cargo.toml --check
+cargo clippy --manifest-path Platforms/Windows/src-tauri/Cargo.toml --all-targets -- -D warnings
+cargo test --manifest-path Platforms/Windows/src-tauri/Cargo.toml
+npm --prefix Platforms/Windows run build
+```
+
+- installer le paquet avec `Platforms\Windows\validate-installed.ps1` ;
+- vérifier le terminal PowerShell dans un dossier contenant des espaces ;
+- tester une tâche programmée, une récurrence et deux conversations simultanées ;
+- fermer la fenêtre avec le moteur activé, rouvrir depuis la zone de notification puis redémarrer la session ;
+- désinstaller, confirmer le retrait du démarrage automatique et vérifier que les données sont conservées ;
+- observer les thèmes et la grande police aux échelles 100 %, 125 %, 150 % et 200 %.
+
 ## Publication
 
 - choisir et ajouter la licence ;
 - vérifier qu’aucune donnée personnelle, clé, jeton ou chemin privé n’est suivi par Git ;
 - mettre à jour la version et les notes de version ;
 - pour une application précompilée, signer avec Developer ID, notariser et vérifier le téléchargement sur un autre Mac ;
+- signer l’exécutable et l’installateur Windows avec Authenticode, puis vérifier le téléchargement sur une autre machine ;
 - ne publier les mises à jour automatiques qu’après mise en place d’un flux signé et vérifié.

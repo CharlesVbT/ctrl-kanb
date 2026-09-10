@@ -65,6 +65,13 @@ setImmediate(() => {
     if (!rust.includes(`\"${action}\"`)) throw new Error(`action absente du contrat Windows: ${action}`);
   }
   const config = JSON.parse(fs.readFileSync("Platforms/Windows/src-tauri/tauri.conf.json", "utf8"));
+  const agents = fs.readFileSync("Platforms/Windows/src-tauri/src/agents.rs", "utf8");
+  for (const marker of ["CTRL_KANB_CODEX_PATH", "CTRL_KANB_CLAUDE_PATH", "OpenAI/Codex/bin", "Programs/OpenAI/Codex/bin/codex.exe"]) {
+    if (!agents.includes(marker)) throw new Error(`détection Windows incomplète : ${marker}`);
+  }
+  if (agents.indexOf('OpenAI/Codex/bin') > agents.indexOf('env::split_paths')) {
+    throw new Error("la version active de l’application Codex doit être cherchée avant l’ancien PATH");
+  }
   const storage = fs.readFileSync("Platforms/Windows/src-tauri/src/storage.rs", "utf8");
   const dataFolder = storage.match(/PathBuf::from\(root\)\.join\("([^"]+)"\)/)?.[1];
   if (!dataFolder || dataFolder === config.productName) {

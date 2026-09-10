@@ -91,4 +91,4 @@ if (-not $checks.WebView2) {
 rustup default stable-msvc
 npm install
 Write-Host "Socle Windows prêt. Codex et Claude Code restent facultatifs et seront détectés séparément par l’application."
-Write-Host "Lancez npm run dev pour ouvrir la préversion."
+Write-Host "Lancez npm run dev pour ouvrir CTRL KANB."
