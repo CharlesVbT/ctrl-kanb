@@ -1,11 +1,16 @@
+mod agents;
+mod background;
+mod conversations;
+mod notifications;
 mod platform;
+mod security;
 mod storage;
 mod terminal;
 
 use serde::Serialize;
 use serde_json::{Value, json};
 use std::{collections::HashSet, sync::Mutex};
-use tauri::{AppHandle, State};
+use tauri::{AppHandle, Manager, State};
 
 const KNOWN_ACTIONS: &[&str] = &[
     "ready",
@@ -72,31 +77,11 @@ pub(crate) fn message(function: &str, object: Value) -> NativeMessage {
     }
 }
 
-fn command_exists(name: &str) -> bool {
-    let path = std::env::var_os("PATH").unwrap_or_default();
-    #[cfg(not(target_os = "windows"))]
-    let names = [name.to_string()];
-    #[cfg(target_os = "windows")]
-    let names = {
-        let extensions = std::env::var("PATHEXT").unwrap_or_else(|_| ".EXE;.CMD;.BAT;.COM".into());
-        extensions
-            .split(';')
-            .map(|extension| format!("{}{}", name, extension.to_ascii_lowercase()))
-            .chain(std::iter::once(name.to_string()))
-            .collect::<Vec<_>>()
-    };
-    std::env::split_paths(&path).any(|folder| {
-        names
-            .iter()
-            .any(|candidate| folder.join(candidate).is_file())
-    })
-}
-
-fn scheduler_status() -> Value {
-    json!({"enabled":false,"installed":false,"state":"disabled","message":"Le moteur de tâches Windows n’est pas encore activé.","lastCheck":"","error":""})
-}
-
-fn status_messages(app: &AppHandle, state: &AppState) -> Result<Vec<NativeMessage>, String> {
+fn status_messages(
+    app: &AppHandle,
+    state: &AppState,
+    agents: &agents::AgentManager,
+) -> Result<Vec<NativeMessage>, String> {
     let loaded = storage::load(app)?;
     *state
         .last_presented
@@ -108,16 +93,13 @@ fn status_messages(app: &AppHandle, state: &AppState) -> Result<Vec<NativeMessag
             json!({"version":env!("CARGO_PKG_VERSION"),"build":"windows"}),
         ),
         message("load", loaded.board),
-        message(
-            "agentStatus",
-            json!({"codex":command_exists("codex"),"claude":command_exists("claude")}),
-        ),
-        message("backgroundSchedulerStatus", scheduler_status()),
+        message("agentStatus", agents::availability()),
+        message("backgroundSchedulerStatus", background::status(app, None)),
         message(
             "notificationAuthorizationStatus",
-            json!({"status":"unknown"}),
+            json!({"status":"authorized"}),
         ),
-        message("runsRestored", json!({"running":[],"queued":[]})),
+        message("runsRestored", agents::restored(agents)),
     ];
     if loaded.recovered {
         messages.push(message("nativeWarning", json!({"message":"Le fichier principal était illisible. La sauvegarde précédente a été restaurée à l’écran."})));
@@ -182,6 +164,8 @@ fn bridge_message(
     app: AppHandle,
     state: State<'_, AppState>,
     terminals: State<'_, terminal::TerminalManager>,
+    agents: State<'_, agents::AgentManager>,
+    security: State<'_, security::SecurityManager>,
 ) -> Result<Vec<NativeMessage>, String> {
     if serde_json::to_vec(&payload)
         .map_err(|error| error.to_string())?
@@ -197,6 +181,21 @@ fn bridge_message(
     let known: HashSet<&str> = KNOWN_ACTIONS.iter().copied().collect();
     if !known.contains(action) {
         return Err(format!("Action Windows inconnue : {action}"));
+    }
+    if let Some(result) = agents::handle(action, &payload, &app, &agents) {
+        return result;
+    }
+    if let Some(result) = conversations::handle(action, &payload, &app) {
+        return result;
+    }
+    if let Some(result) = background::handle(action, &payload, &app) {
+        return result;
+    }
+    if let Some(result) = notifications::handle(action, &payload) {
+        return result;
+    }
+    if let Some(result) = security::handle(action, &payload, &app, &security) {
+        return result;
     }
     if let Some(result) = terminal::handle(action, &payload, &app, &terminals) {
         return result;
@@ -216,24 +215,9 @@ fn bridge_message(
         return Ok(messages);
     }
     match action {
-        "ready" => status_messages(&app, &state),
+        "ready" => status_messages(&app, &state, &agents),
         "save" => save_board(&payload, &app, &state),
-        "agentStatus" => Ok(vec![message(
-            "agentStatus",
-            json!({"codex":command_exists("codex"),"claude":command_exists("claude")}),
-        )]),
-        "backgroundSchedulerStatus" => Ok(vec![message(
-            "backgroundSchedulerStatus",
-            scheduler_status(),
-        )]),
-        "notificationStatus" => Ok(vec![message(
-            "notificationAuthorizationStatus",
-            json!({"status":"unknown"}),
-        )]),
-        "securityStatus" => Ok(vec![message(
-            "securityStatus",
-            json!({"lockEnabled":false,"biometry":""}),
-        )]),
+        "agentStatus" => Ok(vec![message("agentStatus", agents::availability())]),
         "setAppearance" | "setConcurrency" => Ok(Vec::new()),
         "revealData" => {
             let path = storage::data_dir(&app)?;
@@ -255,9 +239,52 @@ fn bridge_message(
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    use tauri::{
+        WindowEvent,
+        menu::{Menu, MenuItem},
+        tray::TrayIconBuilder,
+    };
     tauri::Builder::default()
+        .plugin(tauri_plugin_notification::init())
         .manage(AppState::default())
         .manage(terminal::TerminalManager::default())
+        .manage(agents::AgentManager::default())
+        .manage(security::SecurityManager::default())
+        .setup(|app| {
+            let open = MenuItem::with_id(app, "open", "Ouvrir CTRL KANB", true, None::<&str>)?;
+            let quit = MenuItem::with_id(app, "quit", "Quitter", true, None::<&str>)?;
+            let menu = Menu::with_items(app, &[&open, &quit])?;
+            let mut tray = TrayIconBuilder::with_id("ctrl-kanb")
+                .menu(&menu)
+                .tooltip("CTRL KANB");
+            if let Some(icon) = app.default_window_icon() {
+                tray = tray.icon(icon.clone());
+            }
+            tray.on_menu_event(|app, event| match event.id.as_ref() {
+                "open" => {
+                    let manager = app.state::<security::SecurityManager>();
+                    let _ = security::unlock_and_show(app, &manager);
+                }
+                "quit" => app.exit(0),
+                _ => {}
+            })
+            .build(app)?;
+            let background = std::env::args_os().any(|argument| argument == "--background");
+            let manager = app.state::<security::SecurityManager>();
+            security::initialize(app.handle(), &manager, background)
+                .map_err(std::io::Error::other)?;
+            Ok(())
+        })
+        .on_window_event(|window, event| {
+            if let WindowEvent::CloseRequested { api, .. } = event
+                && background::should_keep_alive(window.app_handle())
+            {
+                api.prevent_close();
+                let manager = window.app_handle().state::<security::SecurityManager>();
+                security::mark_locked(window.app_handle(), &manager);
+                let _ = window.hide();
+            }
+        })
         .invoke_handler(tauri::generate_handler![bridge_message])
         .run(tauri::generate_context!())
         .expect("CTRL KANB Windows n’a pas pu démarrer");

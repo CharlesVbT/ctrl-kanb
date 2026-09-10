@@ -1,0 +1,138 @@
+#[cfg(target_os = "windows")]
+use crate::agents;
+use crate::{NativeMessage, message, storage};
+use serde_json::{Value, json};
+#[cfg(target_os = "windows")]
+use std::{env, process::Command};
+use tauri::AppHandle;
+
+#[cfg(target_os = "windows")]
+const TASK_NAME: &str = "CTRL KANB Scheduler";
+
+#[cfg(target_os = "windows")]
+fn hidden(command: &mut Command) {
+    agents::hidden(command);
+}
+
+fn task_installed() -> bool {
+    #[cfg(target_os = "windows")]
+    {
+        let mut command = Command::new("schtasks.exe");
+        command.args(["/Query", "/TN", TASK_NAME]);
+        hidden(&mut command);
+        command.status().is_ok_and(|status| status.success())
+    }
+    #[cfg(not(target_os = "windows"))]
+    {
+        false
+    }
+}
+
+fn board_enabled(app: &AppHandle) -> bool {
+    storage::load(app)
+        .ok()
+        .and_then(|loaded| {
+            loaded
+                .board
+                .pointer("/settings/backgroundSchedulerEnabled")
+                .and_then(Value::as_bool)
+        })
+        .unwrap_or(false)
+}
+
+pub fn should_keep_alive(app: &AppHandle) -> bool {
+    board_enabled(app)
+}
+
+pub fn status(app: &AppHandle, error: Option<&str>) -> Value {
+    let enabled = board_enabled(app);
+    let installed = task_installed();
+    let state = if error.is_some() {
+        "error"
+    } else if !enabled {
+        "disabled"
+    } else if installed {
+        "installed"
+    } else {
+        "missing"
+    };
+    let status = error.map(str::to_string).unwrap_or_else(|| {
+        if enabled && installed {
+            "Le moteur Windows est installé et contrôle les tâches chaque minute.".into()
+        } else if enabled {
+            "Le lancement automatique Windows est introuvable.".into()
+        } else {
+            "Aucun service ne tourne sans ton accord.".into()
+        }
+    });
+    json!({"enabled":enabled,"installed":installed,"state":state,"message":status,"lastCheck":"","error":error.unwrap_or("")})
+}
+
+fn store_enabled(app: &AppHandle, enabled: bool) -> Result<(), String> {
+    let mut loaded = storage::load(app)?.board;
+    loaded["settings"]["backgroundSchedulerEnabled"] = json!(enabled);
+    match storage::save(app, &loaded, Some(&loaded))? {
+        storage::SaveResult::Saved(_) | storage::SaveResult::Merged(_) => Ok(()),
+        storage::SaveResult::Conflict(_) => {
+            Err("Les réglages ont changé en même temps. Réessaie.".into())
+        }
+    }
+}
+
+fn configure(app: &AppHandle, enabled: bool) -> Result<Vec<NativeMessage>, String> {
+    #[cfg(target_os = "windows")]
+    {
+        let mut command = Command::new("schtasks.exe");
+        if enabled {
+            let executable = env::current_exe().map_err(|error| error.to_string())?;
+            let launch = format!("\"{}\" --background", executable.display());
+            command.args([
+                "/Create", "/SC", "ONLOGON", "/TN", TASK_NAME, "/TR", &launch, "/RL", "LIMITED",
+                "/F",
+            ]);
+        } else {
+            command.args(["/Delete", "/TN", TASK_NAME, "/F"]);
+        }
+        hidden(&mut command);
+        let output = command.output().map_err(|error| error.to_string())?;
+        if enabled && !output.status.success() {
+            let detail = String::from_utf8_lossy(&output.stderr).trim().to_string();
+            store_enabled(app, false)?;
+            return Err(if detail.is_empty() {
+                "Windows a refusé d’installer le lancement automatique.".into()
+            } else {
+                detail
+            });
+        }
+    }
+    #[cfg(not(target_os = "windows"))]
+    {
+        let _ = enabled;
+    }
+    store_enabled(app, enabled)?;
+    Ok(vec![message(
+        "backgroundSchedulerStatus",
+        status(app, None),
+    )])
+}
+
+pub fn handle(
+    action: &str,
+    payload: &Value,
+    app: &AppHandle,
+) -> Option<Result<Vec<NativeMessage>, String>> {
+    Some(match action {
+        "backgroundSchedulerStatus" => Ok(vec![message(
+            "backgroundSchedulerStatus",
+            status(app, None),
+        )]),
+        "setBackgroundScheduler" => configure(
+            app,
+            payload
+                .get("enabled")
+                .and_then(Value::as_bool)
+                .unwrap_or(false),
+        ),
+        _ => return None,
+    })
+}
