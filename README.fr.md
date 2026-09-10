@@ -2,7 +2,7 @@
 
 [English](README.md) · **Français**
 
-![Aperçu de CTRL KANB](docs/assets/ctrl-kanb-hero-fr.png)
+![CTRL KANB — poste de pilotage visuel du travail confié aux agents](docs/assets/ctrl-kanb-banner.png)
 
 **Le poste de pilotage local pour organiser, planifier et suivre le travail confié à Codex et Claude Code sur macOS et Windows.**
 
@@ -29,6 +29,8 @@ L’architecture pourra accueillir d’autres moteurs si leurs permissions, diag
 ## L’application en action
 
 Toutes les captures sont générées depuis un jeu fictif. Elles ne contiennent ni compte, ni conversation, ni chemin provenant d’un utilisateur réel.
+
+![Vue Flux de CTRL KANB avec des projets et tâches fictifs](docs/assets/ctrl-kanb-hero-fr.png)
 
 | Tableau | Agenda |
 |---|---|

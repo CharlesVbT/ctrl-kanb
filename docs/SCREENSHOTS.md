@@ -2,6 +2,8 @@
 
 Les images publiées dans le README sont générées depuis l’interface réelle avec un jeu de données entièrement fictif. Elles ne doivent jamais être remplacées par une capture du profil d’un utilisateur.
 
+La bannière `docs/assets/ctrl-kanb-banner.png` est une illustration marketing sans texte ni donnée utilisateur. Les huit autres images sont des captures reproductibles de l’interface.
+
 ## Régénérer les images
 
 Sur macOS avec Google Chrome :

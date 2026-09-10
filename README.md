@@ -2,7 +2,7 @@
 
 **English** · [Français](README.fr.md)
 
-![CTRL KANB overview](docs/assets/ctrl-kanb-hero.png)
+![CTRL KANB — visual control center for agent work](docs/assets/ctrl-kanb-banner.png)
 
 **A local control center for organizing, scheduling, and tracking work delegated to Codex and Claude Code on macOS and Windows.**
 
@@ -29,6 +29,8 @@ The architecture may support more engines in the future, provided their permissi
 ## The app in action
 
 Every screenshot below is generated from a fictional presentation dataset. It contains no real account, conversation, project path, or user data.
+
+![CTRL KANB Flow overview with fictional projects and tasks](docs/assets/ctrl-kanb-hero.png)
 
 | Board | Calendar |
 |---|---|
