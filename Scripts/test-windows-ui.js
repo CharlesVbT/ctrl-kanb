@@ -24,6 +24,9 @@ assert.ok(!d.body.textContent.includes('OAuth access token')&&!d.body.textConten
 w.CodexBoard.runnerFinished({cardID:'failed-card',success:false,exitCode:1,error:JSON.stringify({type:'error',status:429,error:{message:'Usage limit reached'}})});
 assert.ok(d.querySelector('#board').textContent.includes('Limite d’usage atteinte pour Claude Code.'),'une limite d’usage doit être présentée clairement');
 assert.ok(!d.querySelector('#board').textContent.includes('status')&&!d.querySelector('#board').textContent.includes('Usage limit'),'le détail technique ne doit pas rester dans la carte');
+assert.equal(state.settings.accountChecks['claude-code:default'].state,'ready','une limite de quota doit confirmer que le compte est reconnu');
+w.CodexBoard.runnerFinished({cardID:'failed-card',success:false,exitCode:1,error:rawClaudeError});
+assert.equal(state.settings.accountChecks['claude-code:default'].state,'blocked','un refus d’authentification réel doit demander une reconnexion');
 
 const timerStart=timers.length,past=new Date(Date.now()-60000).toISOString();
 w.CodexBoard.boardImported({board:{version:22,spaces:[state.spaces[0]],cards:[{...structuredClone(state.cards[0]),id:'imported-schedule',status:'queued',launchMode:'scheduled',scheduledAt:past,scheduleState:'pending',scheduleNextAttemptAt:past,recurrence:'weekly'}],utilityChats:[{id:'imported-chat',spaceID:'project',status:'running',executionState:'active',messages:[]}],templates:[],validations:[],settings:{...state.settings,backgroundSchedulerEnabled:true}},message:''});
