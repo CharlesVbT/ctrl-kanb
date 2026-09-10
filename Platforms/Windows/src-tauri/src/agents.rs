@@ -211,6 +211,15 @@ fn request_root(app: &AppHandle, payload: &Value) -> Result<PathBuf, String> {
     platform::verified_root(app, &flat)
 }
 
+fn display_root(space: &Value) -> String {
+    let displayed = string(space, "/displayRootPath");
+    if displayed.trim().is_empty() {
+        string(space, "/rootPath")
+    } else {
+        displayed
+    }
+}
+
 fn path_stays_in_project(raw: &str, root: &Path) -> bool {
     let requested = Path::new(raw);
     let candidate = if requested.is_absolute() {
@@ -515,7 +524,7 @@ fn launch(manager: &AgentManager, payload: Value, app: &AppHandle) -> Result<(),
                 json!({
                     "cardID":ctx.card_id,"threadID":ctx.thread_id,"engine":"claude-code",
                     "name":ctx.card.get("title").and_then(Value::as_str).unwrap_or("Session Claude"),
-                    "cwd":ctx.space["rootPath"],"projectName":ctx.space.get("name").and_then(Value::as_str).unwrap_or(""),
+                    "cwd":display_root(&ctx.space),"projectName":ctx.space.get("name").and_then(Value::as_str).unwrap_or(""),
                     "accountID":ctx.card.get("accountID").and_then(Value::as_str).unwrap_or(""),"created":ctx.created
                 }),
             );
@@ -702,7 +711,7 @@ fn handle_codex(
         }
         let (mut association, turn) = if let Ok(mut ctx) = context.lock() {
             ctx.thread_id = thread_id.clone();
-            let association = json!({"cardID":ctx.card_id,"threadID":thread_id,"name":ctx.card.get("title").and_then(Value::as_str).unwrap_or("Conversation Codex"),"preview":"","cwd":ctx.space["rootPath"],"created":ctx.created,"recovered":ctx.recovered,"accountID":ctx.card.get("accountID").and_then(Value::as_str).unwrap_or("")});
+            let association = json!({"cardID":ctx.card_id,"threadID":thread_id,"name":ctx.card.get("title").and_then(Value::as_str).unwrap_or("Conversation Codex"),"preview":"","cwd":display_root(&ctx.space),"created":ctx.created,"recovered":ctx.recovered,"accountID":ctx.card.get("accountID").and_then(Value::as_str).unwrap_or("")});
             let sandbox = if ctx.mode == "workspaceWrite" {
                 json!({"type":"workspaceWrite","writableRoots":[ctx.space["rootPath"]],"networkAccess":false,"excludeTmpdirEnvVar":false,"excludeSlashTmp":false})
             } else {
@@ -825,7 +834,7 @@ fn handle_claude(
                 emit(
                     app,
                     "conversationAssociated",
-                    json!({"cardID":ctx.card_id,"threadID":session,"engine":"claude-code","name":ctx.card.get("title").and_then(Value::as_str).unwrap_or("Session Claude"),"cwd":ctx.space["rootPath"],"projectName":ctx.space.get("name").and_then(Value::as_str).unwrap_or(""),"accountID":ctx.card.get("accountID").and_then(Value::as_str).unwrap_or("")}),
+                    json!({"cardID":ctx.card_id,"threadID":session,"engine":"claude-code","name":ctx.card.get("title").and_then(Value::as_str).unwrap_or("Session Claude"),"cwd":display_root(&ctx.space),"projectName":ctx.space.get("name").and_then(Value::as_str).unwrap_or(""),"accountID":ctx.card.get("accountID").and_then(Value::as_str).unwrap_or("")}),
                 );
             }
         }
@@ -939,7 +948,7 @@ fn handle_claude(
             emit(
                 app,
                 "approvalRequested",
-                json!({"cardID":ctx.card_id,"requestID":request_id,"kind":kind,"params":{"cwd":ctx.space["rootPath"],"tool":tool,"input":input,"questions":request["input"]["questions"]},"agentEngine":"claude-code","mode":ctx.mode,"threadID":ctx.thread_id}),
+                json!({"cardID":ctx.card_id,"requestID":request_id,"kind":kind,"params":{"cwd":display_root(&ctx.space),"tool":tool,"input":input,"questions":request["input"]["questions"]},"agentEngine":"claude-code","mode":ctx.mode,"threadID":ctx.thread_id}),
             );
         }
     } else if kind == "control_cancel_request" {
@@ -1096,6 +1105,7 @@ fn start(
 ) -> Result<Vec<NativeMessage>, String> {
     let mut request = payload.clone();
     let root = request_root(app, &request)?;
+    request["space"]["displayRootPath"] = json!(string(&request, "/space/rootPath"));
     request["space"]["rootPath"] = json!(root);
     let start = reserve_or_queue(manager, request.clone())?;
     if start {

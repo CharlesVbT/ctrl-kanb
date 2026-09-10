@@ -17,6 +17,13 @@ struct Session {
     _master: Box<dyn MasterPty + Send>,
 }
 
+impl Drop for Session {
+    fn drop(&mut self) {
+        // Close the child before ConPTY's handle disappears during app exit.
+        let _ = self.killer.kill();
+    }
+}
+
 #[derive(Clone, Default)]
 pub struct TerminalManager {
     sessions: Arc<Mutex<HashMap<String, Session>>>,
