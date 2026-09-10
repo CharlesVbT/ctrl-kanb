@@ -115,16 +115,30 @@ fn start(
 
     let reader_app = app.clone();
     let reader_id = id.clone();
+    let reader_sessions = manager.sessions.clone();
     thread::spawn(move || {
         let mut buffer = [0_u8; 8192];
         loop {
             match reader.read(&mut buffer) {
                 Ok(0) => break,
-                Ok(length) => emit(
-                    &reader_app,
-                    "terminalOutput",
-                    json!({"terminalID":reader_id,"text":String::from_utf8_lossy(&buffer[..length])}),
-                ),
+                Ok(length) => {
+                    let raw = String::from_utf8_lossy(&buffer[..length]);
+                    if raw.contains("\u{1b}[6n")
+                        && let Ok(mut sessions) = reader_sessions.lock()
+                        && let Some(session) = sessions.get_mut(&reader_id)
+                    {
+                        let _ = session.writer.write_all(b"\x1b[1;1R");
+                        let _ = session.writer.flush();
+                    }
+                    let visible = raw.replace("\u{1b}[6n", "");
+                    if !visible.is_empty() {
+                        emit(
+                            &reader_app,
+                            "terminalOutput",
+                            json!({"terminalID":reader_id,"text":visible}),
+                        );
+                    }
+                }
                 Err(_) => break,
             }
         }
