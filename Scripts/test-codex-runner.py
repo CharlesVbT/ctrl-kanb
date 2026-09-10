@@ -49,6 +49,7 @@ with tempfile.TemporaryDirectory(prefix="ctrl-kanb-codex-test-") as temporary:
     sync_environment = {
         **os.environ,
         "CTRL_KANB_CODEX_PATH": str(fake_executable),
+        "CTRL_KANB_DATA_FILE": str(board_file),
         "TEST_CWD": str(workspace),
         "TEST_SYNC": "1",
         "TEST_SYNC_COUNT": "2",
@@ -85,7 +86,7 @@ with tempfile.TemporaryDirectory(prefix="ctrl-kanb-codex-test-") as temporary:
     assert tools_result["fileResolved"], ("ajout d'un fichier du projet au chat", tools_result)
     assert tools_result["terminalStarted"] and tools_result["terminalOutput"] and tools_result["terminalPTY"] and tools_result["terminalInterrupted"] and tools_result["terminalStopped"], ("terminal natif", tools_result)
     assert "stack-env" not in "".join(event.get("data", {}).get("text", "") for event in tools_result["events"] if event.get("event") == "terminalOutput"), ("environnement terminal isole", tools_result)
-    print("PASS vrai terminal zsh et fichiers limites au projet ou dossier libre choisi")
+    print("PASS terminal zsh démarré dans le projet et navigateur de fichiers confiné")
 
     cases = [
         ("new thread assigned to exact project", {}),
@@ -103,6 +104,7 @@ with tempfile.TemporaryDirectory(prefix="ctrl-kanb-codex-test-") as temporary:
         environment = {
             **os.environ,
             "CTRL_KANB_CODEX_PATH": str(fake_executable),
+            "CTRL_KANB_DATA_FILE": str(board_file),
             "TEST_CWD": str(workspace),
             "TEST_PROMPT": prompt,
             "TEST_EXPECTED_PROMPT": prompt,
@@ -126,6 +128,7 @@ with tempfile.TemporaryDirectory(prefix="ctrl-kanb-codex-test-") as temporary:
     stubborn = {
         **os.environ,
         "CTRL_KANB_CODEX_PATH": str(fake_executable),
+        "CTRL_KANB_DATA_FILE": str(board_file),
         "TEST_CWD": str(workspace),
         "TEST_PROMPT": "Instruction contextualisée CTRL KANB",
         "TEST_EXPECTED_PROMPT": "Instruction contextualisée CTRL KANB",

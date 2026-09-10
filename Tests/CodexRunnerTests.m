@@ -231,7 +231,7 @@ int main(int argc, const char *argv[]) { @autoreleasepool {
     if (session.length) card[@"conversationID"] = session;
     [probe runCard:@{
         @"card":card,
-        @"space":@{ @"rootPath":environment[@"TEST_CWD"] ?: @"/private/tmp" },
+        @"space":@{ @"id":@"test-space", @"rootPath":environment[@"TEST_CWD"] ?: @"/private/tmp" },
         @"mode":@"readOnly"
     }];
     // Suspension demandee une fois le tour engage : c est le seul moment ou

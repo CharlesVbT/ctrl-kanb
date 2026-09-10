@@ -41,7 +41,8 @@ La version actuelle constitue la première étape publique du projet. Elle fonct
 - suivi des réponses et poursuite d’une conversation existante ;
 - centre de validations pour les commandes, modifications de fichiers et questions des agents ;
 - chat latéral Codex ou Claude Code avec choix du modèle, pièces jointes et conversations séparées ;
-- terminal zsh et navigateur de fichiers limités au dossier sélectionné ;
+- navigateur de fichiers limité au dossier sélectionné ;
+- terminal zsh démarrant dans ce dossier, avec les droits complets du compte macOS ;
 - synchronisation explicite des conversations Codex et Claude Code ;
 - comptes séparés par agent, sans copie des identifiants dans le tableau ;
 - thèmes clairs et sombres, palettes de couleurs et taille de police réglable ;

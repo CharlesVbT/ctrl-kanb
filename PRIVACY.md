@@ -26,7 +26,7 @@ Une actualisation Codex interroge les conversations associées. Une actualisatio
 
 ## Accès aux fichiers
 
-L’utilisateur choisit le dossier d’un projet. Le navigateur, le terminal et les tâches travaillent dans ce périmètre. Ajouter un fichier au chat transmet son contenu ou sa référence à l’agent choisi lors de l’envoi.
+L’utilisateur choisit le dossier d’un projet. Le navigateur de fichiers refuse les chemins qui en sortent. Le terminal démarre dans ce dossier mais reste un shell zsh complet : il peut accéder à tout ce que le compte macOS peut lire ou modifier. Les tâches suivent le mode d’accès, le bac à sable et les autorisations du moteur choisi. En mode sans modification, CTRL KANB limite Claude Code aux outils Read, Glob et Grep, ignore les autorisations personnelles ou propres au projet, puis refuse leurs demandes de chemin qui sortent du projet. Claude Code peut néanmoins charger au démarrage ses fichiers d’instructions CLAUDE.md selon son fonctionnement officiel, y compris leurs imports déjà configurés. Ajouter un fichier au chat transmet son contenu ou sa référence à l’agent choisi lors de l’envoi.
 
 Supprimer un projet de CTRL KANB ne supprime jamais son dossier dans le Finder. Supprimer une carte retire ses données du tableau après confirmation.
 

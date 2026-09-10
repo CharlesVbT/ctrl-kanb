@@ -22,7 +22,8 @@ Les problèmes propres aux services Codex ou Claude Code doivent aussi être sig
 
 - les données de l’application restent hors du dépôt ;
 - les fichiers locaux sont écrits avec des permissions limitées au compte utilisateur ;
-- les chemins de projet sont normalisés et contrôlés avant les opérations de fichiers ;
+- les chemins de projet sont normalisés et contrôlés avant les opérations du navigateur et les demandes des outils Read, Glob et Grep de Claude Code en mode sans modification ; Claude Code peut encore charger ses fichiers d’instructions CLAUDE.md au démarrage ;
+- le terminal intégré est un shell local complet qui démarre dans le projet et conserve les droits du compte macOS ;
 - les messages affichés dans la WebView sont échappés ;
 - les processus d’agent reçoivent des arguments structurés ;
 - le contrôle `npm run test:privacy` recherche les chemins absolus, emails, secrets courants et artefacts de données avant publication.

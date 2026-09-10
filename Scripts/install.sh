@@ -68,13 +68,15 @@ fi
 # vrai client et le font parler a un faux App Server.
 if command -v python3 >/dev/null 2>&1; then
   print -r -- "  tests du pont natif…"
-  if ! output="$(python3 "$PROJECT_DIR/Scripts/test-codex-runner.py" 2>&1)"; then
-    print -r -- ""
-    print -r -- "Le contrôle « test-codex-runner » a échoué ; rien n'a été installé." >&2
-    print -r -- "$output" | tail -20 >&2
-    exit 1
-  fi
-  print -r -- "  ${output##*$'\n'}"
+  for suite in test-security-boundaries test-cli-concurrency test-codex-runner test-claude-runner; do
+    if ! output="$(python3 "$PROJECT_DIR/Scripts/$suite.py" 2>&1)"; then
+      print -r -- ""
+      print -r -- "Le contrôle « $suite » a échoué ; rien n'a été installé." >&2
+      print -r -- "$output" | tail -20 >&2
+      exit 1
+    fi
+    print -r -- "  ${output##*$'\n'}"
+  done
 else
   print -r -- "  (python3 absent : tests du pont natif ignores)"
 fi

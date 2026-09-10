@@ -40,7 +40,7 @@ int main(int argc,const char *argv[]){@autoreleasepool{
     NSMutableDictionary *card=[@{@"id":@"test-card",@"title":environment[@"TEST_TITLE"]?:@"Café — test",@"prompt":environment[@"TEST_PROMPT"]?:@"Café, caractères et reprise",@"agentEngine":@"claude-code",@"model":environment[@"TEST_MODEL"]?:@"sonnet",@"reasoningEffort":environment[@"TEST_EFFORT"]?:@"medium"}mutableCopy];
     NSString *session=NSProcessInfo.processInfo.environment[@"TEST_SESSION"];if(session)card[@"conversationID"]=session;
     NSString *mode=NSProcessInfo.processInfo.environment[@"TEST_MODE"]?:@"workspaceWrite";
-    NSDictionary *space=@{@"name":environment[@"TEST_SPACE_NAME"]?:@"Projet test",@"rootPath":environment[@"TEST_CWD"]?:@"/private/tmp"};
+    NSDictionary *space=@{@"id":@"test-space",@"name":environment[@"TEST_SPACE_NAME"]?:@"Projet test",@"rootPath":environment[@"TEST_CWD"]?:@"/private/tmp"};
     [probe runCard:@{@"card":card,@"space":space,@"mode":mode}];
     if(queuePair){NSMutableDictionary *second=[card mutableCopy];second[@"id"]=@"test-card-2";[probe runCard:@{@"card":second,@"space":space,@"mode":mode}];}
     if([NSProcessInfo.processInfo.environment[@"TEST_STOP"]boolValue])dispatch_after(dispatch_time(DISPATCH_TIME_NOW,NSEC_PER_SEC/5),dispatch_get_main_queue(),^{[probe stopCard:@"test-card"];});
