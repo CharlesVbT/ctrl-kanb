@@ -66,6 +66,10 @@ La désinstallation retire cette entrée. Les données restent conservées volon
 
 ## Construire et contrôler
 
+### Installation utilisateur
+
+Le fichier `CTRL KANB_<version>_x64-setup.exe` est le parcours d’installation normal. Un double-clic suffit : l’installateur NSIS installe l’application dans `%LOCALAPPDATA%\CTRL KANB`, ajoute le raccourci du menu Démarrer et conserve les données dans `%LOCALAPPDATA%\CTRL KANB Data`. L’utilisateur n’a pas besoin d’ouvrir PowerShell et aucune console ne doit rester attachée au processus CTRL KANB. Les scripts `setup.ps1` et `build.ps1` ci-dessous sont réservés à la construction depuis les sources.
+
 Depuis `Platforms\Windows` dans PowerShell :
 
 ```powershell

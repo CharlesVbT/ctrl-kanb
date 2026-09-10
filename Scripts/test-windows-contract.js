@@ -48,6 +48,10 @@ setImmediate(() => {
   if (received.length !== 2 || received[1].claude !== true) throw new Error("événement natif non distribué");
 
   const rust = fs.readFileSync("Platforms/Windows/src-tauri/src/lib.rs", "utf8");
+  const entrypoint = fs.readFileSync("Platforms/Windows/src-tauri/src/main.rs", "utf8");
+  if (!entrypoint.includes('#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]')) {
+    throw new Error("l’exécutable Windows doit utiliser le sous-système graphique en release");
+  }
   const actions = [
     "ready", "save", "agentStatus", "agentProbe", "agentLogin", "securityStatus",
     "notificationStatus", "requestNotifications", "openNotificationSettings", "setAppLock",

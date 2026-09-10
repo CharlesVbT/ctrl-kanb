@@ -100,6 +100,14 @@ L’application produite localement utilise une signature ad hoc. Une distributi
 
 ## Construction Windows depuis les sources
 
+### Installation pour utiliser l’application
+
+Téléchargez `CTRL KANB_<version>_x64-setup.exe` depuis la page des releases GitHub, puis double-cliquez sur l’installateur. Il installe CTRL KANB dans votre profil Windows et crée le raccourci du menu Démarrer. Aucun terminal, Node.js, Python, Rust ou outil de développement n’est nécessaire pour utiliser cette version ; WebView2 est installé ou complété par l’installateur si Windows en a besoin.
+
+La première version publiée peut afficher l’avertissement SmartScreen tant que l’installateur n’est pas signé Authenticode. Vérifiez alors l’empreinte SHA-256 publiée avec la release avant de choisir **Informations complémentaires → Exécuter quand même**. L’application se lance ensuite directement depuis le menu Démarrer, sans fenêtre PowerShell ou Invite de commandes persistante.
+
+### Construire depuis le dépôt
+
 Depuis PowerShell, avec Git, Node.js, Rust MSVC, WebView2 et les outils C++ de Visual Studio installés :
 
 ```powershell
