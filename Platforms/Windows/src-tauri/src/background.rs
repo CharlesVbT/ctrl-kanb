@@ -70,8 +70,9 @@ pub fn status(app: &AppHandle, error: Option<&str>) -> Value {
 
 fn store_enabled(app: &AppHandle, enabled: bool) -> Result<(), String> {
     let mut loaded = storage::load(app)?.board;
+    let base = loaded.clone();
     loaded["settings"]["backgroundSchedulerEnabled"] = json!(enabled);
-    match storage::save(app, &loaded, Some(&loaded))? {
+    match storage::save(app, &loaded, Some(&base))? {
         storage::SaveResult::Saved(_) | storage::SaveResult::Merged(_) => Ok(()),
         storage::SaveResult::Conflict(_) => {
             Err("Les réglages ont changé en même temps. Réessaie.".into())
@@ -82,6 +83,13 @@ fn store_enabled(app: &AppHandle, enabled: bool) -> Result<(), String> {
 fn configure(app: &AppHandle, enabled: bool) -> Result<Vec<NativeMessage>, String> {
     #[cfg(target_os = "windows")]
     {
+        if !enabled && !task_installed() {
+            store_enabled(app, false)?;
+            return Ok(vec![message(
+                "backgroundSchedulerStatus",
+                status(app, None),
+            )]);
+        }
         let mut command = Command::new("schtasks.exe");
         if enabled {
             let executable = env::current_exe().map_err(|error| error.to_string())?;
@@ -95,11 +103,17 @@ fn configure(app: &AppHandle, enabled: bool) -> Result<Vec<NativeMessage>, Strin
         }
         hidden(&mut command);
         let output = command.output().map_err(|error| error.to_string())?;
-        if enabled && !output.status.success() {
+        if !output.status.success() {
             let detail = String::from_utf8_lossy(&output.stderr).trim().to_string();
-            store_enabled(app, false)?;
+            if enabled {
+                store_enabled(app, false)?;
+            }
             return Err(if detail.is_empty() {
-                "Windows a refusé d’installer le lancement automatique.".into()
+                if enabled {
+                    "Windows a refusé d’installer le lancement automatique.".into()
+                } else {
+                    "Windows n’a pas pu retirer le lancement automatique.".into()
+                }
             } else {
                 detail
             });

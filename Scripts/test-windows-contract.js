@@ -6,6 +6,12 @@ const invoked = [];
 const received = [];
 let nativeListener = null;
 const listeners = {};
+const platformAttributes = {};
+const document = {
+  documentElement: {
+    setAttribute(name, value) { platformAttributes[name] = value; }
+  }
+};
 const window = {
   __TAURI__: {
     core: {
@@ -25,8 +31,11 @@ const window = {
 };
 window.window = window;
 
-vm.runInNewContext(source, { window, console, String, Array, Promise }, { filename: "platform.js" });
+vm.runInNewContext(source, { window, document, console, String, Array, Promise }, { filename: "platform.js" });
 if (typeof window.ctrlKanbNative?.postMessage !== "function") throw new Error("adaptateur Tauri absent");
+if (window.CTRL_KANB_PLATFORM !== "windows" || platformAttributes["data-platform"] !== "windows") {
+  throw new Error("plateforme Windows non déclarée à l’interface");
+}
 
 window.CodexBoard = { agentStatus(value) { received.push(value); } };
 window.ctrlKanbNative.postMessage({ action: "agentStatus" });

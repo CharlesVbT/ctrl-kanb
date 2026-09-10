@@ -10,7 +10,7 @@ mod terminal;
 use serde::Serialize;
 use serde_json::{Value, json};
 use std::{collections::HashSet, sync::Mutex};
-use tauri::{AppHandle, Manager, State};
+use tauri::{AppHandle, Emitter, Manager, State};
 
 const KNOWN_ACTIONS: &[&str] = &[
     "ready",
@@ -241,7 +241,7 @@ fn bridge_message(
 pub fn run() {
     use tauri::{
         WindowEvent,
-        menu::{Menu, MenuItem},
+        menu::{Menu, MenuBuilder, MenuItem, MenuItemBuilder, SubmenuBuilder},
         tray::TrayIconBuilder,
     };
     tauri::Builder::default()
@@ -250,7 +250,70 @@ pub fn run() {
         .manage(terminal::TerminalManager::default())
         .manage(agents::AgentManager::default())
         .manage(security::SecurityManager::default())
+        .on_menu_event(|app, event| {
+            let action = event.id.as_ref();
+            if action == "quitApp" {
+                app.exit(0);
+            } else {
+                let _ = app.emit(
+                    "ctrl-kanb-native",
+                    message("menuAction", json!({"action":action})),
+                );
+            }
+        })
         .setup(|app| {
+            let new_task = MenuItemBuilder::with_id("newTask", "Nouvelle tâche")
+                .accelerator("Ctrl+N")
+                .build(app)?;
+            let quick_capture = MenuItemBuilder::with_id("quickCapture", "Capturer une idée")
+                .accelerator("Ctrl+Shift+N")
+                .build(app)?;
+            let new_project =
+                MenuItemBuilder::with_id("newProject", "Nouveau projet").build(app)?;
+            let file = SubmenuBuilder::new(app, "Fichier")
+                .items(&[&new_task, &quick_capture, &new_project])
+                .separator()
+                .text("exportData", "Exporter une sauvegarde…")
+                .text("importData", "Restaurer une sauvegarde…")
+                .text("revealData", "Afficher les données")
+                .separator()
+                .text("quitApp", "Quitter CTRL KANB")
+                .build()?;
+            let edit = SubmenuBuilder::new(app, "Édition")
+                .undo_with_text("Annuler")
+                .redo_with_text("Rétablir")
+                .separator()
+                .cut_with_text("Couper")
+                .copy_with_text("Copier")
+                .paste_with_text("Coller")
+                .select_all_with_text("Tout sélectionner")
+                .build()?;
+            let view = SubmenuBuilder::new(app, "Affichage")
+                .text("flow", "Flux")
+                .text("board", "Tableau")
+                .text("agenda", "Agenda")
+                .text("validations", "Validations")
+                .text("follow", "Suivi")
+                .separator()
+                .text("toggleSidebar", "Afficher ou masquer le panneau gauche")
+                .text("toggleTools", "Afficher ou masquer le panneau droit")
+                .build()?;
+            let tools = SubmenuBuilder::new(app, "Outils")
+                .text("toolsChat", "Chat")
+                .text("toolsTerminal", "Terminal")
+                .text("toolsFiles", "Fichiers")
+                .separator()
+                .text("revealProject", "Afficher le projet dans l’Explorateur")
+                .text("settings", "Réglages")
+                .build()?;
+            let help = SubmenuBuilder::new(app, "Aide")
+                .text("shortcuts", "Raccourcis clavier")
+                .build()?;
+            let application_menu = MenuBuilder::new(app)
+                .items(&[&file, &edit, &view, &tools, &help])
+                .build()?;
+            app.set_menu(application_menu)?;
+
             let open = MenuItem::with_id(app, "open", "Ouvrir CTRL KANB", true, None::<&str>)?;
             let quit = MenuItem::with_id(app, "quit", "Quitter", true, None::<&str>)?;
             let menu = Menu::with_items(app, &[&open, &quit])?;
