@@ -69,7 +69,7 @@
     classic:{ideas:t("Une idée reste ici tant qu’elle n’est pas suffisamment définie pour être lancée."),ready:t("La consigne est prête. Lance la carte manuellement quand tu veux confier le travail à l’agent choisi."),planned:t("La tâche démarrera automatiquement à la date prévue si le moteur local est disponible."),running:t("La carte arrive ici dès sa mise en file. Elle peut être arrêtée puis reprise dans sa conversation principale."),validation:t("L’agent attend une autorisation ou une réponse humaine avant de continuer."),review:t("Le résultat est disponible. Termine la tâche ou demande un approfondissement dans la même conversation."),done:t("Le travail est validé. Archive la carte pour alléger le tableau sans perdre son historique ni sa présence dans l’Agenda.")},
     routines:{setup:t("Prépare ici la consigne, la fréquence et le mode de lancement de la routine."),planned:t("La prochaine occurrence est configurée et attend son créneau de lancement."),running:t("Le passage actuel est en file, actif ou suspendu. Une reprise conserve la conversation principale."),validation:t("La routine attend une autorisation ou une information humaine."),review:t("Vérifie le résultat de ce passage avant de créer l’occurrence suivante ou d’arrêter la routine."),done:t("Le passage est validé. Son archivage retire la carte du tableau mais conserve sa trace dans Historique et Agenda.")}
   }[presetID]?.[kind]||t("Cette colonne représente une étape du workflow de la carte."));
-  let board = { version:22, spaces:[], cards:[], utilityChats:[], templates:[], validations:[], settings:{maxConcurrency:2,maxConcurrencyCodex:2,maxConcurrencyClaude:1,autoSync:true,backgroundSchedulerEnabled:false,autoArchiveCompletedDays:0,defaultModel:"gpt-5.6-sol",defaultEffort:"medium",defaultEffortCodex:"medium",defaultEffortClaude:"medium",sidebarCollapsed:false,expandedProjectIDs:[],defaultBoardPreset:"classic",activePresetByScope:{},accounts:[],activeAccount:{},accountChecks:{},conversationSyncChecks:{},agendaMode:"week",agendaTimeZone:"auto",agendaWeekStart:"auto",agendaHourCycle:"auto",theme:"auto",themePalette:"graphite",fontSize:"normal",inAppNotifications:"all",systemNotificationsEnabled:true,notificationWhen:"background",notificationEvents:{taskComplete:true,taskFailed:true,approval:true,chatReply:true,scheduleIssue:true},utilityPanelOpen:false,utilityPanelWidth:390,utilityTab:"chat",utilityAgent:"codex",utilitySpaceID:"",utilityCustomPath:"",priorities:defaultPriorities(),taxonomy:defaultTaxonomy()}, modifiedAt:new Date().toISOString() };
+  let board = { version:22, spaces:[], cards:[], utilityChats:[], templates:[], validations:[], settings:{maxConcurrency:2,maxConcurrencyCodex:2,maxConcurrencyClaude:1,autoSync:true,backgroundSchedulerEnabled:false,autoArchiveCompletedDays:0,defaultModel:"gpt-5.6-sol",defaultModelCodex:"gpt-5.6-sol",defaultModelClaude:"default",defaultEffort:"medium",defaultEffortCodex:"medium",defaultEffortClaude:"medium",sidebarCollapsed:false,expandedProjectIDs:[],defaultBoardPreset:"classic",activePresetByScope:{},accounts:[],activeAccount:{},accountChecks:{},conversationSyncChecks:{},agendaMode:"week",agendaTimeZone:"auto",agendaWeekStart:"auto",agendaHourCycle:"auto",theme:"auto",themePalette:"graphite",fontSize:"normal",inAppNotifications:"all",systemNotificationsEnabled:true,notificationWhen:"background",notificationEvents:{taskComplete:true,taskFailed:true,approval:true,chatReply:true,scheduleIssue:true},utilityPanelOpen:false,utilityPanelWidth:390,utilityTab:"chat",utilityAgent:"codex",utilitySpaceID:"",utilityCustomPath:"",priorities:defaultPriorities(),taxonomy:defaultTaxonomy()}, modifiedAt:new Date().toISOString() };
   let selection = "global", lastWorkspaceSelection="global", surfaceMode = "board", labelFilter = "", taxonomyFilter = "", priorityFilter = "", syncing = false, claudeSyncing = false;
   let syncState = {phase:"idle",completed:0,total:0,durationMs:0,lastAt:"",message:""};
   let claudeSyncState = {phase:"idle",completed:0,total:0,durationMs:0,lastAt:"",message:""};
@@ -184,20 +184,24 @@
   // donc aucun qualificatif de profondeur au nom du modele.
   const builtinEngines = [
     ["codex","Codex",[["gpt-5.6-sol","GPT-5.6 Sol"],["gpt-5.6-terra","GPT-5.6 Terra"],["gpt-5.6-luna","GPT-5.6 Luna"]],"gpt-5.6-sol"],
-    ["claude-code","Claude Code",[["opus","Claude Opus"],["sonnet","Claude Sonnet"],["haiku","Claude Haiku"]],"sonnet"],
+    ["claude-code","Claude Code",[["default","Automatique (recommandé)"],["opus","Claude Opus"],["sonnet","Claude Sonnet"],["haiku","Claude Haiku"]],"default"],
   ];
   // Un agent ACP choisit son modele dans sa propre configuration : CTRL KANB ne
   // lui en impose pas, il liste seulement l agent.
   const engineCatalog = () => builtinEngines;
   const engineEntry = value => engineCatalog().find(([id])=>id===engineKey(value)) || builtinEngines[0];
-  const normalizeEngine = value => engineCatalog().some(([id])=>id===value) ? value : "codex";
+  const normalizeEngine = value => {const key=engineKey(value);return engineCatalog().some(([id])=>id===key)?key:"codex"};
   const defaultEngine = () => normalizeEngine(board.settings?.defaultAgentEngine);
+  const modelCompatibleWith = (engine,value) => {const model=String(value||"").trim(),claude=engineKey(engine)==="claude-code";return Boolean(model)&&(claude?!model.startsWith("gpt-"):model.startsWith("gpt-"))};
   // Chaque moteur garde son propre modele par defaut : basculer d agent sur une
   // carte ne doit pas imposer de rechoisir un modele a chaque fois.
   const defaultModelFor = engine => {
     const [, , models, fallback] = engineEntry(engine);
     const stored = engineKey(engine)==="claude-code" ? board.settings?.defaultModelClaude : board.settings?.defaultModelCodex;
-    return models.some(([id])=>id===stored) ? stored : fallback;
+    return (models.some(([id])=>id===stored)||modelCompatibleWith(engine,stored)) ? stored : fallback;
+  };
+  const normalizeModelFor = (engine,value) => {
+    return modelCompatibleWith(engine,value) ? String(value).trim() : defaultModelFor(engine);
   };
   const effortValues = ["low","medium","high","xhigh","max"];
   const effortCatalog = [["low","Faible"],["medium","Moyen"],["high","Élevé"],["xhigh","Très élevé"],["max","Maximal"]];
@@ -470,7 +474,8 @@
     // « defaultModel » ne connaissait que Codex : on le reprend comme modele Codex
     // et on donne a Claude le sien, sans perdre le choix precedent.
     if(!data.settings.defaultModelCodex){data.settings.defaultModelCodex=data.settings.defaultModel||"gpt-5.6-sol";changed=true;}
-    if(!data.settings.defaultModelClaude){data.settings.defaultModelClaude="sonnet";changed=true;}
+    if(!data.settings.defaultModelClaude){data.settings.defaultModelClaude="default";changed=true;}
+    for(const [engine,key] of [["codex","defaultModelCodex"],["claude-code","defaultModelClaude"]]){const normalized=normalizeModelFor(engine,data.settings[key]);if(data.settings[key]!==normalized){data.settings[key]=normalized;changed=true;}}
     if(!effortValues.includes(data.settings.defaultEffortCodex)){data.settings.defaultEffortCodex=normalizeEffort(data.settings.defaultEffort);changed=true;}
     if(!effortValues.includes(data.settings.defaultEffortClaude)){data.settings.defaultEffortClaude=normalizeEffort(data.settings.defaultEffort);changed=true;}
     const codexConcurrency=normalizeConcurrency(data.settings.maxConcurrencyCodex??data.settings.maxConcurrency),claudeConcurrency=normalizeConcurrency(data.settings.maxConcurrencyClaude??1);
@@ -527,7 +532,7 @@
     for (const card of data.cards) {
       card.priority ||= "normal"; card.priorityLevelID ||= card.priority; card.runMode ||= "readOnly"; card.labels ||= []; card.subtasks ||= []; card.dependencies ||= []; card.conversations ||= [];
       const storedTaskNotification=normalizeTaskNotification(card.notificationMode);if(card.notificationMode!==storedTaskNotification){card.notificationMode=storedTaskNotification;changed=true;}
-      card.agentEngine ||= "codex"; card.model ||= data.settings.defaultModel; card.reasoningEffort ||= defaultEffortFor(card.agentEngine); card.columnAssignments ||= {};
+      card.agentEngine=normalizeEngine(card.agentEngine||"codex");const normalizedModel=normalizeModelFor(card.agentEngine,card.model);if(card.model!==normalizedModel){card.model=normalizedModel;changed=true;}card.reasoningEffort ||= defaultEffortFor(card.agentEngine); card.columnAssignments ||= {};
       for(const conversation of card.conversations){if(!conversation.engine){conversation.engine=normalizeEngine(card.agentEngine);changed=true;}if(!conversation.accountID){const key=engineKey(conversation.engine),chosen=data.settings.activeAccount[key];conversation.accountID=validAccountIDs.has(chosen)?chosen:`${key}:default`;changed=true;}if(technicalFailure(conversation.preview)){conversation.preview=friendlyAgentError(conversation.preview,conversation.engine);changed=true;}if(Array.isArray(conversation.messages))conversation.messages=conversation.messages.map(message=>{if(!message?.error&&!technicalFailure(message?.text))return message;const text=friendlyAgentError(message?.text,conversation.engine);if(text!==message?.text)changed=true;return {...message,text,error:true}});}
       if (!data.settings.priorities.some(p=>p.id===card.priorityLevelID)) card.priorityLevelID=data.settings.priorities.find(p=>p.id==="normal")?.id||data.settings.priorities[0].id;
       card.categoryAssignments ||= {};
@@ -561,7 +566,7 @@
       if(seenUtilityChats.has(key))return changed=true,false;
       seenUtilityChats.add(key);chat.utilityChat=true;chat.agentEngine=engine;chat.id=chat.id||`utility-chat-${chat.spaceID}-${engine}`;
       chat.title=chat.title||`${engineLabel(engine)} · ${getSpace(chat.spaceID)?.name||t("Projet")}`;chat.prompt=chat.prompt||"";chat.status=cardIsBusy(chat)?chat.status||"running":"ready";
-      if(chat.runMode!=="workspaceWrite"){chat.runMode="workspaceWrite";changed=true;}chat.model=chat.model||defaultModelFor(engine);chat.reasoningEffort=normalizeEffort(chat.reasoningEffort||defaultEffortFor(engine));
+      if(chat.runMode!=="workspaceWrite"){chat.runMode="workspaceWrite";changed=true;}const normalizedModel=normalizeModelFor(engine,chat.model);if(chat.model!==normalizedModel){chat.model=normalizedModel;changed=true;}chat.reasoningEffort=normalizeEffort(chat.reasoningEffort||defaultEffortFor(engine));
       chat.conversations=Array.isArray(chat.conversations)?chat.conversations:[];
       for(const conversation of chat.conversations){if(!conversation.engine){conversation.engine=engine;changed=true;}if(!conversation.accountID){const chosen=data.settings.activeAccount[engine];conversation.accountID=validAccountIDs.has(chosen)?chosen:`${engine}:default`;changed=true;}conversation.messages=Array.isArray(conversation.messages)?conversation.messages.slice(-120).map(message=>{if(!message?.error&&!technicalFailure(message?.text))return message;const text=friendlyUtilityError(message?.text,engine);if(text!==message?.text)changed=true;return {...message,text,error:true}}):[];if(technicalFailure(conversation.preview)){conversation.preview=friendlyUtilityError(conversation.preview,engine);changed=true;}const firstUser=conversation.messages.find(message=>message.role==="user")?.text;if(firstUser&&/^Chat (Codex|Claude Code) ·/i.test(String(conversation.name||""))){conversation.name=utilityConversationTitle(firstUser,[],engine);changed=true;}}
       chat.messages=Array.isArray(chat.messages)?chat.messages.slice(-120).map(message=>{const text=message?.error||technicalFailure(message?.text)?friendlyUtilityError(message?.text,engine):String(message?.text||"");if(text!==message?.text)changed=true;return {...message,text,attachments:Array.isArray(message?.attachments)?message.attachments.map(normalizeUtilityAttachment).filter(Boolean).slice(0,utilityAttachmentLimit):[]}}):[];
@@ -1208,7 +1213,7 @@
     return `<article class="focus-card ${paused?"paused":""}" style="--space-color:#${safeHex(space.accentHex)}"><div class="card-top"><span class="priority-ref" style="--priority-color:#${safeHex(priority.color,"9CA3AF")}">${esc(cardReference(card))}</span><h3><button class="card-title-button" data-action="edit-card" data-id="${esc(card.id)}">${esc(card.title)}</button></h3><button class="more pin-task ${card.pinned?'pinned':''}" data-action="pin-card" data-id="${esc(card.id)}" aria-label="${t("Épingler la tâche")}" aria-pressed="${Boolean(card.pinned)}">${icon("pin")}</button></div><div class="space-tag"><i></i>${esc(space.name)}</div><p class="prompt">${esc(card.prompt)}</p>${paused?`<div class="pause-note">${t("Ⅱ Exécution arrêtée · la conversation est conservée")}</div>`:""}<div class="focus-action"><span class="mode">${paused?t("Arrêtée"):esc(aiSummary(card))}</span>${action}</div></article>`;
   }
   const priorityOrder = card => priorityByID(card.priorityLevelID)?.weight ?? 999;
-  const modelLabel = value => ({"gpt-5.6-sol":"Sol","gpt-5.6-terra":"Terra","gpt-5.6-luna":"Luna","sonnet":"Sonnet","opus":"Opus","haiku":"Haiku"}[value]||t("Modèle par défaut"));
+  const modelLabel = value => ({"gpt-5.6-sol":"Sol","gpt-5.6-terra":"Terra","gpt-5.6-luna":"Luna","default":t("Automatique"),"sonnet":"Sonnet","opus":"Opus","haiku":"Haiku"}[value]||t("Modèle par défaut"));
   const effortLabel = value => t(effortCatalog.find(([id])=>id===value)?.[1]||"Moyen");
   const aiSummary = card => `${engineLabel(card.agentEngine)} · ${modelLabel(card.model||defaultModelFor(card.agentEngine))} · ${effortLabel(card.reasoningEffort||defaultEffortFor(card.agentEngine))}`;
 
@@ -1783,7 +1788,7 @@
     const previousSystemNotifications=Boolean(board.settings.systemNotificationsEnabled);
     if(has("defaultAgentEngine"))board.settings.defaultAgentEngine=normalizeEngine(data.defaultAgentEngine);
     if(has("defaultModelCodex"))board.settings.defaultModelCodex=data.defaultModelCodex||"gpt-5.6-sol";
-    if(has("defaultModelClaude"))board.settings.defaultModelClaude=data.defaultModelClaude||"sonnet";
+    if(has("defaultModelClaude"))board.settings.defaultModelClaude=normalizeModelFor("claude-code",data.defaultModelClaude||"default");
     // Conserve pour les versions anterieures, qui ne lisent que cette cle.
     board.settings.defaultModel=board.settings.defaultModelCodex;
     if(has("defaultEffortCodex"))board.settings.defaultEffortCodex=normalizeEffort(data.defaultEffortCodex);
@@ -1889,9 +1894,9 @@
   }
   let securityState={lockEnabled:false,biometry:"",checked:false};
   function engineModelOptions(engine,selected){
-    const models=engineEntry(engine)[2];
-    if(selected&&!models.some(([id])=>id===selected))models.unshift([selected,selected]);
-    return models.map(([id,label])=>`<option value="${esc(id)}" ${id===selected?"selected":""}>${esc(label)}</option>`).join("");
+    const models=[...engineEntry(engine)[2]],normalized=normalizeModelFor(engine,selected);
+    if(normalized&&!models.some(([id])=>id===normalized))models.unshift([normalized,normalized]);
+    return models.map(([id,label])=>`<option value="${esc(id)}" ${id===normalized?"selected":""}>${esc(t(label))}</option>`).join("");
   }
   let clearedDraftForm=null;
   const draftKey=form=>`ctrl-kanb.draft.${form?.dataset?.id||"new"}`;
@@ -1983,7 +1988,8 @@
       const concurrencyLabel=id==="codex"?t("Conversations différentes en parallèle"):t("Sessions différentes en parallèle");
       const concurrencyHelp=id==="codex"?t("Une même conversation reste séquentielle ; ses instructions attendent dans la file."):t("Une même session reste séquentielle. Plusieurs sessions dans un même dossier peuvent modifier les mêmes fichiers.");
       const concurrencyOptions=[1,2,3,4].map(value=>`<option value="${value}" ${value===concurrencyFor(id)?"selected":""}>${id==="codex"?tn(value,"{n} conversation","{n} conversations"):tn(value,"{n} session","{n} sessions")}</option>`).join("");
-      return `<article id="settings-${id==="codex"?"codex":"claude"}" class="engine-settings-section engine-settings-card"><div class="preference-heading engine-preference-heading"><div class="agent-mark">${engineLogo(id)}</div><div><h3>${label}</h3><p>${detail}</p></div><span class="agent-status ${ready?'available':'missing'}">${!engineAvailability.checked?t("Vérification…"):ready?t("Disponible sur ce Mac"):t("Non installé")}</span></div><div class="preference-grid"><div class="field"><label>${t("Modèle par défaut")}</label><small>${t("Utilisé par les nouvelles tâches {agent}.",{agent:label})}</small><select name="${modelSetting}">${models.map(([value,name])=>`<option value="${esc(value)}" ${value===defaultModelFor(id)?"selected":""}>${esc(name)}</option>`).join("")}</select></div><div class="field"><label>${t("Effort de réflexion")}</label><small>${t("Intensité de raisonnement transmise à {agent}.",{agent:label})}</small><select name="${effortSetting}">${effortOptions(defaultEffortFor(id))}</select></div><div class="field"><label>${concurrencyLabel}</label><small>${concurrencyHelp}</small><select name="${concurrencySetting}">${concurrencyOptions}</select></div></div><div class="engine-account-summary"><div><span>${t("Compte utilisé")}</span><strong>${esc(activeAccount(id)?.label||"—")}</strong><small class="${connection.state}">${esc(connection.label)}${connection.state==="ready"?` · ${esc(probeDate(accountCheck(compte)?.at))}`:""}</small></div><button type="button" class="ui-button secondary" data-action="scroll-setting" data-target="settings-accounts">${t("Gérer les comptes")}</button></div></article>`;
+      const modelHelp=id==="claude-code"?t("Automatique laisse Claude Code choisir un modèle disponible pour ce compte."):t("Utilisé par les nouvelles tâches {agent}.",{agent:label});
+      return `<article id="settings-${id==="codex"?"codex":"claude"}" class="engine-settings-section engine-settings-card"><div class="preference-heading engine-preference-heading"><div class="agent-mark">${engineLogo(id)}</div><div><h3>${label}</h3><p>${detail}</p></div><span class="agent-status ${ready?'available':'missing'}">${!engineAvailability.checked?t("Vérification…"):ready?t("Disponible sur ce Mac"):t("Non installé")}</span></div><div class="preference-grid"><div class="field"><label>${t("Modèle par défaut")}</label><small>${modelHelp}</small><select name="${modelSetting}">${models.map(([value,name])=>`<option value="${esc(value)}" ${value===defaultModelFor(id)?"selected":""}>${esc(t(name))}</option>`).join("")}</select></div><div class="field"><label>${t("Effort de réflexion")}</label><small>${t("Intensité de raisonnement transmise à {agent}.",{agent:label})}</small><select name="${effortSetting}">${effortOptions(defaultEffortFor(id))}</select></div><div class="field"><label>${concurrencyLabel}</label><small>${concurrencyHelp}</small><select name="${concurrencySetting}">${concurrencyOptions}</select></div></div><div class="engine-account-summary"><div><span>${t("Compte utilisé")}</span><strong>${esc(activeAccount(id)?.label||"—")}</strong><small class="${connection.state}">${esc(connection.label)}${connection.state==="ready"?` · ${esc(probeDate(accountCheck(compte)?.at))}`:""}</small></div><button type="button" class="ui-button secondary" data-action="scroll-setting" data-target="settings-accounts">${t("Gérer les comptes")}</button></div></article>`;
     }).join("");
   }
 

@@ -3,7 +3,9 @@ import sys,json,os,time,unicodedata
 args=sys.argv[1:]
 assert '--dangerously-skip-permissions' not in args
 assert '--permission-prompt-tool' in args and args[args.index('--permission-prompt-tool')+1]=='stdio'
-assert args[args.index('--model')+1]==os.environ.get('TEST_MODEL','sonnet'),args
+expected_model=os.environ.get('TEST_MODEL','sonnet')
+if expected_model=='default': assert '--model' not in args,args
+else: assert args[args.index('--model')+1]==expected_model,args
 assert args[args.index('--effort')+1]==os.environ.get('TEST_EFFORT','medium'),args
 if os.environ.get('TEST_MODE')=='readOnly':
  assert args[args.index('--tools')+1]=='Read,Glob,Grep'

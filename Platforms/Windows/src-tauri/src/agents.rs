@@ -89,6 +89,15 @@ fn engine(payload: &Value) -> String {
     }
 }
 
+fn claude_model(value: &str) -> Option<&str> {
+    let model = value.trim();
+    if model.is_empty() || model == "default" || model.starts_with("gpt-") {
+        None
+    } else {
+        Some(model)
+    }
+}
+
 fn conversation(payload: &Value) -> Option<String> {
     if payload
         .get("newConversation")
@@ -379,13 +388,10 @@ fn command_for(payload: &Value, root: &Path, session: &mut String) -> Result<Com
     } else {
         let card = &payload["card"];
         let mode = string(payload, "/mode");
-        let mut model = card
+        let model = card
             .get("model")
             .and_then(Value::as_str)
-            .unwrap_or("sonnet");
-        if model.starts_with("gpt-") || model.is_empty() {
-            model = "sonnet";
-        }
+            .unwrap_or("default");
         let mut effort = card
             .get("reasoningEffort")
             .and_then(Value::as_str)
@@ -409,8 +415,11 @@ fn command_for(payload: &Value, root: &Path, session: &mut String) -> Result<Com
             "stdio",
             "--permission-mode",
             "default",
-            "--model",
-            model,
+        ]);
+        if let Some(model) = claude_model(model) {
+            command.args(["--model", model]);
+        }
+        command.args([
             "--effort",
             effort,
             "--name",
@@ -1318,8 +1327,6 @@ fn probe(payload: &Value, app: &AppHandle) -> Result<Vec<NativeMessage>, String>
                 "Reponds uniquement par le mot pong.",
                 "--output-format",
                 "json",
-                "--model",
-                "haiku",
                 "--disable-slash-commands",
                 "--strict-mcp-config",
                 "--tools",
@@ -1536,5 +1543,14 @@ mod tests {
             claude_result_error(&message),
             "Not logged in · Please run /login"
         );
+    }
+
+    #[test]
+    fn claude_default_model_does_not_force_an_unavailable_alias() {
+        assert_eq!(claude_model("default"), None);
+        assert_eq!(claude_model(""), None);
+        assert_eq!(claude_model("gpt-5.6-sol"), None);
+        assert_eq!(claude_model("sonnet"), Some("sonnet"));
+        assert_eq!(claude_model("claude-sonnet-4-6"), Some("claude-sonnet-4-6"));
     }
 }

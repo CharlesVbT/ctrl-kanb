@@ -612,11 +612,18 @@ assert(enginesPage.includes("Conversations différentes en parallèle")&&engines
 assert(enginesPage.includes("Une même session reste séquentielle"),"La serialisation d une session Claude n est pas expliquee.");
 assert(enginesPage.includes("Plusieurs sessions dans un même dossier peuvent modifier les mêmes fichiers"),"Le risque de modifier un meme dossier depuis plusieurs sessions Claude n est pas explique.");
 assert(enginesPage.includes("Claude Opus")&&enginesPage.includes("Claude Sonnet")&&enginesPage.includes("Claude Haiku"),"Les modeles Claude n'apparaissent pas dans les reglages.");
+assert(enginesPage.includes("Automatique (recommandé)"),"Claude ne propose pas le routage automatique compatible avec le compte.");
+assert(enginesPage.includes("Automatique laisse Claude Code choisir un modèle disponible pour ce compte."),"Le routage automatique Claude n'est pas explique.");
 assert(enginesPage.includes("GPT-5.6 Sol"),"Les modeles Codex ont disparu des reglages.");
 assert(enginesPage.includes('class="engine-logo codex-logo" src="Brands/Codex-light.png"'),"Le logo officiel Codex manque dans les reglages.");
 assert(enginesPage.includes('class="engine-logo claude-code-logo" src="Brands/Claude-Code.png"'),"Le logo officiel Claude Code manque dans les reglages.");
 assert(fs.existsSync(`${__dirname}/../Resources/Brands/Codex-light.png`)&&fs.existsSync(`${__dirname}/../Resources/Brands/Codex-dark.png`)&&fs.existsSync(`${__dirname}/../Resources/Brands/Claude-Code.png`),"Les actifs officiels Codex ou Claude Code manquent des ressources.");
 assert(!enginesPage.includes("settings-acp")&&!enginesPage.includes("settings-providers"),"Les agents externes sont encore visibles.");
+
+load([card("claude-route","Route Claude","ready",{agentEngine:"claudeCode",model:"gpt-5.6-sol"})],{defaultModelClaude:"default"});
+const migratedClaude=saves().at(-1).data.cards.find(item=>item.id==="claude-route");
+assert(migratedClaude.agentEngine==="claude-code"&&migratedClaude.model==="default","Une ancienne carte Claude conserve encore un modèle Codex indisponible.");
+click({select:"settingsView"});
 
 const enginePrefs = values => ({id:"preferences-form",dataset:{},formValues:{defaultAgentEngine:"claude-code",defaultModelCodex:"gpt-5.6-luna",defaultModelClaude:"opus",defaultEffortCodex:"high",defaultEffortClaude:"low",maxConcurrencyCodex:"3",maxConcurrencyClaude:"1",defaultBoardPreset:"classic",autoArchiveCompletedDays:"0",theme:"auto",language:"fr",...values}});
 listeners.change({target:{closest:selector=>selector==="#preferences-form"?enginePrefs({}):null}});
