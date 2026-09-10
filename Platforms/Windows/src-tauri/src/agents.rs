@@ -901,20 +901,7 @@ fn handle_claude(
         let error = if success {
             None
         } else {
-            Some(
-                message
-                    .get("errors")
-                    .and_then(Value::as_array)
-                    .map(|items| {
-                        items
-                            .iter()
-                            .filter_map(Value::as_str)
-                            .collect::<Vec<_>>()
-                            .join("\n")
-                    })
-                    .filter(|v| !v.is_empty())
-                    .unwrap_or_else(|| "Claude Code n’a pas terminé cette exécution.".into()),
-            )
+            Some(claude_result_error(message))
         };
         finish(manager, app, context, success, error);
     } else if kind == "control_request" {
@@ -981,6 +968,28 @@ fn handle_claude(
             );
         }
     }
+}
+
+fn claude_result_error(message: &Value) -> String {
+    message
+        .get("errors")
+        .and_then(Value::as_array)
+        .map(|items| {
+            items
+                .iter()
+                .filter_map(Value::as_str)
+                .collect::<Vec<_>>()
+                .join("\n")
+        })
+        .filter(|value| !value.is_empty())
+        .or_else(|| {
+            message
+                .get("result")
+                .and_then(Value::as_str)
+                .filter(|value| !value.is_empty())
+                .map(str::to_owned)
+        })
+        .unwrap_or_else(|| "Claude Code n’a pas terminé cette exécution.".into())
 }
 
 fn handle_message(
@@ -1513,5 +1522,19 @@ mod tests {
         ));
         let _ = fs::remove_file(&outside);
         let _ = fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn claude_result_error_keeps_the_authentication_detail() {
+        let message = json!({
+            "type":"result",
+            "subtype":"success",
+            "is_error":true,
+            "result":"Not logged in · Please run /login"
+        });
+        assert_eq!(
+            claude_result_error(&message),
+            "Not logged in · Please run /login"
+        );
     }
 }

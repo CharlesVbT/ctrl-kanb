@@ -58,6 +58,13 @@ click('[data-action="close-modal"]');
 d.body.dispatchEvent(new w.KeyboardEvent('keydown',{key:'c',ctrlKey:true,altKey:true,bubbles:true,cancelable:true}));
 assert.equal(state.settings.utilityPanelOpen,true);
 assert.equal(state.settings.utilityTab,'chat');
+d.querySelector('[data-action="utility-tab"][data-tab="files"]').click();
+w.CodexBoard.projectFilesLoaded({spaceID:'project',entries:[{name:'exemple.txt',path:'exemple.txt',directory:false,size:12}]});
+const fileRow=d.querySelector('[data-utility-file][data-name="exemple.txt"]');
+assert.ok(fileRow,'le fichier de contrôle doit être visible');
+fileRow.dispatchEvent(new w.MouseEvent('contextmenu',{bubbles:true,cancelable:true,clientX:400,clientY:200,button:2}));
+assert.ok(d.body.textContent.includes('Ouvrir dans l’Explorateur de fichiers'),'le menu contextuel Windows doit employer une formulation correcte');
+assert.ok(!d.body.textContent.includes('le Explorateur'),'le menu contextuel ne doit pas conserver un article incorrect');
 d.body.dispatchEvent(new w.KeyboardEvent('keydown',{key:'l',ctrlKey:true,bubbles:true,cancelable:true}));
 assert.equal(messages.at(-1).action,'lockNow');
 
