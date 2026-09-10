@@ -1,59 +1,71 @@
+mod platform;
 mod storage;
+mod terminal;
 
 use serde::Serialize;
 use serde_json::{Value, json};
-use std::collections::HashSet;
-use tauri::AppHandle;
+use std::{collections::HashSet, sync::Mutex};
+use tauri::{AppHandle, State};
 
 const KNOWN_ACTIONS: &[&str] = &[
-    "agentLogin",
-    "agentProbe",
+    "ready",
+    "save",
     "agentStatus",
-    "backgroundSchedulerStatus",
-    "chooseFolder",
-    "chooseUtilityAttachments",
-    "chooseUtilityFolder",
+    "agentProbe",
+    "agentLogin",
+    "securityStatus",
+    "notificationStatus",
+    "requestNotifications",
+    "openNotificationSettings",
+    "setAppLock",
+    "lockNow",
+    "setAppearance",
     "copyText",
+    "chooseFolder",
     "exportBoard",
     "importBoard",
-    "listConversations",
-    "listProjectFiles",
-    "lockNow",
-    "notificationStatus",
-    "openClaudeConversation",
-    "openConversation",
-    "openNotificationSettings",
-    "openSystemTerminal",
-    "readConversation",
-    "ready",
-    "requestNotifications",
-    "respondRequest",
-    "revealData",
-    "revealPath",
-    "revealProjectFile",
-    "run",
-    "save",
-    "securityStatus",
-    "setAppLock",
-    "setAppearance",
-    "setBackgroundScheduler",
+    "chooseUtilityFolder",
+    "chooseUtilityAttachments",
     "setConcurrency",
-    "startTerminal",
+    "run",
     "stop",
-    "stopTerminal",
-    "syncClaudeSessions",
+    "respondRequest",
+    "listConversations",
     "syncConversations",
+    "syncClaudeSessions",
+    "readConversation",
+    "openConversation",
+    "openClaudeConversation",
+    "setBackgroundScheduler",
+    "backgroundSchedulerStatus",
+    "startTerminal",
     "terminalCommand",
     "terminalInterrupt",
+    "stopTerminal",
+    "openSystemTerminal",
+    "listProjectFiles",
+    "openProjectFile",
+    "revealProjectFile",
+    "openProjectFileWith",
+    "saveProjectFileAs",
+    "copyProjectFilePath",
+    "resolveProjectFileForChat",
+    "revealData",
+    "revealPath",
 ];
 
-#[derive(Serialize)]
-pub struct NativeMessage {
-    function: String,
-    object: Value,
+#[derive(Default)]
+struct AppState {
+    last_presented: Mutex<Option<Value>>,
 }
 
-fn message(function: &str, object: Value) -> NativeMessage {
+#[derive(Clone, Serialize)]
+pub(crate) struct NativeMessage {
+    pub(crate) function: String,
+    pub(crate) object: Value,
+}
+
+pub(crate) fn message(function: &str, object: Value) -> NativeMessage {
     NativeMessage {
         function: function.into(),
         object,
@@ -80,44 +92,97 @@ fn command_exists(name: &str) -> bool {
     })
 }
 
-fn status_messages(app: &AppHandle) -> Result<Vec<NativeMessage>, String> {
-    let board = storage::load(app)?;
-    Ok(vec![
+fn scheduler_status() -> Value {
+    json!({"enabled":false,"installed":false,"state":"disabled","message":"Le moteur de tâches Windows n’est pas encore activé.","lastCheck":"","error":""})
+}
+
+fn status_messages(app: &AppHandle, state: &AppState) -> Result<Vec<NativeMessage>, String> {
+    let loaded = storage::load(app)?;
+    *state
+        .last_presented
+        .lock()
+        .map_err(|_| "État de sauvegarde indisponible.")? = Some(loaded.board.clone());
+    let mut messages = vec![
         message(
             "appInfo",
-            json!({ "version": env!("CARGO_PKG_VERSION"), "build": "windows-preview" }),
+            json!({"version":env!("CARGO_PKG_VERSION"),"build":"windows"}),
         ),
-        message("load", board),
+        message("load", loaded.board),
         message(
             "agentStatus",
-            json!({ "codex": command_exists("codex"), "claude": command_exists("claude") }),
+            json!({"codex":command_exists("codex"),"claude":command_exists("claude")}),
         ),
-        message(
-            "backgroundSchedulerStatus",
-            json!({
-                "enabled": false, "installed": false, "state": "disabled",
-                "message": "Le moteur Windows sera ajouté après validation du socle.", "lastCheck": "", "error": ""
-            }),
-        ),
+        message("backgroundSchedulerStatus", scheduler_status()),
         message(
             "notificationAuthorizationStatus",
-            json!({ "status": "unknown" }),
+            json!({"status":"unknown"}),
         ),
-        message("runsRestored", json!({ "running": [], "queued": [] })),
-    ])
+        message("runsRestored", json!({"running":[],"queued":[]})),
+    ];
+    if loaded.recovered {
+        messages.push(message("nativeWarning", json!({"message":"Le fichier principal était illisible. La sauvegarde précédente a été restaurée à l’écran."})));
+    }
+    Ok(messages)
 }
 
 fn planned(action: &str) -> Vec<NativeMessage> {
     vec![message(
         "nativeWarning",
-        json!({
-            "message": format!("« {} » n’est pas encore disponible dans la préversion Windows.", action)
-        }),
+        json!({"message":format!("« {action} » n’est pas encore disponible dans la version Windows actuelle.")}),
     )]
 }
 
+fn save_board(
+    payload: &Value,
+    app: &AppHandle,
+    state: &AppState,
+) -> Result<Vec<NativeMessage>, String> {
+    let board = payload
+        .get("data")
+        .ok_or_else(|| "Tableau absent.".to_string())?;
+    let presented = state
+        .last_presented
+        .lock()
+        .map_err(|_| "État de sauvegarde indisponible.")?
+        .clone();
+    match storage::save(app, board, presented.as_ref())? {
+        storage::SaveResult::Saved(saved) => {
+            *state
+                .last_presented
+                .lock()
+                .map_err(|_| "État de sauvegarde indisponible.")? = Some(saved);
+            Ok(Vec::new())
+        }
+        storage::SaveResult::Merged(saved) => {
+            *state
+                .last_presented
+                .lock()
+                .map_err(|_| "État de sauvegarde indisponible.")? = Some(saved.clone());
+            Ok(vec![message(
+                "boardMerged",
+                json!({"board":saved,"message":"Les changements faits en parallèle ont été réunis."}),
+            )])
+        }
+        storage::SaveResult::Conflict(latest) => {
+            *state
+                .last_presented
+                .lock()
+                .map_err(|_| "État de sauvegarde indisponible.")? = Some(latest.clone());
+            Ok(vec![message(
+                "boardSaveConflict",
+                json!({"board":latest,"message":"Le tableau a été modifié en même temps. La version la plus récente a été rechargée et ta modification a été conservée dans un fichier de conflit."}),
+            )])
+        }
+    }
+}
+
 #[tauri::command]
-fn bridge_message(payload: Value, app: AppHandle) -> Result<Vec<NativeMessage>, String> {
+fn bridge_message(
+    payload: Value,
+    app: AppHandle,
+    state: State<'_, AppState>,
+    terminals: State<'_, terminal::TerminalManager>,
+) -> Result<Vec<NativeMessage>, String> {
     if serde_json::to_vec(&payload)
         .map_err(|error| error.to_string())?
         .len()
@@ -131,38 +196,43 @@ fn bridge_message(payload: Value, app: AppHandle) -> Result<Vec<NativeMessage>, 
         .ok_or_else(|| "Action Windows absente.".to_string())?;
     let known: HashSet<&str> = KNOWN_ACTIONS.iter().copied().collect();
     if !known.contains(action) {
-        return Err(format!("Action Windows inconnue : {}", action));
+        return Err(format!("Action Windows inconnue : {action}"));
     }
-
-    match action {
-        "ready" => status_messages(&app),
-        "save" => {
-            let board = payload
-                .get("data")
-                .ok_or_else(|| "Tableau absent.".to_string())?;
-            storage::save(&app, board)?;
-            Ok(Vec::new())
+    if let Some(result) = terminal::handle(action, &payload, &app, &terminals) {
+        return result;
+    }
+    if let Some(result) = platform::handle(action, &payload, &app) {
+        let messages = result?;
+        if let Some(imported) = messages
+            .iter()
+            .find(|item| item.function == "boardImported")
+            && let Some(board) = imported.object.get("board")
+        {
+            *state
+                .last_presented
+                .lock()
+                .map_err(|_| "État de sauvegarde indisponible.")? = Some(board.clone());
         }
+        return Ok(messages);
+    }
+    match action {
+        "ready" => status_messages(&app, &state),
+        "save" => save_board(&payload, &app, &state),
         "agentStatus" => Ok(vec![message(
             "agentStatus",
-            json!({
-                "codex": command_exists("codex"), "claude": command_exists("claude")
-            }),
+            json!({"codex":command_exists("codex"),"claude":command_exists("claude")}),
         )]),
         "backgroundSchedulerStatus" => Ok(vec![message(
             "backgroundSchedulerStatus",
-            json!({
-                "enabled": false, "installed": false, "state": "disabled",
-                "message": "Le moteur Windows sera ajouté après validation du socle.", "lastCheck": "", "error": ""
-            }),
+            scheduler_status(),
         )]),
         "notificationStatus" => Ok(vec![message(
             "notificationAuthorizationStatus",
-            json!({ "status": "unknown" }),
+            json!({"status":"unknown"}),
         )]),
         "securityStatus" => Ok(vec![message(
             "securityStatus",
-            json!({ "lockEnabled": false, "biometry": "" }),
+            json!({"lockEnabled":false,"biometry":""}),
         )]),
         "setAppearance" | "setConcurrency" => Ok(Vec::new()),
         "revealData" => {
@@ -173,7 +243,10 @@ fn bridge_message(payload: Value, app: AppHandle) -> Result<Vec<NativeMessage>, 
                 .spawn()
                 .map_err(|error| error.to_string())?;
             #[cfg(not(target_os = "windows"))]
-            let _ = path;
+            std::process::Command::new("open")
+                .arg(path)
+                .spawn()
+                .map_err(|error| error.to_string())?;
             Ok(Vec::new())
         }
         _ => Ok(planned(action)),
@@ -183,7 +256,22 @@ fn bridge_message(payload: Value, app: AppHandle) -> Result<Vec<NativeMessage>, 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .manage(AppState::default())
+        .manage(terminal::TerminalManager::default())
         .invoke_handler(tauri::generate_handler![bridge_message])
         .run(tauri::generate_context!())
         .expect("CTRL KANB Windows n’a pas pu démarrer");
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn declares_the_complete_native_contract() {
+        assert_eq!(KNOWN_ACTIONS.len(), 44);
+        assert_eq!(
+            KNOWN_ACTIONS.iter().copied().collect::<HashSet<_>>().len(),
+            44
+        );
+    }
 }

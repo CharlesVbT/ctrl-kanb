@@ -39,8 +39,20 @@ setImmediate(() => {
   if (received.length !== 2 || received[1].claude !== true) throw new Error("événement natif non distribué");
 
   const rust = fs.readFileSync("Platforms/Windows/src-tauri/src/lib.rs", "utf8");
-  const actions = [...fs.readFileSync("Resources/app.js", "utf8").matchAll(/action:\"([^\"]+)\"/g)].map(match => match[1]);
-  for (const action of new Set(actions)) {
+  const actions = [
+    "ready", "save", "agentStatus", "agentProbe", "agentLogin", "securityStatus",
+    "notificationStatus", "requestNotifications", "openNotificationSettings", "setAppLock",
+    "lockNow", "setAppearance", "copyText", "chooseFolder", "exportBoard", "importBoard",
+    "chooseUtilityFolder", "chooseUtilityAttachments", "setConcurrency", "run", "stop",
+    "respondRequest", "listConversations", "syncConversations", "syncClaudeSessions",
+    "readConversation", "openConversation", "openClaudeConversation", "setBackgroundScheduler",
+    "backgroundSchedulerStatus", "startTerminal", "terminalCommand", "terminalInterrupt",
+    "stopTerminal", "openSystemTerminal", "listProjectFiles", "openProjectFile",
+    "revealProjectFile", "openProjectFileWith", "saveProjectFileAs", "copyProjectFilePath",
+    "resolveProjectFileForChat", "revealData", "revealPath"
+  ];
+  if (new Set(actions).size !== 44) throw new Error("contrat natif incomplet");
+  for (const action of actions) {
     if (!rust.includes(`\"${action}\"`)) throw new Error(`action absente du contrat Windows: ${action}`);
   }
   const config = JSON.parse(fs.readFileSync("Platforms/Windows/src-tauri/tauri.conf.json", "utf8"));
@@ -49,5 +61,5 @@ setImmediate(() => {
   if (!dataFolder || dataFolder === config.productName) {
     throw new Error("le dossier de données Windows doit rester séparé du dossier d’installation NSIS");
   }
-  console.log(`PASS adaptateur Tauri et ${new Set(actions).size} actions Windows déclarées`);
+  console.log(`PASS adaptateur Tauri et ${actions.length} actions Windows déclarées`);
 });
