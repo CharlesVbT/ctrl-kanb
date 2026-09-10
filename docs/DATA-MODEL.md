@@ -47,7 +47,7 @@
 - `status`, `priorityLevelID`, `priorityNumber`, `runMode` ;
 - `executionState` : chaîne vide, `pausing` ou `paused` ; `pausedAt` conserve la date de suspension ;
 - `agentEngine`, `model`, `reasoningEffort` ;
-- `notificationMode` : `inherit`, `always` ou `mute` pour reprendre, forcer ou couper les notifications macOS de cette tâche ;
+- `notificationMode` : `inherit`, `always` ou `mute` pour reprendre, forcer ou couper les notifications système de cette tâche ;
 - `columnAssignments` : ancien classement conservé pour compatibilité, mais ignoré par les deux tableaux fixes ;
 - `categoryAssignments` : valeurs sélectionnées, regroupées par identifiant d'axe ;
 - `labels[]`, `subtasks[]`, `dependencies[]` ;
@@ -66,12 +66,12 @@ Le champ historique `priority` reflète `priorityLevelID` pour la compatibilité
 ## Notifications
 
 - `inAppNotifications` vaut `all` ou `essential`. Le second mode masque les confirmations de routine mais conserve les erreurs, demandes d’action et résultats d’agent ;
-- `systemNotificationsEnabled` coupe ou active globalement les alertes remises au Centre de notifications macOS ;
+- `systemNotificationsEnabled` coupe ou active globalement les alertes remises au système de notifications ;
 - `notificationWhen` vaut `background` ou `all` ;
 - `notificationEvents` active séparément les résultats réussis, échecs manuels, validations/questions, réponses du chat latéral et problèmes de planification ;
 - le réglage historique `notifications` reste écrit en miroir pour les anciennes versions de l’application.
 
-Le moteur natif applique d’abord `notificationMode` de la carte, puis les réglages globaux. `mute` bloque toujours l’alerte. `always` force l’alerte de la tâche même si sa catégorie ou le canal global sont coupés. La remise effective dépend encore de l’autorisation accordée à CTRL KANB dans macOS, dont l’état est affiché dans Réglages.
+Le moteur natif applique d’abord `notificationMode` de la carte, puis les réglages globaux. `mute` bloque toujours l’alerte. `always` force l’alerte de la tâche même si sa catégorie ou le canal global sont coupés. La remise effective dépend encore de l’autorisation accordée à CTRL KANB par le système, dont l’état est affiché dans Réglages.
 
 ## Comptes
 
@@ -122,7 +122,7 @@ Le bouton d’affichage progressif du panneau latéral est un état d’interfac
 
 L’Agenda ne duplique aucune donnée. Il dérive un événement par carte : `completedAt` pour une tâche terminée, y compris archivée, `scheduledAt` pour un lancement planifié, sinon `dueDate` pour une échéance manuelle. `durationMinutes` règle uniquement la hauteur temporelle de l’événement, de 15 à 480 minutes. Une suppression explicite de carte reste le seul moyen de retirer définitivement sa réalisation de l’Agenda.
 
-`agendaTimeZone` vaut `auto` ou un fuseau IANA, `agendaWeekStart` vaut `auto`, `0`, `1` ou `6`, et `agendaHourCycle` vaut `auto`, `h23` ou `h12`. Les valeurs automatiques suivent les réglages régionaux de macOS. Le fuseau règle l’affichage et la saisie ; il ne décale pas l’instant déjà enregistré.
+`agendaTimeZone` vaut `auto` ou un fuseau IANA, `agendaWeekStart` vaut `auto`, `0`, `1` ou `6`, et `agendaHourCycle` vaut `auto`, `h23` ou `h12`. Les valeurs automatiques suivent les réglages régionaux du système. Le fuseau règle l’affichage et la saisie ; il ne décale pas l’instant déjà enregistré.
 
 ## Organisations de tableau
 

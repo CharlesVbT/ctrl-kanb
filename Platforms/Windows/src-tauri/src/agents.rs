@@ -111,30 +111,49 @@ pub(crate) fn executable(engine: &str) -> Option<PathBuf> {
     } else {
         "codex"
     };
-    let override_name = if engine == "claude-code" {
-        "CLAUDE_PATH"
+    let override_names = if engine == "claude-code" {
+        ["CTRL_KANB_CLAUDE_PATH", "CLAUDE_PATH"]
     } else {
-        "CODEX_PATH"
+        ["CTRL_KANB_CODEX_PATH", "CODEX_PATH"]
     };
     let mut candidates = Vec::new();
-    if let Some(path) = env::var_os(override_name) {
-        candidates.push(PathBuf::from(path));
-    }
-    for folder in env::split_paths(&env::var_os("PATH").unwrap_or_default()) {
-        candidates.push(folder.join(format!("{name}.exe")));
-        #[cfg(not(target_os = "windows"))]
-        candidates.push(folder.join(name));
+    for override_name in override_names {
+        if let Some(path) = env::var_os(override_name) {
+            candidates.push(PathBuf::from(path));
+        }
     }
     #[cfg(target_os = "windows")]
     {
         if let Some(root) = env::var_os("LOCALAPPDATA") {
             if name == "codex" {
-                candidates.push(PathBuf::from(root).join("Programs/OpenAI/Codex/bin/codex.exe"));
+                let root = PathBuf::from(root);
+                let managed = root.join("OpenAI/Codex/bin");
+                let mut current = fs::read_dir(&managed)
+                    .into_iter()
+                    .flatten()
+                    .filter_map(Result::ok)
+                    .map(|entry| entry.path().join("codex.exe"))
+                    .filter(|path| path.is_file())
+                    .collect::<Vec<_>>();
+                current.sort_by_key(|path| {
+                    std::cmp::Reverse(
+                        fs::metadata(path)
+                            .and_then(|metadata| metadata.modified())
+                            .unwrap_or(std::time::SystemTime::UNIX_EPOCH),
+                    )
+                });
+                candidates.extend(current);
+                candidates.push(root.join("Programs/OpenAI/Codex/bin/codex.exe"));
             }
         }
         if let Some(root) = env::var_os("USERPROFILE") {
             candidates.push(PathBuf::from(root).join(format!(".local/bin/{name}.exe")));
         }
+    }
+    for folder in env::split_paths(&env::var_os("PATH").unwrap_or_default()) {
+        candidates.push(folder.join(format!("{name}.exe")));
+        #[cfg(not(target_os = "windows"))]
+        candidates.push(folder.join(name));
     }
     candidates.into_iter().find(|path| path.is_file())
 }
