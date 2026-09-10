@@ -81,6 +81,16 @@ setImmediate(() => {
     throw new Error("un parcours Windows affiche encore une fonctionnalité inachevée");
   }
   const config = JSON.parse(fs.readFileSync("Platforms/Windows/src-tauri/tauri.conf.json", "utf8"));
+  const packagedNotices = config.bundle?.resources || {};
+  for (const [source, destination] of Object.entries({
+    "../../../LICENSE": "LICENSE",
+    "../../../NOTICE": "NOTICE",
+    "../../../THIRD_PARTY_NOTICES.md": "THIRD_PARTY_NOTICES.md"
+  })) {
+    if (packagedNotices[source] !== destination) {
+      throw new Error(`mention légale absente du paquet Windows : ${destination}`);
+    }
+  }
   const agents = fs.readFileSync("Platforms/Windows/src-tauri/src/agents.rs", "utf8");
   for (const marker of ["CTRL_KANB_CODEX_PATH", "CTRL_KANB_CLAUDE_PATH", "OpenAI/Codex/bin", "Programs/OpenAI/Codex/bin/codex.exe"]) {
     if (!agents.includes(marker)) throw new Error(`détection Windows incomplète : ${marker}`);
