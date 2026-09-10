@@ -107,13 +107,6 @@ fn status_messages(
     Ok(messages)
 }
 
-fn planned(action: &str) -> Vec<NativeMessage> {
-    vec![message(
-        "nativeWarning",
-        json!({"message":format!("« {action} » n’est pas encore disponible dans la version Windows actuelle.")}),
-    )]
-}
-
 fn save_board(
     payload: &Value,
     app: &AppHandle,
@@ -233,7 +226,7 @@ fn bridge_message(
                 .map_err(|error| error.to_string())?;
             Ok(Vec::new())
         }
-        _ => Ok(planned(action)),
+        _ => Err("Cette action Windows n’a pas pu être exécutée.".into()),
     }
 }
 

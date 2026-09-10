@@ -64,6 +64,18 @@ setImmediate(() => {
   for (const action of actions) {
     if (!rust.includes(`\"${action}\"`)) throw new Error(`action absente du contrat Windows: ${action}`);
   }
+  const handlers = [
+    rust.slice(rust.indexOf("match action")),
+    ...["agents", "background", "conversations", "notifications", "platform", "security", "terminal"]
+      .map(name => fs.readFileSync(`Platforms/Windows/src-tauri/src/${name}.rs`, "utf8"))
+      .map(module => module.slice(module.indexOf("pub fn handle")))
+  ].join("\n");
+  for (const action of actions) {
+    if (!handlers.includes(`\"${action}\"`)) throw new Error(`action Windows sans gestionnaire: ${action}`);
+  }
+  if (rust.includes("n’est pas encore disponible dans la version Windows actuelle")) {
+    throw new Error("un parcours Windows affiche encore une fonctionnalité inachevée");
+  }
   const config = JSON.parse(fs.readFileSync("Platforms/Windows/src-tauri/tauri.conf.json", "utf8"));
   const agents = fs.readFileSync("Platforms/Windows/src-tauri/src/agents.rs", "utf8");
   for (const marker of ["CTRL_KANB_CODEX_PATH", "CTRL_KANB_CLAUDE_PATH", "OpenAI/Codex/bin", "Programs/OpenAI/Codex/bin/codex.exe"]) {
