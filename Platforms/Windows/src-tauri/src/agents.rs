@@ -1277,17 +1277,15 @@ fn probe(payload: &Value, app: &AppHandle) -> Result<Vec<NativeMessage>, String>
         if engine_name == "claude-code" {
             command.args([
                 "--print",
+                "Reponds uniquement par le mot pong.",
                 "--output-format",
                 "json",
                 "--model",
                 "haiku",
                 "--disable-slash-commands",
                 "--strict-mcp-config",
-                "--mcp-config",
-                "{\"mcpServers\":{}}",
                 "--tools",
                 "",
-                "Reponds uniquement par le mot pong.",
             ]);
         } else {
             command.args([
@@ -1305,13 +1303,45 @@ fn probe(payload: &Value, app: &AppHandle) -> Result<Vec<NativeMessage>, String>
         hidden(&mut command);
         let result = command.output();
         let (state, detail) = match result {
-            Ok(output) if output.status.success() => (
-                "ready",
-                String::from_utf8_lossy(&output.stdout).trim().to_string(),
-            ),
+            Ok(output) if engine_name == "claude-code" => {
+                let stdout = String::from_utf8_lossy(&output.stdout);
+                let parsed = serde_json::from_str::<Value>(stdout.trim()).ok();
+                let answer = parsed
+                    .as_ref()
+                    .and_then(|value| value.get("result"))
+                    .and_then(Value::as_str)
+                    .unwrap_or_else(|| stdout.trim());
+                let explicit_error = parsed
+                    .as_ref()
+                    .and_then(|value| value.get("is_error"))
+                    .and_then(Value::as_bool)
+                    .unwrap_or(false);
+                if output.status.success()
+                    && !explicit_error
+                    && answer.trim().eq_ignore_ascii_case("pong")
+                {
+                    ("ready", "pong".to_string())
+                } else {
+                    let stderr = String::from_utf8_lossy(&output.stderr);
+                    let raw = if answer.trim().is_empty() {
+                        stderr.trim()
+                    } else {
+                        answer.trim()
+                    };
+                    ("blocked", compact_probe_detail(raw))
+                }
+            }
+            Ok(output) if output.status.success() => {
+                let answer = String::from_utf8_lossy(&output.stdout);
+                if answer.trim().eq_ignore_ascii_case("pong") {
+                    ("ready", "pong".to_string())
+                } else {
+                    ("blocked", compact_probe_detail(answer.trim()))
+                }
+            }
             Ok(output) => (
                 "blocked",
-                String::from_utf8_lossy(&output.stderr).trim().to_string(),
+                compact_probe_detail(String::from_utf8_lossy(&output.stderr).trim()),
             ),
             Err(error) => ("blocked", error.to_string()),
         };
@@ -1322,6 +1352,20 @@ fn probe(payload: &Value, app: &AppHandle) -> Result<Vec<NativeMessage>, String>
         );
     });
     Ok(Vec::new())
+}
+
+fn compact_probe_detail(raw: &str) -> String {
+    let detail = raw.trim();
+    if detail.is_empty() {
+        return "Le moteur n’a pas répondu.".into();
+    }
+    if let Some(line) = detail
+        .lines()
+        .find(|line| line.to_lowercase().contains("usage limit"))
+    {
+        return line.trim().chars().take(500).collect();
+    }
+    detail.chars().take(500).collect()
 }
 
 fn login(payload: &Value) -> Result<Vec<NativeMessage>, String> {

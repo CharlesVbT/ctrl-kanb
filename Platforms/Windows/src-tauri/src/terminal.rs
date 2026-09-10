@@ -1,11 +1,11 @@
 use crate::{NativeMessage, message, platform};
-use portable_pty::{ChildKiller, CommandBuilder, PtySize, native_pty_system};
+use portable_pty::{ChildKiller, CommandBuilder, MasterPty, PtySize, native_pty_system};
 use serde_json::{Value, json};
 use std::{
     collections::HashMap,
     io::{Read, Write},
     process::Command,
-    sync::Mutex,
+    sync::{Arc, Mutex},
     thread,
 };
 use tauri::{AppHandle, Emitter};
@@ -13,11 +13,13 @@ use tauri::{AppHandle, Emitter};
 struct Session {
     writer: Box<dyn Write + Send>,
     killer: Box<dyn ChildKiller + Send + Sync>,
+    // ConPTY owns handles that must remain alive for the whole terminal session.
+    _master: Box<dyn MasterPty + Send>,
 }
 
-#[derive(Default)]
+#[derive(Clone, Default)]
 pub struct TerminalManager {
-    sessions: Mutex<HashMap<String, Session>>,
+    sessions: Arc<Mutex<HashMap<String, Session>>>,
 }
 
 fn value(payload: &Value, key: &str) -> String {
@@ -91,7 +93,14 @@ fn start(
         .take_writer()
         .map_err(|error| error.to_string())?;
     drop(pair.slave);
-    sessions.insert(id.clone(), Session { writer, killer });
+    sessions.insert(
+        id.clone(),
+        Session {
+            writer,
+            killer,
+            _master: pair.master,
+        },
+    );
     drop(sessions);
 
     let reader_app = app.clone();
@@ -112,6 +121,7 @@ fn start(
     });
     let wait_app = app.clone();
     let wait_id = id.clone();
+    let wait_sessions = manager.sessions.clone();
     thread::spawn(move || {
         let (exit_code, status_message) = match child.wait() {
             Ok(status) => (status.exit_code() as i64, String::new()),
@@ -122,6 +132,9 @@ fn start(
             "terminalStopped",
             json!({"terminalID":wait_id,"exitCode":exit_code,"message":status_message}),
         );
+        if let Ok(mut sessions) = wait_sessions.lock() {
+            sessions.remove(&wait_id);
+        }
     });
     Ok(vec![message(
         "terminalStarted",
