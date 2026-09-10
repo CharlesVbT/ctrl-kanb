@@ -44,6 +44,7 @@ npm --prefix Platforms/Windows run build
 ```
 
 - installer le paquet avec `Platforms\Windows\validate-installed.ps1` ;
+- lancer le raccourci du menu Démarrer et confirmer que la release démarre sans fenêtre PowerShell, Invite de commandes ou Windows Terminal ;
 - vérifier le terminal PowerShell dans un dossier contenant des espaces ;
 - tester une tâche programmée, une récurrence et deux conversations simultanées ;
 - fermer la fenêtre avec le moteur activé, rouvrir depuis la zone de notification puis redémarrer la session ;
