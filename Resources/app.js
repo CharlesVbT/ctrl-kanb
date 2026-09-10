@@ -421,7 +421,7 @@
     if(JSON.stringify(cleanAccountChecks)!==JSON.stringify(data.settings.accountChecks)){data.settings.accountChecks=cleanAccountChecks;changed=true;}
     if(!data.settings.conversationSyncChecks||typeof data.settings.conversationSyncChecks!=="object"||Array.isArray(data.settings.conversationSyncChecks)){data.settings.conversationSyncChecks={};changed=true;}
     const cleanSyncChecks={};
-    for(const engine of ["codex","claude-code"]){const check=data.settings.conversationSyncChecks[engine];if(!check||!["success","error","empty"].includes(check.phase))continue;cleanSyncChecks[engine]={phase:check.phase,completed:Math.max(0,Number(check.completed)||0),total:Math.max(0,Number(check.total)||0),failed:Math.max(0,Number(check.failed)||0),durationMs:Math.max(0,Number(check.durationMs)||0),lastAt:String(check.lastAt||""),message:String(check.message||"").slice(0,500)};}
+    for(const engine of ["codex","claude-code"]){const check=data.settings.conversationSyncChecks[engine];if(!check||!["success","partial","error","empty"].includes(check.phase))continue;cleanSyncChecks[engine]={phase:check.phase,completed:Math.max(0,Number(check.completed)||0),total:Math.max(0,Number(check.total)||0),failed:Math.max(0,Number(check.failed)||0),durationMs:Math.max(0,Number(check.durationMs)||0),lastAt:String(check.lastAt||""),message:String(check.message||"").slice(0,500)};}
     if(JSON.stringify(cleanSyncChecks)!==JSON.stringify(data.settings.conversationSyncChecks)){data.settings.conversationSyncChecks=cleanSyncChecks;changed=true;}
     const legacyNotifications=["all","background","none"].includes(storedSettings.notifications)?storedSettings.notifications:"all";
     if(typeof storedSettings.systemNotificationsEnabled!=="boolean"){data.settings.systemNotificationsEnabled=legacyNotifications!=="none";changed=true;}
@@ -620,15 +620,29 @@
   const validationKindIcon = kind => kind===t("file")?t("file"):kind==="input"?t("question"):"terminal";
   const validationStatusLabel = status => ({accepted:"Autorisée une fois",acceptedForSession:"Autorisée pour la session",declined:"Refusée",answered:"Réponse envoyée",resolved:"Résolue",interrupted:"Interrompue"}[status]||status);
   const validationTime = value => {const date=new Date(value);return Number.isNaN(date.getTime())?"":date.toLocaleString(locale(),{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"});};
+  function validationProjectPath(value,cwd=""){
+    const path=String(value||"").trim(),root=String(cwd||"").replace(/\/$/,"");
+    if(!path)return "";
+    return root&&path.startsWith(`${root}/`)?path.slice(root.length+1):path;
+  }
   function validationDetail(validation){
     const params=validation.params||{};
     if(validation.kind==="input")return (params.questions||[]).map(question=>question.question||question.header).filter(Boolean).join(" · ")||"L’agent attend une information pour continuer.";
+    const input=params.input&&typeof params.input==="object"?params.input:{},tool=String(params.tool||"").trim();
+    const path=validationProjectPath(input.file_path||input.path||params.path||params.filePath,params.cwd);
+    if(validation.kind==="file"){
+      if(path)return t("Créer ou modifier « {path} »",{path});
+      return t("Modifier des fichiers dans le dossier du projet.");
+    }
+    const inputCommand=Array.isArray(input.command)?input.command.join(" "):input.command;
+    if(inputCommand)return String(inputCommand);
+    if(tool&&path)return `${tool} · ${path}`;
+    if(tool)return t("Utiliser l’outil {tool}",{tool});
     const command=Array.isArray(params.command)?params.command.join(" "):params.command;
     if(command)return String(command);
     if(params.reason)return String(params.reason);
-    if(params.path||params.filePath)return String(params.path||params.filePath);
-    const visible=Object.fromEntries(Object.entries(params).filter(([key])=>!["threadId","turnId","itemId"].includes(key)));
-    return Object.keys(visible).length?JSON.stringify(visible,null,2):"Cette action dépasse les autorisations déjà accordées à la tâche.";
+    if(path)return path;
+    return t("Cette action dépasse les autorisations déjà accordées à la tâche.");
   }
   function registerValidation(payload){
     const card=getCard(payload.cardID);if(!card)return;
@@ -1211,7 +1225,7 @@
   }
   function openSimpleCardModal(card=null,defaults={}){
     if(!board.spaces.length)return openSpaceModal();
-    const preferred=card?.spaceID||defaults.spaceID||(selection==="global"||specialViews[selection]?board.spaces[0].id:selection);
+    const preferred=card?.spaceID||defaults.spaceID||preferredWorkspaceID();
     const engine=normalizeEngine(card?.agentEngine||defaults.agentEngine||defaultEngine());
     const executionType=simpleExecutionType(card,defaults),scheduledAt=card?.scheduledAt||defaults.scheduledAt||"",dueDate=card?.dueDate||defaults.dueDate||"";
     const recurrence=card?.recurrence&&card.recurrence!=="none"?card.recurrence:(defaults.recurrence&&defaults.recurrence!=="none"?defaults.recurrence:"weekly");
@@ -1221,6 +1235,7 @@
     const organisationUsed=Boolean(card&&(selectedPriority!==normalPriority||assignedValues(card).length||(card.labels||[]).length));
     modal(`<div class="editor-heading"><div><span class="eyebrow">${card?esc(cardReference(card))+" / "+t("TÂCHE"):t("NOUVELLE TÂCHE")}</span><h2>${card?t("Modifier la tâche"):t("Que doit faire l’agent ?")}</h2></div><button type="button" class="icon-button" data-action="close-modal" aria-label="${t("Fermer le panneau")}">×</button></div>
     <form id="card-form" class="task-editor-form simple-task-form" data-id="${esc(card?.id||"")}" data-simple="true">
+      <input type="hidden" name="dueDate" value="${esc(dueDate)}">
       <div class="simple-task-body">
         <section class="simple-task-main">
           <div class="draft-notice" id="draft-notice" hidden>${t("Un brouillon est disponible.")} <button type="button" data-action="restore-draft">${t("Le reprendre")}</button><button type="button" data-action="discard-draft">${t("L’écarter")}</button></div>
@@ -1270,7 +1285,7 @@
       status:existing?.executionState==="paused"?existing.status:(existing?.status||"ready"),priorityLevelID,priority:priorityLevelID,
       priorityNumber:existing&&existing.priorityLevelID===priorityLevelID?existing.priorityNumber:nextPriorityNumber(data.spaceID,priorityLevelID),categoryAssignments,
       agentEngine:engine,model:existing&&engineKey(existing.agentEngine)===engine?existing.model:defaultModelFor(engine),reasoningEffort:existing?.reasoningEffort||defaultEffortFor(engine),
-      runMode:data.runMode||"readOnly",durationMinutes:existing?.durationMinutes||60,dueDate:existing?.dueDate||"",recurrence,recurrenceSource:"board",
+      runMode:data.runMode||"readOnly",durationMinutes:existing?.durationMinutes||60,dueDate:data.dueDate||existing?.dueDate||"",recurrence,recurrenceSource:"board",
       launchMode,scheduledAt,missedRunPolicy:existing?.missedRunPolicy||"catchUp",routineName:existing?.routineName||"",notificationMode:normalizeTaskNotification(data.notificationMode),labels:String(data.labels||"").split(",").map(label=>label.trim()).filter(Boolean),
       subtasks:existing?.subtasks||[],dependencies:existing?.dependencies||[],completedAt:existing?.completedAt||"",updatedAt:now()
     };
@@ -1321,7 +1336,7 @@
     if (dependencyOpen(card)) return toast("Cette tâche dépend encore d’une carte non terminée.",true);
     if (cardIsBusy(card)) return toast(t("Cette tâche est déjà en cours. Arrête-la avant de la relancer."),true);
     const space=getSpace(card.spaceID), conv=activeConversation(card);
-    modal(`<h2>${t("Lancer avec {agent} ?", {agent: engineLabel(card.agentEngine)})}</h2><p class="lead">${esc(card.title)} · ${esc(aiSummary(card))}</p><div class="run-conversation ${conv?"":"new"}"><div><strong>${esc(conv?.name||t("Nouvelle conversation"))}</strong><small>${esc(conv?.id||t("Elle sera créée et liée automatiquement."))}</small></div></div><div class="field"><label>${t("Dossier de travail")}</label><div class="run-box">${esc(space?.rootPath||"")}</div></div><form id="run-form" class="form-grid" data-id="${esc(card.id)}"><div class="field"><label>${t("Niveau d’accès")}</label><select name="mode"><option value="readOnly" ${card.runMode==="readOnly"?"selected":""}>${t("Sans modification")}</option><option value="workspaceWrite" ${card.runMode!=="readOnly"?"selected":""}>${t("Autoriser les modifications")}</option></select></div>${conv?'<label class="check-row"><input type="checkbox" name="newConversation"><span>Créer une nouvelle conversation et conserver l’actuelle dans l’historique.</span></label>':""}${!isClaude(card)?`<label class="check-row"><input type="checkbox" name="autoApprove"><span>${t("Utiliser l’examen automatique des autorisations Codex.")}</span></label>`:`<p class="settings-callout">${t("Sans modification : outils Read, Glob et Grep ; leurs demandes hors projet sont refusées. Claude charge encore ses instructions CLAUDE.md. Modifications : permissions Claude habituelles.")}</p>`}<div class="modal-actions"><button type="button" class="secondary" data-action="close-modal">${t("Annuler")}</button><button class="primary">${t("Ajouter à la file")}</button></div></form>`);
+    modal(`<h2>${t("Lancer avec {agent} ?", {agent: engineLabel(card.agentEngine)})}</h2><p class="lead">${esc(card.title)} · ${esc(aiSummary(card))}</p><div class="run-conversation ${conv?"":"new"}"><div><strong>${esc(conv?.name||t("Nouvelle conversation"))}</strong><small>${esc(conv?.id||t("Elle sera créée et liée automatiquement."))}</small></div></div><div class="field"><label>${t("Dossier de travail")}</label><div class="run-box">${esc(space?.rootPath||"")}</div></div><form id="run-form" class="form-grid" data-id="${esc(card.id)}"><div class="field"><label>${t("Niveau d’accès")}</label><select name="mode"><option value="readOnly" ${card.runMode==="readOnly"?"selected":""}>${t("Sans modification")}</option><option value="workspaceWrite" ${card.runMode!=="readOnly"?"selected":""}>${t("Autoriser les modifications")}</option></select></div>${conv?'<label class="check-row"><input type="checkbox" name="newConversation"><span>Créer une nouvelle conversation et conserver l’actuelle dans l’historique.</span></label>':""}${!isClaude(card)?`<label class="check-row"><input type="checkbox" name="autoApprove"><span>${t("Utiliser l’examen automatique des autorisations Codex.")}</span></label>`:`<p class="settings-callout" id="claude-access-help">${card.runMode==="readOnly"?t("Claude pourra seulement lire le dossier du projet avec Read, Glob et Grep."):t("Claude demandera ton autorisation avant chaque modification du projet.")}</p>`}<div class="modal-actions"><button type="button" class="secondary" data-action="close-modal">${t("Annuler")}</button><button class="primary">${t("Ajouter à la file")}</button></div></form>`);
   }
 
   function batchReadyCards(){
@@ -1485,6 +1500,7 @@
     const progress=syncState.total?`${syncState.completed}/${syncState.total}`:"";
     if(syncState.phase==="running")return {label:progress?t("Codex · {progress}",{progress}):t("Connexion à Codex…"),detail:t("CTRL KANB actualise uniquement les conversations principales Codex."),showDetail:true};
     if(syncState.phase==="slow")return {label:progress?t("Codex répond lentement · {progress}",{progress}):t("Codex répond lentement"),detail:t("L’application répond toujours. La synchronisation s’arrêtera automatiquement si Codex ne répond pas."),showDetail:true};
+    if(syncState.phase==="partial")return {label:t("Codex partiellement à jour"),detail:syncCheckedDetail(syncState,syncState.message),showDetail:true};
     if(syncState.phase==="error")return {label:t("Actualisation Codex interrompue"),detail:syncState.message||t("Clique pour réessayer."),showDetail:true};
     if(syncState.phase==="empty")return {label:t("Aucune conversation Codex"),detail:t("Aucune conversation principale Codex n’est liée à une tâche active.")};
     if(syncState.phase==="success")return {label:t("Codex à jour"),detail:syncCheckedDetail(syncState,tn(syncState.total,"{n} conversation principale Codex actualisée.","{n} conversations principales Codex actualisées."))};
@@ -1493,6 +1509,7 @@
   function claudeSyncStatusCopy(){
     const progress=claudeSyncState.total?`${claudeSyncState.completed}/${claudeSyncState.total}`:"";
     if(claudeSyncState.phase==="running")return {label:progress?t("Claude · {progress}",{progress}):t("Lecture de Claude…"),detail:t("CTRL KANB relit les sessions Claude locales sans envoyer de message."),showDetail:true};
+    if(claudeSyncState.phase==="partial")return {label:t("Claude partiellement à jour"),detail:syncCheckedDetail(claudeSyncState,claudeSyncState.message),showDetail:true};
     if(claudeSyncState.phase==="error")return {label:t("Claude à vérifier"),detail:claudeSyncState.message||t("Clique pour réessayer."),showDetail:true};
     if(claudeSyncState.phase==="empty")return {label:t("Aucune session Claude"),detail:t("Aucune session Claude principale n’est liée à une tâche active.")};
     if(claudeSyncState.phase==="success")return {label:t("Claude à jour"),detail:syncCheckedDetail(claudeSyncState,tn(claudeSyncState.total,"{n} session Claude locale relue.","{n} sessions Claude locales relues."))};
@@ -1502,6 +1519,7 @@
     const progress=state.total?`${state.completed}/${state.total}`:"";
     if(state.phase==="running")return progress||t("En cours");
     if(state.phase==="slow")return t("Réponse lente");
+    if(state.phase==="partial")return progress||t("Partiel");
     if(state.phase==="error")return t("À vérifier");
     if(state.phase==="empty")return engine==="codex"?t("Aucune conversation"):t("Aucune session");
     if(state.phase==="success")return t("À jour");
@@ -1509,7 +1527,7 @@
   }
   function renderOneSyncStatus(selector,state,busy,copy,engine){
     const node=document.querySelector(selector);if(!node)return;
-    const status=sidebarSyncStateLabel(engine,state),label=engine==="codex"?"Codex":"Claude Code",statusIcon=busy?"sync":state.phase==="error"?"alert":state.phase==="success"?"check":"sync";
+    const status=sidebarSyncStateLabel(engine,state),label=engine==="codex"?"Codex":"Claude Code",statusIcon=busy?"sync":["error","partial"].includes(state.phase)?"alert":state.phase==="success"?"check":"sync";
     node.className=`sidebar-sync sync-${state.phase}`;node.disabled=busy;node.title=copy.detail;node.setAttribute("aria-label",`${copy.label}. ${copy.detail}`);
     node.innerHTML=`<span class="sidebar-sync-engine">${engineLogo(engine)}<strong>${label}</strong></span><span class="sidebar-sync-state">${icon(statusIcon)}<small>${esc(status)}</small></span>`;
   }
@@ -1747,7 +1765,13 @@
   function captureDraft(){const form=document.querySelector("#card-form");if(!form||form===clearedDraftForm||!form.elements)return;try{const entries=[...new FormData(form)];if(entries.some(([key,value])=>["title","prompt"].includes(key)&&String(value).trim())){localStorage.setItem(draftKey(form),JSON.stringify(entries));const status=document.querySelector("#draft-state");if(status)status.textContent="Brouillon conservé sur ce Mac";}}catch{}}
   function clearDraft(form){clearedDraftForm=form;try{localStorage.removeItem(draftKey(form))}catch{}}
   function restoreDraft(){const form=document.querySelector("#card-form"),entries=readDraft(form);if(!form||!entries)return;const values=Object.fromEntries(entries);if(values.agentEngine&&form.elements.model)form.elements.model.innerHTML=engineModelOptions(values.agentEngine,values.model);for(const control of form.elements){const selected=entries.filter(([key])=>key===control.name).map(([,value])=>value);if(control.type==="checkbox")control.checked=selected.includes(control.value);else if(control.multiple)for(const option of control.options)option.selected=selected.includes(option.value);else if(selected.length)control.value=selected[0];}if(form.dataset.simple==="true")updateSimpleExecutionFields(form,Boolean(values.scheduledAt));else if(form.elements.scheduledAt)refreshSchedulePicker(form,Boolean(values.scheduledAt));document.querySelector("#draft-notice").hidden=true;toast("Brouillon repris");}
-  function navigateTo(view,surface){closeModal();labelFilter="";priorityFilter="";taxonomyFilter="";selection=view;lastWorkspaceSelection=view;if(surface){surfaceMode=surface;board.settings.surfaceMode=surface;save()}render();}
+  function preferredWorkspaceID(){
+    if(getSpace(selection))return selection;
+    if(getSpace(lastWorkspaceSelection))return lastWorkspaceSelection;
+    return board.spaces[0]?.id||"";
+  }
+  function rememberWorkspaceSelection(value){if(value==="global"||getSpace(value))lastWorkspaceSelection=value;}
+  function navigateTo(view,surface){closeModal();labelFilter="";priorityFilter="";taxonomyFilter="";selection=view;rememberWorkspaceSelection(view);if(surface){surfaceMode=surface;board.settings.surfaceMode=surface;save()}render();}
   const commandActions=()=>[
     {label:t("Créer une tâche"),detail:"Un brief complet",key:"N",icon:"plus",run:()=>openCardModal()},
     {label:t("Capturer une idée"),detail:"Le titre suffit pour commencer",key:"⇧ N",icon:"edit",run:()=>openQuickCapture()},
@@ -1768,7 +1792,7 @@
   function openCommandPalette(){modal(`<div class="palette-search">${icon("search")}<input id="command-search" autofocus autocomplete="off" placeholder="${t("Une tâche, un projet, une action…")}" aria-label="${t("Rechercher une tâche, un projet ou une action")}"><kbd>esc</kbd></div><div id="command-results"></div><div class="palette-footer"><span>↑ ↓ naviguer</span><span>${t("↵ ouvrir")}</span><span>CTRL KANB</span></div>`,"command-palette");renderCommandResults("");}
   function renderCommandResults(query){const q=normalizeSearch(query);const actions=commandActions().map(c=>({...c,group:"Actions"}));const projects=orderedSpaces().map(space=>({label:space.name,detail:space.rootPath,group:"Projets",icon:"folder",run:()=>navigateTo(space.id,"board")}));const tasks=board.cards.filter(c=>!c.archived).sort((a,b)=>Number(b.pinned)-Number(a.pinned)||String(b.updatedAt).localeCompare(String(a.updatedAt))).map(c=>({label:c.title,detail:`${getSpace(c.spaceID)?.name||"Projet"} · ${statusLabel(c.status)} · ${cardReference(c)}`,group:"Tâches",icon:"check",run:()=>openCardModal(c)}));paletteItems=[...actions,...projects,...tasks].filter(c=>!q||normalizeSearch(`${c.label} ${c.detail}`).includes(q)).slice(0,q?16:12);paletteIndex=0;document.querySelector("#command-results").innerHTML=paletteItems.length?paletteItems.map((c,index)=>`${index===0||paletteItems[index-1].group!==c.group?`<div class="command-group">${c.group}</div>`:""}<button class="command-result ${index===0?"selected":""}" data-action="command-pick" data-index="${index}"><span class="command-icon">${icon(c.icon)}</span><span><strong>${esc(c.label)}</strong><small>${esc(c.detail)}</small></span>${c.key?`<kbd>${c.key}</kbd>`:""}</button>`).join(""):'<div class="command-empty">Aucun résultat. Essaie un titre ou un nom de projet.</div>';}
   function runPaletteItem(index){const item=paletteItems[index];if(item){closeModal();item.run();}}
-  function openQuickCapture(){if(!board.spaces.length)return openSpaceModal();modal(`<span class="eyebrow">${t("VIDE TON ESPRIT")}</span><h2>${t("Une idée, avant qu’elle s’envole.")}</h2><p class="lead">${t("Note-la maintenant. Tu pourras préciser le brief ensuite.")}</p><form id="quick-capture-form" class="form-grid"><div class="field"><label>${t("Ton idée")}</label><input name="title" required maxlength="240" autofocus placeholder="${t("Qu’as-tu en tête ?")}"></div><div class="two-cols"><div class="field"><label>${t("Projet")}</label><select name="spaceID">${board.spaces.map(s=>`<option value="${esc(s.id)}" ${s.id===selection?"selected":""}>${esc(s.name)}</option>`).join("")}</select></div><div class="field"><label>${t("Agent")}</label><select name="agentEngine"><option value="codex">Codex</option><option value="claude-code">Claude Code</option></select></div></div><div class="modal-actions"><span class="grow">${t("⌘ ↵ pour capturer")}</span><button type="button" class="secondary" data-action="close-modal">${t("Fermer")}</button><button class="primary">${t("Garder l’idée")}</button></div></form>`,"quick-capture");}
+  function openQuickCapture(){if(!board.spaces.length)return openSpaceModal();const preferred=preferredWorkspaceID();modal(`<span class="eyebrow">${t("VIDE TON ESPRIT")}</span><h2>${t("Une idée, avant qu’elle s’envole.")}</h2><p class="lead">${t("Note-la maintenant. Tu pourras préciser le brief ensuite.")}</p><form id="quick-capture-form" class="form-grid"><div class="field"><label>${t("Ton idée")}</label><input name="title" required maxlength="240" autofocus placeholder="${t("Qu’as-tu en tête ?")}"></div><div class="two-cols"><div class="field"><label>${t("Projet")}</label><select name="spaceID">${board.spaces.map(s=>`<option value="${esc(s.id)}" ${s.id===preferred?"selected":""}>${esc(s.name)}</option>`).join("")}</select></div><div class="field"><label>${t("Agent")}</label><select name="agentEngine"><option value="codex">Codex</option><option value="claude-code">Claude Code</option></select></div></div><div class="modal-actions"><span class="grow">${t("⌘ ↵ pour capturer")}</span><button type="button" class="secondary" data-action="close-modal">${t("Fermer")}</button><button class="primary">${t("Garder l’idée")}</button></div></form>`,"quick-capture");}
   function openShortcuts(){modal(`<span class="eyebrow">${t("MOINS DE CLICS, PLUS D’ÉLAN")}</span><h2>${t("À portée de clavier.")}</h2><div class="shortcut-list">${[["⌘ K",t("Rechercher et ouvrir une action")],["N / ⌘ N",t("Créer une tâche")],["⇧ N",t("Capturer une idée")],[t("⌥⌘ C"),t("Ouvrir le chat du projet")],[t("⌥⌘ T"),t("Ouvrir le terminal du projet")],[t("⌥⌘ F"),t("Parcourir les fichiers du projet")],["⌘ ↵",t("Envoyer ou enregistrer")],["1 / 2 / 3",`${t("Flux")} / ${t("Tableau")} / ${t("Agenda")}`],["4 / 5",`${t("Validations")} / ${t("Suivi")}`],["Esc",t("Fermer le panneau · conserver le brouillon")],["?",t("Afficher les raccourcis")]].map(([key,label])=>`<div><span>${label}</span><kbd>${key}</kbd></div>`).join("")}</div><p class="lead">${t("Les raccourcis sans ⌘ restent inactifs pendant la saisie.")}</p><div class="modal-actions"><button class="secondary" data-action="command-palette">${t("Ouvrir la palette de commandes")}</button><button class="primary" data-action="close-modal">${t("C’est noté")}</button></div>`);}
   function duplicateCard(card){if(!card)return;openCardModal(null,{...card,id:undefined,priorityNumber:undefined,title:`${card.title} — copie`,status:"backlog",launchMode:"manual",scheduledAt:"",dueDate:""});toast("Copie préparée. Enregistre-la pour la créer.");}
   function openClaudeSessionLink(cardID){modal(`<h2>${t("Associer une session Claude")}</h2><p class="lead">${t("Colle l’identifiant de la session à reprendre dans ce projet.")}</p><form id="claude-link-form" data-id="${esc(cardID)}" class="form-grid"><div class="field"><label>${t("Identifiant de session")}</label><input name="sessionID" required autofocus placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" pattern="[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"></div><div class="modal-actions"><button type="button" class="secondary" data-action="close-modal">${t("Annuler")}</button><button class="primary">Associer</button></div></form>`);}
@@ -1994,8 +2018,8 @@
     if(projectMenuID&&!event.target.closest(".project-nav-row")){projectMenuID=null;renderSidebar()}
     if(utilityFileMenu&&!event.target.closest?.(".utility-file-context-menu")){utilityFileMenu=null;document.querySelector(".utility-file-context-menu")?.remove?.()}
     const target=event.target.closest("[data-action],[data-select],[data-surface]");if(!target)return;
-    if(target.dataset.surface){if(target.dataset.select&&selection!==target.dataset.select){labelFilter="";priorityFilter="";taxonomyFilter="";}surfaceMode=target.dataset.surface;board.settings.surfaceMode=surfaceMode;if(target.dataset.select){selection=target.dataset.select;lastWorkspaceSelection=selection}save();render();return}
-    if(target.dataset.select){if(selection!==target.dataset.select){labelFilter="";priorityFilter="";taxonomyFilter="";}projectMenuID=null;const expandedNow=target.dataset.projectSelect?setProjectExpanded(target.dataset.projectSelect,true):false;if(target.dataset.select==="settingsView"){if(selection!=="settingsView")lastWorkspaceSelection=selection;selection="settingsView"}else{selection=target.dataset.select;lastWorkspaceSelection=selection}if(expandedNow)save();render();return}const action=target.dataset.action;
+    if(target.dataset.surface){if(target.dataset.select&&selection!==target.dataset.select){labelFilter="";priorityFilter="";taxonomyFilter="";}surfaceMode=target.dataset.surface;board.settings.surfaceMode=surfaceMode;if(target.dataset.select){selection=target.dataset.select;rememberWorkspaceSelection(selection)}save();render();return}
+    if(target.dataset.select){if(selection!==target.dataset.select){labelFilter="";priorityFilter="";taxonomyFilter="";}projectMenuID=null;const expandedNow=target.dataset.projectSelect?setProjectExpanded(target.dataset.projectSelect,true):false;if(target.dataset.select==="settingsView"){if(selection!=="settingsView")rememberWorkspaceSelection(selection);selection="settingsView"}else{selection=target.dataset.select;rememberWorkspaceSelection(selection)}if(expandedNow)save();render();return}const action=target.dataset.action;
     if(action==="command-palette"){openCommandPalette();return}
     if(action==="command-pick"){runPaletteItem(Number(target.dataset.index));return}
     if(action==="shortcuts"){openShortcuts();return}
@@ -2147,6 +2171,11 @@
       const chat=utilityChat(space.id,engine,true);chat.model=event.target.value;chat.updatedAt=now();save();renderUtilityPanel();return;
     }
     if(event.target.id==="utility-chat-conversation"){switchUtilityConversation(event.target.value);return}
+    if(event.target?.name==="mode"&&event.target.closest?.("#run-form")){
+      const help=document.querySelector("#claude-access-help");
+      if(help)help.textContent=event.target.value==="readOnly"?t("Claude pourra seulement lire le dossier du projet avec Read, Glob et Grep."):t("Claude demandera ton autorisation avant chaque modification du projet.");
+      return;
+    }
     if(event.target?.name==="spaceID"&&event.target.value==="__new-space__"){
       const form=event.target.closest("form");
       pendingAfterSpace={simple:Boolean(form?.dataset?.simple),defaults:captureCardDefaults(form)};
@@ -2417,10 +2446,10 @@
     syncStarted({total=syncState.total}){if(!syncing)return;syncState.total=total;syncState.completed=0;syncState.phase="running";renderSyncStatus()},
     syncProgress({completed=0,total=syncState.total}){if(!syncing)return;syncState.completed=completed;syncState.total=total;renderSyncStatus()},
     syncSlow({completed=syncState.completed,total=syncState.total}){if(!syncing)return;syncState.completed=completed;syncState.total=total;syncState.phase="slow";renderSyncStatus()},
-    conversationsSynced({conversations:items,total=syncState.total,failed=0,durationMs=0}){for(const thread of items||[])applyConversationSync(thread);const silent=syncState.silent;syncing=false;syncState={phase:failed?"error":"success",completed:total-failed,total,failed,durationMs,lastAt:now(),message:failed?tn(failed,"{n} conversation n’a pas répondu. Réessaie pour l’actualiser.","{n} conversations n’ont pas répondu. Réessaie pour les actualiser."):""};rememberConversationSync("codex",syncState);save();render();if(!silent)toast(failed?syncState.message:t("Actualisation Codex terminée en {duration}.",{duration:syncDurationLabel(durationMs)}),Boolean(failed))},
+    conversationsSynced({conversations:items,total=syncState.total,failed=0,durationMs=0}){for(const thread of items||[])applyConversationSync(thread);const silent=syncState.silent;syncing=false;const completed=Math.max(0,total-failed),phase=failed?(completed?"partial":"error"):"success",message=failed?tn(failed,"{completed}/{total} conversations Codex relues. {n} conversation est inaccessible.","{completed}/{total} conversations Codex relues. {n} conversations sont inaccessibles.",{completed,total}):"";syncState={phase,completed,total,failed,durationMs,lastAt:now(),message};rememberConversationSync("codex",syncState);save();render();if(!silent)toast(failed?syncState.message:t("Actualisation Codex terminée en {duration}.",{duration:syncDurationLabel(durationMs)}),Boolean(failed))},
     syncFailed({message,completed=syncState.completed,total=syncState.total}){const silent=syncState.silent;syncing=false;syncState={phase:"error",completed,total,failed:Math.max(0,total-completed),durationMs:0,lastAt:now(),message:message||t("Codex n’a pas répondu dans le délai prévu. Clique pour réessayer.")};rememberConversationSync("codex",syncState);save();renderHeader();renderSyncStatus();if(!silent)toast(syncState.message,true)},
     claudeSyncStarted({total=claudeSyncState.total}){if(!claudeSyncing)return;claudeSyncState.total=total;claudeSyncState.completed=0;claudeSyncState.phase="running";renderSyncStatus()},
-    claudeSessionsSynced({sessions=[],total=claudeSyncState.total,failed=0,durationMs=0}){for(const session of sessions)applyClaudeSessionSync(session);const silent=claudeSyncState.silent;claudeSyncing=false;const phase=!total?"empty":failed?"error":"success",message=failed?tn(failed,"{n} session Claude locale est introuvable.","{n} sessions Claude locales sont introuvables."):"";claudeSyncState={phase,completed:total-failed,total,failed,durationMs,lastAt:now(),message};rememberConversationSync("claude-code",claudeSyncState);save();render();if(!silent)toast(failed?message:t("Actualisation Claude terminée en {duration}.",{duration:syncDurationLabel(durationMs)}),Boolean(failed))},
+    claudeSessionsSynced({sessions=[],total=claudeSyncState.total,failed=0,durationMs=0}){for(const session of sessions)applyClaudeSessionSync(session);const silent=claudeSyncState.silent;claudeSyncing=false,completed=Math.max(0,total-failed),phase=!total?"empty":failed?(completed?"partial":"error"):"success",message=failed?tn(failed,"{completed}/{total} sessions Claude relues. {n} session Claude locale est introuvable.","{completed}/{total} sessions Claude relues. {n} sessions Claude locales sont introuvables.",{completed,total}):"";claudeSyncState={phase,completed,total,failed,durationMs,lastAt:now(),message};rememberConversationSync("claude-code",claudeSyncState);save();render();if(!silent)toast(failed?message:t("Actualisation Claude terminée en {duration}.",{duration:syncDurationLabel(durationMs)}),Boolean(failed))},
     claudeSyncFailed({message,total=claudeSyncState.total}){const silent=claudeSyncState.silent;claudeSyncing=false;claudeSyncState={phase:"error",completed:0,total,failed:total,durationMs:0,lastAt:now(),message:message||t("Les sessions Claude n’ont pas pu être relues.")};rememberConversationSync("claude-code",claudeSyncState);save();renderHeader();renderSyncStatus();if(!silent)toast(claudeSyncState.message,true)},
     conversationDetailLoaded({cardID,conversation}){const c=getCard(cardID);if(c&&cardID===detailCardID&&conversation?.id===detailThreadID&&document.querySelector(".conversation-drawer,.drawer-loading"))renderConversationDetail(c,conversation)},
     conversationDetailFailed({cardID,threadID,message}){if(cardID!==detailCardID||(threadID&&threadID!==detailThreadID)||!document.querySelector(".conversation-drawer,.drawer-loading"))return;if(document.querySelector("#conversation-message-form")){toast(message,true);return}modal(`<h2>${t("Conversation indisponible")}</h2><p class="lead">${esc(message)}</p><div class="modal-actions"><button class="secondary" data-action="close-modal">${t("Fermer")}</button></div>`)},
