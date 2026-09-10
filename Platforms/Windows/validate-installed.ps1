@@ -9,10 +9,31 @@ $installFolder = Join-Path $env:LOCALAPPDATA "CTRL KANB"
 $executable = Join-Path $installFolder "ctrl-kanb-windows.exe"
 $taskNames = @("CTRL KANB Validation A", "CTRL KANB Validation B")
 
+function Get-PeSubsystem {
+  param([Parameter(Mandatory = $true)][string]$Path)
+
+  $bytes = [System.IO.File]::ReadAllBytes($Path)
+  if ($bytes.Length -lt 256 -or $bytes[0] -ne 0x4D -or $bytes[1] -ne 0x5A) {
+    throw "Le programme installé n’est pas un exécutable PE valide : $Path"
+  }
+  $peOffset = [BitConverter]::ToInt32($bytes, 0x3C)
+  if ($peOffset -lt 0 -or ($peOffset + 94) -ge $bytes.Length) {
+    throw "L’en-tête PE du programme installé est incomplet : $Path"
+  }
+  if ($bytes[$peOffset] -ne 0x50 -or $bytes[$peOffset + 1] -ne 0x45) {
+    throw "La signature PE du programme installé est invalide : $Path"
+  }
+  return [BitConverter]::ToUInt16($bytes, $peOffset + 92)
+}
+
 Get-Process $processName -ErrorAction SilentlyContinue | Stop-Process -Force
 Start-Process -FilePath $Installer -ArgumentList "/S" -Wait
 if (-not (Test-Path -LiteralPath $executable -PathType Leaf)) {
   throw "Le programme installé est introuvable : $executable"
+}
+$peSubsystem = Get-PeSubsystem -Path $executable
+if ($peSubsystem -ne 2) {
+  throw "Le programme installé utilise le sous-système PE $peSubsystem au lieu du mode graphique Windows (2)."
 }
 
 $principal = New-ScheduledTaskPrincipal -UserId $env:USERNAME -LogonType Interactive -RunLevel Limited
@@ -34,6 +55,8 @@ $result = [ordered]@{
   sessionIDs = @($processes | Select-Object -ExpandProperty SessionId -Unique)
   responding = -not ($processes | Where-Object { -not $_.Responding })
   executableSHA256 = (Get-FileHash $executable -Algorithm SHA256).Hash
+  peSubsystem = $peSubsystem
+  graphicalExecutable = $peSubsystem -eq 2
   dataSeparated = Test-Path (Join-Path $env:LOCALAPPDATA "CTRL KANB Data")
   strayBoardInInstallFolder = [bool](Get-ChildItem $installFolder -Filter "board*.json" -ErrorAction SilentlyContinue)
 }
