@@ -118,7 +118,7 @@
     if(/model.*(?:not found|unsupported|unavailable|requires? (?:a )?newer version)|unsupported model|unknown model|update.*codex|codex.*update|upgrade.*latest|latest (?:app|cli|version)/i.test(detail))return t("Ce modèle n’est pas disponible avec la version installée de {agent}. Mets le moteur à jour ou choisis un autre modèle.",{agent:label});
     if(/command.*not found|commande.*introuvable|executable.*not found|spawn\s+.*enoent|no such file or directory/i.test(detail))return t("{agent} est introuvable sur ce PC. Installe-le ou indique son emplacement dans Réglages → Agents et modèles.",{agent:label});
     if(/timed?\s*out|timeout|deadline exceeded|délai.*dépass/i.test(detail))return t("{agent} n’a pas répondu dans le délai prévu. La tâche est conservée et peut être relancée.",{agent:label});
-    if(/econn|network|socket|dns|connection (?:failed|refused|reset)|connexion.*(?:impossible|interrompue)/i.test(detail))return t("La connexion de {agent} a été interrompue. Vérifie le réseau, puis réessaie.",{agent:label});
+    if(/\beconn\w*\b|network|socket|dns|connection (?:failed|refused|reset)|connexion.*(?:impossible|interrompue)/i.test(detail))return t("La connexion de {agent} a été interrompue. Vérifie le réseau, puis réessaie.",{agent:label});
     if(/eacces|eperm|access denied|permission denied|operation not permitted|accès refusé|autorisation refusée/i.test(detail))return t("{agent} n’a pas l’autorisation nécessaire pour accéder au projet. Vérifie le dossier et ses droits d’accès.",{agent:label});
     const clean=detail.replace(/^error\s*:\s*/i,"").split("\n").map(line=>line.trim()).filter(line=>line&&!/^\s*at\s+\S+/.test(line)&&!/^https?:\/\//i.test(line))[0]||"";
     if(clean&&clean.length<=320&&!technicalFailure(value))return clean;
@@ -489,12 +489,12 @@
     for(const [id,check] of Object.entries(data.settings.accountChecks)){
       if(!validAccountIDs.has(id)||!check||!['ready','blocked','missing','login'].includes(check.state))continue;
       const engine=engineKey(check.engine||id.split(':')[0]);
-      cleanAccountChecks[id]={engine,account:id,state:check.state,at:String(check.at||""),detail:check.state==="ready"?"":friendlyAgentError(check.detail,engine)};
+      cleanAccountChecks[id]={engine,account:id,state:check.state,at:String(check.at||""),detail:check.state==="ready"?"":technicalFailure(check.detail)?friendlyAgentError(check.detail,engine):String(check.detail||"").slice(0,500)};
     }
     if(JSON.stringify(cleanAccountChecks)!==JSON.stringify(data.settings.accountChecks)){data.settings.accountChecks=cleanAccountChecks;changed=true;}
     if(!data.settings.conversationSyncChecks||typeof data.settings.conversationSyncChecks!=="object"||Array.isArray(data.settings.conversationSyncChecks)){data.settings.conversationSyncChecks={};changed=true;}
     const cleanSyncChecks={};
-    for(const engine of ["codex","claude-code"]){const check=data.settings.conversationSyncChecks[engine];if(!check||!["success","partial","error","empty"].includes(check.phase))continue;const message=check.phase==="error"?friendlyAgentError(check.message,engine):String(check.message||"").slice(0,500);cleanSyncChecks[engine]={phase:check.phase,completed:Math.max(0,Number(check.completed)||0),total:Math.max(0,Number(check.total)||0),failed:Math.max(0,Number(check.failed)||0),durationMs:Math.max(0,Number(check.durationMs)||0),lastAt:String(check.lastAt||""),message};}
+    for(const engine of ["codex","claude-code"]){const check=data.settings.conversationSyncChecks[engine];if(!check||!["success","partial","error","empty"].includes(check.phase))continue;const rawMessage=String(check.message||"").slice(0,500),message=check.phase==="error"&&technicalFailure(rawMessage)?friendlyAgentError(rawMessage,engine):rawMessage;cleanSyncChecks[engine]={phase:check.phase,completed:Math.max(0,Number(check.completed)||0),total:Math.max(0,Number(check.total)||0),failed:Math.max(0,Number(check.failed)||0),durationMs:Math.max(0,Number(check.durationMs)||0),lastAt:String(check.lastAt||""),message};}
     if(JSON.stringify(cleanSyncChecks)!==JSON.stringify(data.settings.conversationSyncChecks)){data.settings.conversationSyncChecks=cleanSyncChecks;changed=true;}
     const legacyNotifications=["all","background","none"].includes(storedSettings.notifications)?storedSettings.notifications:"all";
     if(typeof storedSettings.systemNotificationsEnabled!=="boolean"){data.settings.systemNotificationsEnabled=legacyNotifications!=="none";changed=true;}
@@ -643,6 +643,21 @@
       else{card.scheduleState="failed";card.scheduleNote="Lancement impossible en l’état. Corrige la tâche, puis relance la programmation.";card.updatedAt=now();changed=true}
     }
     if(changed&&!queued){save();render()}
+  }
+
+  function prepareImportedBoard(restored) {
+    const safe=structuredClone(restored),settings=safe.settings&&typeof safe.settings==="object"?safe.settings:(safe.settings={});let changed=settings.backgroundSchedulerEnabled!==false;
+    settings.backgroundSchedulerEnabled=false;
+    for(const card of safe.cards||[]){
+      if(["queued","running"].includes(card.status)){card.status="ready";changed=true}
+      if(card.executionState||card.pausedAt){delete card.executionState;delete card.pausedAt;changed=true}
+      if(card.launchMode==="scheduled"&&!card.archived&&card.status!=="done"){
+        if(card.scheduleState!=="paused"||card.scheduleNextAttemptAt||card.scheduleTriggeredAt||Number(card.scheduleAttempts||0)!==0)changed=true;
+        card.scheduleState="paused";card.scheduleNextAttemptAt="";card.scheduleTriggeredAt="";card.scheduleAttempts=0;card.scheduleNote=t("Programmation suspendue après restauration. Reprends-la quand tu l’as vérifiée.");
+      }
+    }
+    for(const chat of safe.utilityChats||[]){if(["queued","running"].includes(chat.status)){chat.status="ready";changed=true}if(chat.executionState){delete chat.executionState;changed=true}}
+    return {board:safe,changed};
   }
 
   function syncLegacyConversationFields(card) {
@@ -2114,7 +2129,7 @@
     bridge({action:"chooseUtilityFolder"});
   }
   function confirmImportData(){
-    modal(`<div class="delete-project-head"><span>${icon("history")}</span><div><h2>${t("Restaurer une sauvegarde ?")}</h2><p class="lead">${t("Le fichier choisi remplacera les projets, tâches, réglages et historiques actuellement visibles dans CTRL KANB.")}</p></div></div><div class="restore-safety"><strong>${icon("shield")}${t("Une copie de sécurité sera créée automatiquement")}</strong><p>${t("Les dossiers Finder, leurs fichiers et les connexions Codex ou Claude Code ne seront ni déplacés ni supprimés.")}</p></div><form id="import-data-form"><label class="check-row"><input type="checkbox" name="confirm" required><span>${t("Je confirme remplacer l’organisation actuelle de CTRL KANB.")}</span></label><div class="modal-actions"><button type="button" class="secondary" data-action="close-modal">${t("Annuler")}</button><button class="danger">${t("Choisir la sauvegarde…")}</button></div></form>`);
+    modal(`<div class="delete-project-head"><span>${icon("history")}</span><div><h2>${t("Restaurer une sauvegarde ?")}</h2><p class="lead">${t("Le fichier choisi remplacera les projets, tâches, réglages et historiques actuellement visibles dans CTRL KANB.")}</p></div></div><div class="restore-safety"><strong>${icon("shield")}${t("Une copie de sécurité sera créée automatiquement")}</strong><p>${t("Les dossiers Finder, leurs fichiers et les connexions Codex ou Claude Code ne seront ni déplacés ni supprimés.")}</p><p>${t("Par sécurité, le moteur local sera désactivé et les tâches programmées seront restaurées en pause. Tu pourras les reprendre après vérification.")}</p></div><form id="import-data-form"><label class="check-row"><input type="checkbox" name="confirm" required><span>${t("Je confirme remplacer l’organisation actuelle de CTRL KANB.")}</span></label><div class="modal-actions"><button type="button" class="secondary" data-action="close-modal">${t("Annuler")}</button><button class="danger">${t("Choisir la sauvegarde…")}</button></div></form>`);
   }
 
   document.addEventListener("contextmenu",event=>{
@@ -2525,7 +2540,7 @@
     projectFilePathCopied(){toast(t("Chemin d’accès copié."))},
     projectFileSaved({path}){toast(t("Copie enregistrée dans « {nom} ».",{nom:String(path||"").split("/").filter(Boolean).at(-1)||t("Fichier")}))},
     boardExported({path}){toast(t("Sauvegarde exportée dans « {nom} ».",{nom:String(path||"").split("/").filter(Boolean).at(-1)||t("Fichier")}))},
-    boardImported({board:restored,message}){if(restored?.spaces&&restored?.cards){selection="global";lastWorkspaceSelection="global";this.load(restored)}toast(message||t("Sauvegarde restaurée."))},
+    boardImported({board:restored,message}){if(restored?.spaces&&restored?.cards){const prepared=prepareImportedBoard(restored);selection="global";lastWorkspaceSelection="global";this.load(prepared.board);if(prepared.changed)save()}toast(message||t("Sauvegarde restaurée. Les programmations sont en pause jusqu’à leur reprise manuelle."))},
     nativeError({message}){toast(friendlyNativeError(message),true)},nativeWarning({message}){toast(friendlyNativeError(message),true)},
     boardMerged({board:latest,message}){if(latest?.spaces&&latest?.cards)this.load(latest);toast(message||t("Les changements faits en parallèle ont été réunis."))},
     boardSaveConflict({board:latest,message}){if(latest?.spaces&&latest?.cards)this.load(latest);toast(message||t("Le tableau a changé sur le disque et vient d’être rechargé."),true)},

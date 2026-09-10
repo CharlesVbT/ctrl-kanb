@@ -138,6 +138,10 @@ fn configure(app: &AppHandle, enabled: bool) -> Result<Vec<NativeMessage>, Strin
     )])
 }
 
+pub fn disable_after_import(app: &AppHandle) -> Result<(), String> {
+    configure(app, false).map(|_| ())
+}
+
 pub fn handle(
     action: &str,
     payload: &Value,

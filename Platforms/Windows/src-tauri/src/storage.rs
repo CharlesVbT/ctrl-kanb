@@ -124,6 +124,70 @@ fn validate_import(board: &Value) -> Result<(), String> {
     Ok(())
 }
 
+fn neutralize_imported_board(restored: &mut Map<String, Value>) -> usize {
+    let settings = restored
+        .entry("settings")
+        .or_insert_with(|| json!({}))
+        .as_object_mut()
+        .expect("import settings validated");
+    settings.insert("backgroundSchedulerEnabled".into(), json!(false));
+
+    let mut paused = 0;
+    if let Some(cards) = restored.get_mut("cards").and_then(Value::as_array_mut) {
+        for card in cards {
+            let Some(card) = card.as_object_mut() else {
+                continue;
+            };
+            let status = card
+                .get("status")
+                .and_then(Value::as_str)
+                .unwrap_or("")
+                .to_string();
+            if matches!(status.as_str(), "queued" | "running") {
+                card.insert("status".into(), json!("ready"));
+            }
+            card.remove("executionState");
+            card.remove("pausedAt");
+
+            let scheduled = card.get("launchMode").and_then(Value::as_str) == Some("scheduled");
+            let archived = card
+                .get("archived")
+                .and_then(Value::as_bool)
+                .unwrap_or(false);
+            let finished = status == "done" || archived;
+            if scheduled && !finished {
+                card.insert("scheduleState".into(), json!("paused"));
+                card.insert("scheduleNextAttemptAt".into(), json!(""));
+                card.insert("scheduleTriggeredAt".into(), json!(""));
+                card.insert("scheduleAttempts".into(), json!(0));
+                card.insert(
+                    "scheduleNote".into(),
+                    json!("Programmation suspendue après restauration. Reprends-la quand tu l’as vérifiée."),
+                );
+                paused += 1;
+            }
+        }
+    }
+    if let Some(chats) = restored
+        .get_mut("utilityChats")
+        .and_then(Value::as_array_mut)
+    {
+        for chat in chats {
+            let Some(chat) = chat.as_object_mut() else {
+                continue;
+            };
+            if matches!(
+                chat.get("status").and_then(Value::as_str),
+                Some("queued" | "running")
+            ) {
+                chat.insert("status".into(), json!("ready"));
+            }
+            chat.remove("executionState");
+        }
+    }
+    paused
+}
+
 fn read_board_file(path: &Path) -> Result<Value, String> {
     if is_link_or_reparse(path)? {
         return Err("Le fichier de données est un lien ou un point de réanalyse.".into());
@@ -382,13 +446,13 @@ pub fn replace_import(
         };
         let mut restored = imported.as_object().cloned().unwrap_or_else(Map::new);
         restored.insert("version".into(), json!(BOARD_VERSION));
-        restored.entry("settings").or_insert_with(|| json!({}));
+        let paused = neutralize_imported_board(&mut restored);
         restored.insert("modifiedAt".into(), json!(Local::now().to_rfc3339()));
         let board = Value::Object(restored);
         write_json(&path, &board)?;
         append_event(
             app,
-            json!({"type":"board.imported","spaces":board["spaces"].as_array().map_or(0,Vec::len),"cards":board["cards"].as_array().map_or(0,Vec::len)}),
+            json!({"type":"board.imported","spaces":board["spaces"].as_array().map_or(0,Vec::len),"cards":board["cards"].as_array().map_or(0,Vec::len),"schedulesPaused":paused}),
         );
         Ok((board, backup))
     })
@@ -439,5 +503,27 @@ mod tests {
     #[test]
     fn rejects_newer_imports() {
         assert!(validate_import(&json!({"version":23,"spaces":[],"cards":[]})).is_err());
+    }
+
+    #[test]
+    fn imported_automation_is_restored_paused() {
+        let mut imported = json!({
+            "settings":{"backgroundSchedulerEnabled":true},
+            "cards":[
+                {"id":"due","status":"queued","launchMode":"scheduled","scheduledAt":"2026-01-01T10:00:00Z","scheduleState":"pending","recurrence":"weekly"},
+                {"id":"done","status":"done","launchMode":"scheduled","scheduleState":"completed"}
+            ],
+            "utilityChats":[{"id":"chat","status":"running","executionState":"active"}]
+        })
+        .as_object()
+        .cloned()
+        .unwrap();
+        assert_eq!(neutralize_imported_board(&mut imported), 1);
+        assert_eq!(imported["settings"]["backgroundSchedulerEnabled"], false);
+        assert_eq!(imported["cards"][0]["status"], "ready");
+        assert_eq!(imported["cards"][0]["scheduleState"], "paused");
+        assert_eq!(imported["cards"][0]["recurrence"], "weekly");
+        assert_eq!(imported["cards"][1]["scheduleState"], "completed");
+        assert_eq!(imported["utilityChats"][0]["status"], "ready");
     }
 }

@@ -1,4 +1,4 @@
-use crate::{NativeMessage, message, storage};
+use crate::{NativeMessage, background, message, storage};
 use arboard::Clipboard;
 use chrono::Local;
 use serde_json::{Value, json};
@@ -233,15 +233,23 @@ fn import_board(app: &AppHandle) -> Result<Vec<NativeMessage>, String> {
     let imported: Value = serde_json::from_slice(&bytes)
         .map_err(|_| "Ce fichier n’est pas une sauvegarde CTRL KANB valide.".to_string())?;
     let (board, backup) = storage::replace_import(app, &imported)?;
+    let scheduler_warning = background::disable_after_import(app).err();
     let status = if backup.is_some() {
-        "Sauvegarde restaurée. L’état précédent a été conservé dans le dossier de données."
+        "Sauvegarde restaurée. L’état précédent a été conservé. Les programmations sont en pause jusqu’à leur reprise manuelle."
     } else {
-        "Sauvegarde restaurée."
+        "Sauvegarde restaurée. Les programmations sont en pause jusqu’à leur reprise manuelle."
     };
-    Ok(vec![message(
+    let mut messages = vec![message(
         "boardImported",
         json!({"board":board,"message":status}),
-    )])
+    )];
+    if scheduler_warning.is_some() {
+        messages.push(message(
+            "nativeWarning",
+            json!({"message":"La sauvegarde est restaurée et ses tâches sont en pause, mais Windows n’a pas pu retirer l’ancien lancement automatique. Désactive-le depuis Réglages → Moteur local."}),
+        ));
+    }
+    Ok(messages)
 }
 
 fn save_copy(app: &AppHandle, payload: &Value) -> Result<Vec<NativeMessage>, String> {
