@@ -1830,7 +1830,7 @@ static NSDictionary *ClaudeSessionSnapshot(NSDictionary *descriptor) {
     // Cote Claude la consigne passe par stdin : « --mcp-config » et « --tools »
     // acceptent plusieurs valeurs et avalent un prompt place en argument.
     NSArray *arguments = claude
-        ? @[@"--print", @"--output-format", @"json", @"--model", @"haiku", @"--disable-slash-commands",
+        ? @[@"--print", @"--output-format", @"json", @"--disable-slash-commands",
             @"--strict-mcp-config", @"--mcp-config", @"{\"mcpServers\":{}}", @"--tools", @""]
         : @[@"exec", @"--skip-git-repo-check", @"--sandbox", @"read-only", @"--color", @"never",
             @"--output-last-message", lastMessage, prompt];
@@ -1916,12 +1916,14 @@ static NSDictionary *ClaudeSessionSnapshot(NSDictionary *descriptor) {
     storedSpace[@"rootPath"]=cwd;
     space=storedSpace;
     BOOL readOnly=![request[@"mode"] isEqual:@"workspaceWrite"];
-    NSString *model=[card[@"model"] isKindOfClass:NSString.class]?card[@"model"]:@"sonnet";
-    if([model hasPrefix:@"gpt-"]||!model.length)model=@"sonnet";
+    NSString *model=[card[@"model"] isKindOfClass:NSString.class]?card[@"model"]:@"default";
+    if([model hasPrefix:@"gpt-"]||[model isEqual:@"default"]||!model.length)model=nil;
     NSString *effort=card[@"reasoningEffort"]?:@"medium";
     if(![@[@"low",@"medium",@"high",@"xhigh",@"max"] containsObject:effort])effort=@"medium";
     NSString *sessionName=[card[@"title"] isKindOfClass:NSString.class]&&[card[@"title"] length]?card[@"title"]:L(@"Tâche CTRL KANB", @"CTRL KANB task");
-    NSMutableArray *args=[@[@"--print",@"--verbose",@"--input-format",@"stream-json",@"--output-format",@"stream-json",@"--permission-prompt-tool",@"stdio",@"--permission-mode",@"default",@"--model",model,@"--effort",effort,@"--name",sessionName,@"--strict-mcp-config",@"--mcp-config",@"{\"mcpServers\":{}}"] mutableCopy];
+    NSMutableArray *args=[@[@"--print",@"--verbose",@"--input-format",@"stream-json",@"--output-format",@"stream-json",@"--permission-prompt-tool",@"stdio",@"--permission-mode",@"default"] mutableCopy];
+    if(model.length)[args addObjectsFromArray:@[@"--model",model]];
+    [args addObjectsFromArray:@[@"--effort",effort,@"--name",sessionName,@"--strict-mcp-config",@"--mcp-config",@"{\"mcpServers\":{}}"]];
     // Analysis exposes only built-in reading tools. Permissions are not an OS sandbox.
     if(readOnly)[args addObjectsFromArray:@[@"--setting-sources",@"",@"--tools",@"Read,Glob,Grep",@"--disable-slash-commands"]];
     NSString *session=card[@"conversationID"];

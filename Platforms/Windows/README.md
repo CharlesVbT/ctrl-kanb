@@ -39,7 +39,7 @@ L’installateur NSIS est produit sous `src-tauri\target\release\bundle\nsis`.
 ## Vérifier le paquet installé
 
 ```powershell
-.\validate-installed.ps1 -Installer "src-tauri\target\release\bundle\nsis\CTRL KANB_6.11.1_x64-setup.exe"
+.\validate-installed.ps1 -Installer "src-tauri\target\release\bundle\nsis\CTRL KANB_6.11.2_x64-setup.exe"
 ```
 
 Le script vérifie l’installation, le lancement dans la session interactive, le verrou d’instance unique, la séparation des données et l’empreinte du programme. L’état détaillé des essais réels et les limites de publication sont consignés dans [`docs/WINDOWS-PORT.md`](../../docs/WINDOWS-PORT.md).

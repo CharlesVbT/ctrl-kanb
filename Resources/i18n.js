@@ -10,6 +10,9 @@
 // Les accolades, par exemple {n}, sont des emplacements remplaces a l execution.
 window.CTRL_KANB_TRANSLATIONS = {
   en: {
+    "Automatique (recommandé)": "Automatic (recommended)",
+    "Automatique": "Automatic",
+    "Automatique laisse Claude Code choisir un modèle disponible pour ce compte.": "Automatic lets Claude Code choose a model available for this account.",
     "Aucune conversation Codex": "No Codex conversation",
     "Aucune conversation": "No conversation",
     "Aucune conversation principale Codex n’est liée à une tâche active.": "No main Codex conversation is linked to an active task.",

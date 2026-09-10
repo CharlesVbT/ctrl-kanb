@@ -58,6 +58,8 @@ Les emplacements natifs reconnus comprennent notamment :
 
 La présence de l’exécutable et l’authentification sont deux états séparés. Le test de connexion lance un vrai aller-retour. CTRL KANB réutilise les sessions propres aux agents et ne copie aucun jeton dans son tableau.
 
+Pour Claude Code, **Automatique (recommandé)** ne force aucun alias avec `--model` et laisse la CLI sélectionner le modèle disponible pour le compte ou la politique de l’organisation. Les choix Opus, Sonnet et Haiku restent disponibles lorsqu’un utilisateur veut les imposer explicitement. Le test de connexion utilise toujours le routage automatique afin qu’un modèle restreint ne soit jamais confondu avec une connexion défaillante.
+
 ## Planificateur et arrière-plan
 
 Les cartes restent pilotées par le planificateur interne. L’application ne crée pas une tâche Windows par carte. Si l’utilisateur active le moteur, CTRL KANB ajoute une entrée dans `HKCU\Software\Microsoft\Windows\CurrentVersion\Run`, démarre avec `--background` à la prochaine ouverture de session et reste dans la zone de notification lorsque la fenêtre est fermée.
@@ -82,7 +84,7 @@ Depuis `Platforms\Windows` dans PowerShell :
 L’installateur est produit sous `src-tauri\target\release\bundle\nsis`. Pour vérifier un paquet installé :
 
 ```powershell
-.\validate-installed.ps1 -Installer "chemin\vers\CTRL KANB_6.11.1_x64-setup.exe"
+.\validate-installed.ps1 -Installer "chemin\vers\CTRL KANB_6.11.2_x64-setup.exe"
 ```
 
 Ce contrôle installe le paquet silencieusement, lance deux ouvertures dans la session interactive, puis vérifie l’instance unique, le processus, la séparation des données et l’empreinte SHA-256.
