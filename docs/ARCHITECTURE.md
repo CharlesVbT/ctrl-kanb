@@ -42,7 +42,7 @@ Pour chaque conversation liée, CTRL KANB appelle `thread/read` avec les tours. 
 
 Toutes les écritures utilisent un verrou interprocessus, une sérialisation JSON validée, un remplacement atomique, une copie `board.previous.json` et une ligne dans `events.jsonl`. Une restauration validée crée en plus une copie privée horodatée `board.before-import-*.json` avant de remplacer le tableau. L’implémentation repose sur `flock` et `NSDataWritingAtomic` sur macOS, et sur un verrou de fichier avec écriture atomique sur Windows.
 
-Le verrou empêche deux écritures physiques simultanées. Le futur skill devra néanmoins relire le tableau juste avant chaque mutation pour éviter une modification fondée sur un état ancien.
+Le verrou empêche deux écritures physiques simultanées. Tout outil externe qui modifie le tableau doit relire l’état courant sous le même verrou avant sa mutation afin d’éviter une écriture fondée sur un état ancien.
 
 ## Migration et taxonomie
 

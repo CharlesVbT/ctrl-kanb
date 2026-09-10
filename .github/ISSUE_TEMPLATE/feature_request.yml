@@ -1,0 +1,38 @@
+name: Proposer une évolution
+description: Expliquer un besoin utilisateur et son parcours.
+title: "[Évolution] "
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: need
+    attributes:
+      label: Besoin
+      description: Quel travail cherchez-vous à organiser ou à accomplir ?
+    validations:
+      required: true
+  - type: textarea
+    id: current
+    attributes:
+      label: Parcours actuel
+      description: Comment procédez-vous aujourd’hui dans CTRL KANB ?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Résultat souhaité
+    validations:
+      required: true
+  - type: textarea
+    id: impact
+    attributes:
+      label: Effets à prendre en compte
+      description: Données, permissions, workflows Classique/Routines, macOS ou Windows.
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Confidentialité
+      options:
+        - label: Cette proposition ne contient aucune donnée personnelle, conversation réelle, clé ou chemin privé.
+          required: true

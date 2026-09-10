@@ -1,0 +1,60 @@
+name: Signaler un bug
+description: Décrire un comportement reproductible sans publier de donnée privée.
+title: "[Bug] "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: >-
+        N’ajoutez aucun jeton, chemin personnel, conversation, export, journal ou capture contenant des données réelles. Pour une vulnérabilité, utilisez le signalement privé décrit dans SECURITY.md.
+  - type: input
+    id: version
+    attributes:
+      label: Version de CTRL KANB
+      placeholder: 6.11.2
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Plateforme
+      options:
+        - macOS Apple Silicon
+        - macOS Intel
+        - Windows 11 x64
+        - Autre ou non déterminée
+    validations:
+      required: true
+  - type: input
+    id: agents
+    attributes:
+      label: Agents et versions concernés
+      description: Indiquez « aucun » si le problème concerne uniquement l’organisation locale.
+      placeholder: Codex 0.x, Claude Code 2.x
+  - type: textarea
+    id: steps
+    attributes:
+      label: Étapes pour reproduire
+      description: Utilisez des noms, chemins et contenus fictifs.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Résultat attendu
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Résultat observé
+    validations:
+      required: true
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Confidentialité
+      options:
+        - label: J’ai retiré les données personnelles, secrets, chemins privés et conversations réelles.
+          required: true

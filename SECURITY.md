@@ -1,29 +1,59 @@
 # Sécurité
 
-## Signaler un problème
+## Versions prises en charge
 
-Utilisez de préférence la fonction de signalement privé de GitHub lorsqu’elle est disponible pour ce dépôt. Ne publiez pas de secret, de donnée personnelle, de chemin privé ni de preuve d’exploitation contenant des données réelles dans une issue publique.
+Avant la première release publique signée, seule la branche `main` et la dernière version candidate font l’objet de corrections. Une version ancienne peut être utilisée pour reproduire un problème, mais aucun calendrier de support rétroactif n’est garanti.
 
-Décrivez la version concernée, le comportement observé, les étapes minimales pour le reproduire et l’impact attendu. Utilisez des noms de projets, chemins et contenus fictifs.
+## Signaler une vulnérabilité
+
+Utilisez le [signalement privé GitHub](https://github.com/charlesvbtpro-ship-it/ctrl-kanb/security/advisories/new). N’ouvrez pas d’issue publique pour une vulnérabilité exploitable.
+
+Le rapport doit contenir :
+
+- la version et la plateforme ;
+- les préconditions ;
+- les étapes minimales de reproduction ;
+- l’impact concret ;
+- une preuve utilisant uniquement des projets, chemins et contenus fictifs.
+
+Ne transmettez jamais de jeton, clé, donnée de compte, export, conversation, chemin personnel ou journal réel. Aucun délai de réponse ou de correction n’est encore garanti.
 
 ## Périmètre
 
-Les sujets de sécurité comprennent notamment :
+Les sujets couverts comprennent notamment :
 
-- lecture ou écriture en dehors du dossier projet choisi ;
-- injection de contenu actif dans l’interface WebKit ;
+- lecture ou écriture en dehors du dossier projet choisi par le navigateur de fichiers ;
+- contournement du contrat fermé entre l’interface et l’hôte natif ;
+- injection de contenu actif dans WebKit ou WebView2 ;
 - exécution de commande non demandée ;
 - exposition de jetons, données de compte, conversations ou chemins locaux ;
-- contournement des validations humaines ou du verrou de l’application.
+- contournement d’une validation humaine ou du verrou de l’application ;
+- corruption ou remplacement non atomique du tableau ;
+- lancement d’un exécutable d’agent différent de celui détecté ou configuré.
 
-Les problèmes propres aux services Codex ou Claude Code doivent aussi être signalés à leur fournisseur respectif.
+Les failles propres à Codex, Claude Code, WebKit, WebView2, Tauri ou au système d’exploitation doivent aussi être signalées au projet ou fournisseur concerné.
 
-## Pratiques du projet
+## Frontières de confiance
 
-- les données de l’application restent hors du dépôt ;
-- les fichiers locaux sont écrits avec des permissions limitées au compte utilisateur ;
-- les chemins de projet sont normalisés et contrôlés avant les opérations du navigateur et les demandes des outils Read, Glob et Grep de Claude Code en mode sans modification ; Claude Code peut encore charger ses fichiers d’instructions CLAUDE.md au démarrage ;
-- le terminal intégré est un shell local complet qui démarre dans le projet et conserve les droits du compte macOS ;
-- les messages affichés dans la WebView sont échappés ;
-- les processus d’agent reçoivent des arguments structurés ;
-- le contrôle `npm run test:privacy` recherche les chemins absolus, emails, secrets courants et artefacts de données avant publication.
+CTRL KANB est une application locale, mais les processus qu’elle lance ne sont pas tous confinés au même périmètre :
+
+- le navigateur de fichiers reste dans le dossier projet contrôlé ;
+- le terminal intégré démarre dans le projet et reste un shell complet avec les droits du compte utilisateur ;
+- Codex et Claude Code appliquent leurs propres bacs à sable, permissions, instructions et politiques de compte ;
+- les fichiers d’instructions tels que `AGENTS.md` ou `CLAUDE.md` peuvent modifier le comportement de l’agent ;
+- le verrou de l’interface ne chiffre pas les fichiers de données ;
+- un export JSON doit être traité comme une donnée privée.
+
+## Protections présentes
+
+- données hors du dépôt et fichiers locaux créés avec des permissions limitées au compte ;
+- verrou interprocessus, validation JSON, écriture atomique et copie `board.previous.json` ;
+- normalisation et contrôle des chemins avant les opérations du navigateur ;
+- contrôle des chemins demandés par Read, Glob et Grep de Claude Code en mode sans modification ;
+- messages affichés dans la WebView échappés ;
+- actions natives accessibles par une liste fermée et arguments de processus structurés ;
+- sérialisation des instructions visant une même conversation ;
+- demandes d’autorisation liées à leur identifiant natif exact ;
+- contrôle `npm run test:privacy` avant publication.
+
+Les paquets publics devront être signés, accompagnés d’une empreinte SHA-256 et produits par un workflow de release contrôlé. La signature ad hoc macOS et l’absence actuelle de signature Authenticode conviennent aux constructions locales, pas à une chaîne de confiance publique.

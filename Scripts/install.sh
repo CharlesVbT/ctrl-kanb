@@ -1,5 +1,5 @@
 #!/bin/zsh
-# Compile CTRL KANB depuis les sources et l installe dans /Applications.
+# Compile la version macOS de CTRL KANB et l installe dans /Applications.
 #
 # Compiler sur place evite l attribut de quarantaine que macOS pose sur tout
 # fichier telecharge : l application demarre sans passer par Reglages Systeme.
@@ -14,7 +14,7 @@ print -r -- ""
 
 # --- Prerequis -------------------------------------------------------------
 if [[ "$(uname -s)" != "Darwin" ]]; then
-  print -r -- "Cette application est macOS uniquement." >&2
+  print -r -- "Ce script construit uniquement la version macOS. Utilise Platforms/Windows sur Windows." >&2
   exit 1
 fi
 
@@ -153,4 +153,4 @@ if (( relaunch )); then
   print -r -- ""
 fi
 print -r -- "Les donnees vivent dans ~/Library/Application Support/CTRL KANB."
-print -r -- "Ouvre l application, puis Reglages > Comptes pour tester la connexion de chaque compte actif."
+print -r -- "Ouvre l application, puis Reglages > Agents et modeles pour tester chaque agent actif."

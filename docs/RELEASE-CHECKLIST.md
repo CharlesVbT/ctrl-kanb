@@ -53,9 +53,13 @@ npm --prefix Platforms/Windows run build
 
 ## Publication
 
+- vérifier les liens du README anglais et du README français, puis régénérer les captures fictives si l’interface a changé ;
 - vérifier la présence de `LICENSE`, `NOTICE` et des mentions tierces dans le dépôt et dans les paquets macOS/Windows ;
 - vérifier qu’aucune donnée personnelle, clé, jeton ou chemin privé n’est suivi par Git ;
+- exécuter `npm run test:privacy` sur l’arbre propre juste avant le tag ;
 - mettre à jour la version et les notes de version ;
+- confirmer que le dépôt reste privé tant que les paquets, la documentation et le signalement de sécurité ne sont pas prêts ;
+- activer le signalement privé de vulnérabilités et protéger la branche `main` avant le passage public ;
 - pour une application précompilée, signer avec Developer ID, notariser et vérifier le téléchargement sur un autre Mac ;
 - signer l’exécutable et l’installateur Windows avec Authenticode, puis vérifier le téléchargement sur une autre machine ;
 - ne publier les mises à jour automatiques qu’après mise en place d’un flux signé et vérifié.
