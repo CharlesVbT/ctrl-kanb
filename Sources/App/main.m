@@ -32,6 +32,57 @@ static NSString *EnvValue(NSString *name) {
     return env[[@"CTRL_KANB_" stringByAppendingString:name]];
 }
 
+static void AppendDirectory(NSMutableArray<NSString *> *directories, NSString *path) {
+    if (![path isKindOfClass:NSString.class] || !path.length) return;
+    NSString *absolute = [[path stringByExpandingTildeInPath] stringByStandardizingPath];
+    if (absolute.isAbsolutePath && ![directories containsObject:absolute]) [directories addObject:absolute];
+}
+
+static NSArray<NSString *> *AgentCommandDirectories(void) {
+    NSDictionary *env = NSProcessInfo.processInfo.environment;
+    NSString *home = NSHomeDirectory();
+    NSMutableArray<NSString *> *directories = [NSMutableArray array];
+    for (NSString *path in @[@"/opt/homebrew/bin", @"/usr/local/bin", @"/usr/bin", @"/bin",
+                             [home stringByAppendingPathComponent:@".local/bin"],
+                             [home stringByAppendingPathComponent:@"bin"],
+                             [home stringByAppendingPathComponent:@".npm-global/bin"],
+                             [home stringByAppendingPathComponent:@".volta/bin"],
+                             [home stringByAppendingPathComponent:@".bun/bin"],
+                             [home stringByAppendingPathComponent:@"Library/pnpm"],
+                             [home stringByAppendingPathComponent:@".local/share/mise/shims"],
+                             [home stringByAppendingPathComponent:@".asdf/shims"]]) AppendDirectory(directories, path);
+    for (NSString *variable in @[@"NVM_BIN", @"VOLTA_HOME", @"BUN_INSTALL", @"PNPM_HOME"]) {
+        NSString *path = env[variable];
+        if ([variable isEqualToString:@"VOLTA_HOME"] || [variable isEqualToString:@"BUN_INSTALL"]) path = [path stringByAppendingPathComponent:@"bin"];
+        AppendDirectory(directories, path);
+    }
+    if ([env[@"ASDF_DATA_DIR"] length]) AppendDirectory(directories, [env[@"ASDF_DATA_DIR"] stringByAppendingPathComponent:@"shims"]);
+    if ([env[@"MISE_DATA_DIR"] length]) AppendDirectory(directories, [env[@"MISE_DATA_DIR"] stringByAppendingPathComponent:@"shims"]);
+    for (NSString *path in [env[@"PATH"] componentsSeparatedByString:@":"]) AppendDirectory(directories, path);
+
+    NSString *nvmRoot = [home stringByAppendingPathComponent:@".nvm/versions/node"];
+    for (NSString *version in [NSFileManager.defaultManager contentsOfDirectoryAtPath:nvmRoot error:nil] ?: @[])
+        AppendDirectory(directories, [[nvmRoot stringByAppendingPathComponent:version] stringByAppendingPathComponent:@"bin"]);
+    for (NSString *fnmRoot in @[[home stringByAppendingPathComponent:@".local/share/fnm/node-versions"],
+                                [home stringByAppendingPathComponent:@"Library/Application Support/fnm/node-versions"]])
+        for (NSString *version in [NSFileManager.defaultManager contentsOfDirectoryAtPath:fnmRoot error:nil] ?: @[])
+            AppendDirectory(directories, [[fnmRoot stringByAppendingPathComponent:version] stringByAppendingPathComponent:@"installation/bin"]);
+    return directories;
+}
+
+static NSString *FindAgentExecutable(NSString *name, NSArray<NSString *> *overrides, NSArray<NSString *> *bundledPaths) {
+    NSMutableArray<NSString *> *candidates = [NSMutableArray array];
+    for (NSString *path in overrides) if (path.length) [candidates addObject:path];
+    [candidates addObjectsFromArray:bundledPaths ?: @[]];
+    for (NSString *directory in AgentCommandDirectories()) [candidates addObject:[directory stringByAppendingPathComponent:name]];
+    for (NSString *candidate in candidates) {
+        NSString *absolute = [[candidate stringByExpandingTildeInPath] stringByStandardizingPath];
+        BOOL directory = NO;
+        if (absolute.isAbsolutePath && [NSFileManager.defaultManager fileExistsAtPath:absolute isDirectory:&directory] && !directory && [NSFileManager.defaultManager isExecutableFileAtPath:absolute]) return absolute;
+    }
+    return nil;
+}
+
 static NSString *BoardDataPath(void) {
     NSString *override = EnvValue(@"DATA_FILE");
     if (override.length) return override.stringByStandardizingPath;
@@ -1235,17 +1286,8 @@ static BOOL SetAppLockEnabled(BOOL enabled) {
 }
 
 - (NSString *)codexExecutable {
-    NSDictionary *env = NSProcessInfo.processInfo.environment;
-    NSMutableArray<NSString *> *candidates = [NSMutableArray array];
-    if ([EnvValue(@"CODEX_PATH") length]) [candidates addObject:EnvValue(@"CODEX_PATH")];
-    [candidates addObjectsFromArray:@[@"/Applications/ChatGPT.app/Contents/Resources/codex", @"/Applications/Codex.app/Contents/Resources/codex", @"/opt/homebrew/bin/codex", @"/usr/local/bin/codex", [NSHomeDirectory() stringByAppendingPathComponent:@".local/bin/codex"]]];
-    for (NSString *directory in [env[@"PATH"] componentsSeparatedByString:@":"])
-        if (directory.isAbsolutePath) [candidates addObject:[directory stringByAppendingPathComponent:@"codex"]];
-    for (NSString *candidate in candidates) {
-        NSString *absolute = [[candidate stringByExpandingTildeInPath] stringByStandardizingPath];
-        if (absolute.isAbsolutePath && [NSFileManager.defaultManager isExecutableFileAtPath:absolute]) return absolute;
-    }
-    return nil;
+    return FindAgentExecutable(@"codex", @[EnvValue(@"CODEX_PATH") ?: @""],
+        @[@"/Applications/ChatGPT.app/Contents/Resources/codex", @"/Applications/Codex.app/Contents/Resources/codex"]);
 }
 
 - (NSDictionary *)initializeMessage {
@@ -1354,10 +1396,7 @@ static BOOL SetAppLockEnabled(BOOL enabled) {
 }
 
 - (NSString *)claudeExecutable {
-    NSString *override=EnvValue(@"CLAUDE_EXECUTABLE");
-    NSArray *paths=override.length?@[override]:@[[NSHomeDirectory() stringByAppendingPathComponent:@".local/bin/claude"],@"/opt/homebrew/bin/claude",@"/usr/local/bin/claude"];
-    for(NSString *path in paths)if([NSFileManager.defaultManager isExecutableFileAtPath:path])return path;
-    return nil;
+    return FindAgentExecutable(@"claude", @[EnvValue(@"CLAUDE_PATH") ?: @"", EnvValue(@"CLAUDE_EXECUTABLE") ?: @""], @[]);
 }
 
 // Sonde de connexion. Un aller-retour reel est la seule preuve qu un moteur peut

@@ -116,6 +116,17 @@ context.window.CodexBoard.appInfo({version:"6.6.1"});
 assert(element("[data-app-version]").textContent==="Version 6.6.1","Le panneau lateral n'affiche pas le numero de version complet.");
 
 load([
+  card("side-old","Tâche ancienne","ready",{createdAt:iso(-8),updatedAt:iso(-7)}),
+  card("side-new","Tâche récente","ready",{createdAt:iso(-2),updatedAt:iso(-1)}),
+  card("side-done","Tâche à archiver","done",{createdAt:iso(-4),updatedAt:iso(0),completedAt:iso(0)})
+]);
+click({action:"toggle-project",id:"space-1"});
+assert(sidebar().indexOf("Tâche à archiver")<sidebar().indexOf("Tâche récente")&&sidebar().indexOf("Tâche récente")<sidebar().indexOf("Tâche ancienne"),"Les tâches du projet ne sont pas classées de la plus récente à la plus ancienne.");
+assert(sidebar().includes('class="project-task-archive" data-action="archive-card" data-id="side-done"'),"Une tâche terminée ne peut pas être archivée directement depuis le panneau latéral.");
+click({action:"archive-card",id:"side-done"});
+assert(saves().at(-1).data.cards.find(item=>item.id==="side-done").archived===true&&!sidebar().includes("Tâche à archiver"),"L’archivage depuis le panneau latéral ne retire pas la tâche de la liste active.");
+
+load([
   card("c1","Livrable terminé","done",{completedAt:iso(0)}),
   card("c2","Ancienne réalisation","done",{completedAt:iso(0),archived:true,archivedAt:iso(0),archiveReason:"manual"}),
   card("c3","Priorité urgente","ready",{priorityLevelID:"urgent"}),
@@ -180,6 +191,12 @@ assert(modal().includes("Supprimer cette tâche ?")&&modal().includes('data-acti
 assert(modal().includes('<button class="secondary" data-action="close-modal">Conserver la tâche</button>'),"Annuler la suppression depuis l’Agenda ouvre encore la fiche de la tâche.");
 click({action:"delete-card",id:"c1"});
 assert(!saves().at(-1).data.cards.some(item=>item.id==="c1"),"La suppression confirmée depuis l’Agenda ne retire pas la tâche.");
+
+load([card("weekly","Routine hebdomadaire","ready",{launchMode:"scheduled",scheduledAt:new Date(Date.now()+3600000).toISOString(),recurrence:"weekly",boardPresetID:"routines",recurrenceSeriesID:"weekly-series"})],{agendaMode:"week"});
+click({select:"agendaView"});
+click({action:"agenda-next"});
+assert(body().includes('class="agenda-event scheduled projected')&&body().includes("Routine hebdomadaire")&&body().includes("Occurrence prévue"),"L’Agenda n’affiche pas l’occurrence prévue de la semaine suivante.");
+assert(!body().includes('data-agenda-draggable="true"')&&!body().includes('class="agenda-delete-action"'),"Une occurrence future permet encore une action destructive réservée à la prochaine carte réelle.");
 
 const flowCards = [
   card("f2","Résultat à revoir","review",{lastRun:{summary:"Résultat disponible"}}),
@@ -552,6 +569,11 @@ load([card("tz2","Routine saisonniere","ready",{launchMode:"scheduled",scheduled
 click({action:"agenda-complete",id:"tz2"});
 const seasonalCopy=saves().at(-1).data.cards.find(item=>item.id!=="tz2");
 assert(seasonalCopy?.scheduledAt==="2027-03-28T07:30:00.000Z","La recurrence ne conserve pas 09:30 apres le changement d'heure.");
+
+load([card("month-end","Routine fin de mois","ready",{launchMode:"scheduled",scheduledAt:"2027-01-31T08:30:00.000Z",recurrence:"monthly",boardPresetID:"routines",recurrenceSeriesID:"month-end-series"})],{agendaTimeZone:"Europe/Paris",agendaWeekStart:"1",agendaHourCycle:"h23"});
+click({action:"agenda-complete",id:"month-end"});
+const monthEndCopy=saves().at(-1).data.cards.find(item=>item.id!=="month-end");
+assert(monthEndCopy?.scheduledAt==="2027-02-28T08:30:00.000Z","Une routine du dernier jour du mois saute encore le mois de février.");
 
 // La largeur du panneau se remet a sa valeur d origine depuis les reglages.
 listeners.change(changeEvent(prefsForm({})));
