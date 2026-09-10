@@ -1,0 +1,8 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "main-capability",
+  "description": "Droits minimaux de la fenêtre principale CTRL KANB",
+  "windows": ["main"],
+  "platforms": ["windows"],
+  "permissions": ["core:default"]
+}

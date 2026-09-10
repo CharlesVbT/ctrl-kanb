@@ -22,6 +22,12 @@ with tempfile.TemporaryDirectory(prefix="ctrl-kanb-privacy-test-") as folder:
     result = subprocess.run(["python3", str(scanner)], capture_output=True, text=True)
     assert result.returncode == 0, result.stderr
 
+    generated = root / "Platforms" / "Windows" / "src-tauri" / "target"
+    generated.mkdir(parents=True)
+    (generated / "compiler-output.txt").write_text("/" + "Users" + "/generated/cache\n", encoding="utf-8")
+    result = subprocess.run(["python3", str(scanner)], capture_output=True, text=True)
+    assert result.returncode == 0, result.stderr
+
     leak = root / "example.txt"
     leak.write_text("/" + "Users" + "/example/Documents/private.txt\n", encoding="utf-8")
     result = subprocess.run(["python3", str(scanner)], capture_output=True, text=True)

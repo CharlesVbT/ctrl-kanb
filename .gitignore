@@ -2,6 +2,9 @@
 .build/
 build/
 dist/
+Platforms/Windows/node_modules/
+Platforms/Windows/src-tauri/gen/
+Platforms/Windows/src-tauri/target/
 
 # Dépendances et rapports de test
 node_modules/
@@ -14,6 +17,7 @@ board.previous.json
 events.jsonl
 scheduler-status.json
 *.lock
+!Platforms/Windows/src-tauri/Cargo.lock
 test-board-*.json
 test-board-*.previous.json
 

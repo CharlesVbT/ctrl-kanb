@@ -31,13 +31,13 @@ Contrôle effectué le 10 septembre 2026 sur une machine Windows dédiée aux es
 | Système | Windows 11 Professionnel, x64, build 26200 |
 | WebView2 | installé, version 152.0.4191.66 |
 | Git | installé, version 2.54.0 |
-| Node.js | installé, version 22.22.3 |
+| Node.js | installé, version 22.22.3 (runtime de développement actuellement fourni par Hermes) |
 | Codex | natif, `codex-cli 0.137.0` |
 | Claude Code | natif, version 2.1.165 |
 | Protocoles utilisés par CTRL KANB | `codex app-server --stdio` et flux JSON Claude disponibles |
 | WSL | Ubuntu disponible |
-| Rust / Cargo | à installer avant compilation |
-| Outils C++ Visual Studio | à installer avant compilation |
+| Rust / Cargo | installé, toolchain stable MSVC 1.98.1 |
+| Outils C++ Visual Studio | installés, Visual Studio Build Tools 2022 |
 
 Les versions ci-dessus décrivent seulement l’environnement de développement au jour du contrôle. CTRL KANB devra détecter les outils par capacité et par chemin, sans dépendre de ces numéros de version.
 
@@ -52,6 +52,20 @@ Scripts/                           Contrôles partagés et scripts par plateform
 ```
 
 Le JavaScript envoie déjà toutes les demandes natives par une seule fonction `bridge`. Le point d’entrée accepte maintenant un adaptateur `window.ctrlKanbNative` avant de revenir au pont WebKit macOS. L’hôte Windows pourra donc fournir son adaptateur sans dupliquer `app.js`.
+
+## Socle déjà préparé
+
+La branche `codex/windows-port` repose sur CTRL KANB 6.11.0 et contient désormais :
+
+- un projet Tauri 2 dans `Platforms/Windows` ;
+- un adaptateur partagé `Resources/platform.js` chargé avant l’application ;
+- un contrat fermé recensant les 39 actions natives actuellement émises par l’interface ;
+- un premier stockage `%LOCALAPPDATA%\CTRL KANB Data\board.json`, séparé du dossier d’installation, avec verrou, limite de taille, sauvegarde précédente, écriture atomique et refus des liens ou points de réanalyse ;
+- les icônes Windows dérivées du logo actuel ;
+- des scripts PowerShell de préparation, contrôle et construction NSIS ;
+- un contrôle Windows dans l’intégration continue.
+
+Le socle compile sur macOS pour détecter immédiatement les erreurs Rust indépendantes de la plateforme. Sur le Minisforum, la compilation MSVC, la production de l’installateur, l’installation, le lancement visuel dans WebView2 et la désinstallation ont été observés. La désinstallation retire le programme et son raccourci sans modifier le tableau conservé dans le dossier de données séparé. Les mises à l’échelle 125 %, 150 % et 200 % restent à observer avant de déclarer cette phase terminée.
 
 Le contrat du pont doit rester identique sur les deux systèmes : même nom d’action, même structure de données et mêmes fonctions de retour vers l’interface. Toute différence de comportement doit vivre dans l’adaptateur de plateforme.
 
@@ -76,7 +90,7 @@ Le contrat du pont doit rester identique sur les deux systèmes : même nom d’
 | Notifications | UserNotifications | notifications toast Windows |
 | Verrouillage | trousseau et authentification macOS | Windows Credential Manager et Windows Hello |
 | Moteur en arrière-plan | `launchd` et helper | démarrage à la connexion, zone de notification et rattrapage au réveil |
-| Données | `~/Library/Application Support/CTRL KANB` | `%LOCALAPPDATA%\CTRL KANB` |
+| Données | `~/Library/Application Support/CTRL KANB` | `%LOCALAPPDATA%\CTRL KANB Data` |
 | Protection des chemins | chemins réels et liens symboliques | chemins canoniques, jonctions et points de réanalyse |
 
 Les tâches programmées resteront pilotées par le planificateur interne de CTRL KANB. Il n’est pas nécessaire de créer une tâche Windows distincte pour chaque carte. Quand le moteur facultatif est activé, l’application démarre avec la session et reste disponible dans la zone de notification.
@@ -165,18 +179,18 @@ Critère de sortie : une tâche programmée et une routine hebdomadaire sont obs
 - installateur x64 signé ;
 - documentation Windows séparant installation de CTRL KANB et installation des agents.
 
-## Points d’amélioration encore utiles avant publication générale
+## Stabilisation macOS acquise avant le portage
 
-Le produit macOS est suffisamment complet pour figer les nouvelles fonctions pendant le portage. Les prochains efforts doivent viser :
+La version 6.11.0 a figé les nouvelles fonctions et ajouté :
 
-- un accueil de premier lancement qui vérifie les agents, les notifications et le moteur local ;
-- un export/import vérifié avec restauration guidée ;
-- des essais longs couvrant veille, réveil, changement de fuseau, perte de réseau et mise à jour des CLI ;
-- l’accessibilité au clavier, la lecture d’écran et le contraste ;
+- un accueil de premier lancement vide et guidé ;
+- un export/import vérifié avec restauration guidée et copie de sécurité ;
+- des contrôles automatisés de changement de fuseau et de perte de réseau ;
+- une couverture d’accessibilité des vues, formulaires et fenêtres principales ;
 - une licence, une chaîne de publication reproductible et des binaires signés ;
 - un mécanisme de mise à jour compréhensible et désactivable.
 
-Ces chantiers renforcent la publication sans ajouter de nouvelles vues ni alourdir les cartes.
+Les essais matériels prolongés veille/réveil, le choix de licence, la signature et les mises à jour restent des conditions de publication, sur chaque plateforme.
 
 ## Références techniques
 

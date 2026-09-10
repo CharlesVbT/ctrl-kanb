@@ -153,12 +153,14 @@ docs/       Architecture, modèle de données et revue UI
 Documentation technique :
 
 - [Architecture](docs/ARCHITECTURE.md)
-- [Plan de portage Windows](docs/WINDOWS-PORT.md)
+- [Plan et état du portage Windows](docs/WINDOWS-PORT.md)
 - [Modèle de données](docs/DATA-MODEL.md)
 - [Moteur macOS facultatif](docs/BACKGROUND-ENGINE.md)
 - [Revue de l’interface](docs/UI-REVIEW.md)
 - [Contrôles avant publication](docs/RELEASE-CHECKLIST.md)
 - [Politique de sécurité](SECURITY.md)
+
+La version distribuable actuelle cible macOS. Le socle de la préversion Windows vit dans `Platforms/Windows` et réutilise la même interface ; son avancement et ses limites sont détaillés dans le plan de portage.
 
 ## Limites connues
 

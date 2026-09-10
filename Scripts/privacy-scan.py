@@ -11,7 +11,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-IGNORED_DIRS = {".git", ".build", "build", "dist", "node_modules", ".playwright-cli"}
+IGNORED_DIRS = {".git", ".build", "build", "dist", "node_modules", "target", ".playwright-cli"}
 IGNORED_FILES = {Path(__file__).resolve()}
 FORBIDDEN_NAMES = {"events.jsonl", "board.json", "board.previous.json", ".env"}
 TEXT_PATTERNS = {
