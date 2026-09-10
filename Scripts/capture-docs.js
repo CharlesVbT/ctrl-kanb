@@ -20,8 +20,6 @@ const temporary = fs.mkdtempSync(path.join(os.tmpdir(), "ctrl-kanb-docs-"));
 for (const name of ["index.html", "app.css", "app.js", "i18n.js", "platform.js", "AppIcon.png"]) {
   fs.copyFileSync(path.join(resources, name), path.join(temporary, name));
 }
-fs.cpSync(path.join(resources, "Brands"), path.join(temporary, "Brands"), { recursive: true });
-
 const htmlPath = path.join(temporary, "index.html");
 const html = fs.readFileSync(htmlPath, "utf8").replace(
   '<script src="app.js"></script>',

@@ -27,7 +27,8 @@ Ce fichier suit les changements visibles de CTRL KANB. Le projet utilise une num
 - files Codex et Claude séparées, avec sérialisation des tours d’une même conversation ;
 - barre latérale, Flux, Historique, Suivi, Réglages et panneau projet réorganisés ;
 - archivage et suppression accessibles depuis les vues où une tâche apparaît ;
-- détection des CLI adaptée aux installations graphiques macOS et aux emplacements natifs Windows.
+- détection des CLI adaptée aux installations graphiques macOS et aux emplacements natifs Windows ;
+- identification de Codex et Claude par des pictogrammes génériques propres à CTRL KANB, sans logo de fournisseur embarqué.
 
 ### Sécurité
 

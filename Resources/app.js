@@ -402,6 +402,7 @@
     paths.settings='<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2Z"/><circle cx="12" cy="12" r="3"/>';
     paths.shield='<path d="M12 3 5 6v5c0 4.6 2.7 8 7 10 4.3-2 7-5.4 7-10V6l-7-3Z"/><path d="m9 12 2 2 4-5"/>';
     paths.terminal='<path d="m5 7 4 4-4 4M11 17h8"/>';
+    paths.code='<path d="m8 8-4 4 4 4M16 8l4 4-4 4M14 5l-4 14"/>';
     paths.file='<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v5h5"/>';
     paths.chat='<path d="M4 5h16v11H9l-5 4V5Z"/><path d="M8 9h8M8 12h5"/>';
     paths.message=paths.chat;
@@ -720,8 +721,7 @@
   const engineLabel = value => esc({codex:"Codex",claudeCode:"Claude","claude-code":"Claude"}[value]||value||t("Agent IA"));
   const engineLogo = value => {
     const claude=engineKey(value)==="claude-code";
-    const asset=claude?"Claude-orange.svg":"OpenAI-black-monoblossom.svg";
-    return `<img class="engine-logo ${claude?"claude-code-logo":"codex-logo"}" src="Brands/${asset}" alt="" aria-hidden="true">`;
+    return `<span class="engine-logo ${claude?"claude-code-logo":"codex-logo"}" aria-hidden="true">${icon(claude?"terminal":"code")}</span>`;
   };
   const accessLabel = value => value==="workspaceWrite"?t("Modifications autorisées"):t("Sans modification");
   // Codex et Claude ont des limites separees : deux cartes peuvent donc etre

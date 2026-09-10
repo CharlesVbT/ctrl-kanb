@@ -615,12 +615,10 @@ assert(enginesPage.includes("Claude Opus")&&enginesPage.includes("Claude Sonnet"
 assert(enginesPage.includes("Automatique (recommandé)"),"Claude ne propose pas le routage automatique compatible avec le compte.");
 assert(enginesPage.includes("Automatique laisse Claude Code CLI choisir un modèle disponible pour ce compte."),"Le routage automatique Claude n'est pas explique.");
 assert(enginesPage.includes("GPT-5.6 Sol"),"Les modeles Codex ont disparu des reglages.");
-assert(enginesPage.includes('class="engine-logo codex-logo" src="Brands/OpenAI-black-monoblossom.svg"'),"Le Blossom OpenAI officiel manque dans les reglages Codex.");
-assert(enginesPage.includes('class="engine-logo claude-code-logo" src="Brands/Claude-orange.svg"'),"Le symbole Claude officiel manque dans les reglages.");
+assert(enginesPage.includes('class="engine-logo codex-logo"')&&enginesPage.includes('class="engine-logo claude-code-logo"'),"Les icones fonctionnelles des deux moteurs manquent dans les reglages.");
+assert(!enginesPage.includes('src="Brands/'),"Un logo de fournisseur est encore embarque dans les reglages.");
 assert(enginesPage.includes("Connexion locale via Claude Code CLI"),"La provenance technique de l integration Claude manque dans les reglages.");
-const brandAssets=["OpenAI-black-monoblossom.svg","OpenAI-white-monoblossom.svg","Claude-orange.svg","Anthropic-SDK-LICENSE.txt"];
-assert(brandAssets.every(name=>fs.existsSync(`${__dirname}/../Resources/Brands/${name}`)),"Les actifs de moteurs documentes manquent des ressources.");
-assert(!["Codex-light.png","Codex-dark.png","Claude-Code.png"].some(name=>fs.existsSync(`${__dirname}/../Resources/Brands/${name}`)),"Un ancien logo sans provenance reste embarque.");
+assert(!fs.existsSync(`${__dirname}/../Resources/Brands`),"Des ressources de marque tierces restent embarquees.");
 assert(!enginesPage.includes("settings-acp")&&!enginesPage.includes("settings-providers"),"Les agents externes sont encore visibles.");
 
 load([card("claude-route","Route Claude","ready",{agentEngine:"claudeCode",model:"gpt-5.6-sol"})],{defaultModelClaude:"default"});
@@ -984,7 +982,8 @@ context.window.CodexBoard.menuAction({action:"toolsChat"});
 const utilityPanel=()=>element("#utility-panel");
 assert(utilityPanel().hidden===false,"Le menu macOS n'ouvre pas le panneau des outils.");
 assert(utilityPanel().innerHTML.includes('aria-label="Dossier de travail"')&&utilityPanel().innerHTML.includes("Claude"),"Le panneau droit ne propose pas le dossier et les deux moteurs.");
-assert(utilityPanel().innerHTML.includes('src="Brands/OpenAI-black-monoblossom.svg"')&&utilityPanel().innerHTML.includes('src="Brands/Claude-orange.svg"'),"Le selecteur du chat n affiche pas les identifiants visuels documentes des moteurs.");
+assert(utilityPanel().innerHTML.includes('class="engine-logo codex-logo"')&&utilityPanel().innerHTML.includes('class="engine-logo claude-code-logo"'),"Le selecteur du chat n affiche pas les icones fonctionnelles des moteurs.");
+assert(!utilityPanel().innerHTML.includes('src="Brands/'),"Le chat embarque encore un logo de fournisseur.");
 assert(utilityPanel().innerHTML.includes('id="utility-chat-model"')&&utilityPanel().innerHTML.includes("GPT-5.6 Sol"),"Le chat direct ne permet pas de choisir son modèle.");
 assert(utilityPanel().innerHTML.includes('data-action="choose-utility-attachments"'),"Le compositeur du chat n'affiche pas le bouton pour joindre des fichiers.");
 assert(!utilityPanel().innerHTML.includes('id="utility-access-mode"')&&!utilityPanel().innerHTML.includes('class="utility-access"'),"Le chat direct affiche encore un choix d acces inutile.");
@@ -1130,7 +1129,7 @@ const cliSource=fs.readFileSync(`${__dirname}/../Sources/CLI/main.m`,"utf8");
 const packageScript=fs.readFileSync(`${__dirname}/package_app.sh`,"utf8");
 assert(nativeSource.includes('snapshot[@"version"] = @22;')&&nativeSource.includes('@{ @"version":@22'),"L application native ne conserve pas le schema 22 lors d une sauvegarde ou d une premiere ouverture.");
 assert(cliSource.includes('board[@"version"] = @22;')&&!cliSource.includes('board[@"version"] = @19;'),"L outil en ligne de commande peut encore ramener les donnees au schema 19.");
-assert(packageScript.includes('Resources/Brands'),"Le paquet macOS ne copie pas les logos des moteurs.");
+assert(!packageScript.includes('Resources/Brands'),"Le paquet macOS copie encore des ressources de marque tierces.");
 for(const title of ["Fichier", "Édition", "Affichage", "Fenêtre", "Aide"])
   assert(nativeSource.includes(`@"${title}"`),`Le menu macOS « ${title} » manque du code natif.`);
 for(const action of ["setAppearance", "notificationStatus", "requestNotifications", "openNotificationSettings", "chooseUtilityFolder", "chooseUtilityAttachments", "startTerminal", "terminalCommand", "terminalInterrupt", "stopTerminal", "openSystemTerminal", "listProjectFiles", "openProjectFile", "revealProjectFile", "openProjectFileWith", "saveProjectFileAs", "copyProjectFilePath", "resolveProjectFileForChat", "syncClaudeSessions"])

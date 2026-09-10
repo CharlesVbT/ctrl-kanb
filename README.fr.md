@@ -147,6 +147,8 @@ CTRL_KANB_CLAUDE_PATH
 
 Les anciens alias `CODEX_PATH` et `CLAUDE_PATH` restent reconnus. Les identifiants demeurent gérés par les outils officiels ; CTRL KANB ne copie ni jeton ni mot de passe dans son tableau.
 
+L’exécution des tâches utilise les interfaces locales documentées par les fournisseurs : Codex App Server et le mode non interactif de Claude Code CLI. CTRL KANB ne fournit pas l’accès à d’autres utilisateurs et ne revend pas de compte fournisseur. La synchronisation Claude relit seulement les sessions déjà présentes dans le profil local de l’utilisateur ; elle ne s’authentifie pas et n’envoie aucune consigne.
+
 ## Données et permissions
 
 ```text
@@ -210,6 +212,6 @@ Consultez [CONTRIBUTING.md](CONTRIBUTING.md) avant une modification.
 
 ## Indépendance et licence
 
-CTRL KANB est indépendant et n’est ni affilié, ni validé, ni parrainé par OpenAI ou Anthropic. Le Blossom OpenAI officiel et le symbole Claude officiel servent uniquement à identifier leurs intégrations respectives dans les contrôles fonctionnels. Les textes techniques précisent l’usage local de Claude Code CLI lorsque nécessaire. Les noms, marques et ressources tierces restent la propriété de leurs titulaires ; voir [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+CTRL KANB est indépendant et n’est ni affilié, ni validé, ni parrainé par OpenAI ou Anthropic. Les noms « Codex », « Claude » et « Claude Code CLI » servent uniquement à décrire la compatibilité et l’agent local choisi par l’utilisateur. CTRL KANB n’embarque aucun logo OpenAI ou Anthropic ; les icônes d’agents sont des symboles d’interface originaux et neutres. Voir [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 CTRL KANB est imaginé et piloté par **Charles VbT**. Son code original et sa documentation sont distribués sous [Apache License 2.0](LICENSE). Les conditions d’attribution figurent dans [NOTICE](NOTICE).

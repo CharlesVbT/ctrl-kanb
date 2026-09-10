@@ -149,6 +149,8 @@ CTRL_KANB_CLAUDE_PATH
 
 The older `CODEX_PATH` and `CLAUDE_PATH` aliases remain supported for compatibility. Credentials remain managed by the official CLIs; CTRL KANB does not copy tokens or passwords into its board.
 
+Task execution uses the providers’ documented local interfaces: Codex App Server over its local protocol, and Claude Code CLI in non-interactive mode. CTRL KANB neither proxies access for other users nor resells a provider account. Claude conversation sync only reads session records already stored in the user’s local profile; it does not authenticate or send a prompt.
+
 ## Data, files, and permissions
 
 User data is stored in the operating-system profile:
@@ -230,7 +232,7 @@ These limits are tracked with their evidence level in [COMPATIBILITY.md](docs/CO
 
 ## Independent project
 
-CTRL KANB is an independent project. It is not affiliated with, endorsed by, or sponsored by OpenAI or Anthropic. The official OpenAI Blossom and Claude symbol are used only to identify their respective integrations in functional controls. Technical copy identifies the local Claude Code CLI when relevant. Third-party names, marks, and assets remain the property of their respective owners; see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+CTRL KANB is an independent project. It is not affiliated with, endorsed by, or sponsored by OpenAI or Anthropic. “Codex”, “Claude”, and “Claude Code CLI” are used only to describe compatibility and the local agent selected by the user. CTRL KANB does not bundle OpenAI or Anthropic logos; its agent icons are original, neutral interface symbols. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 ## License
 
