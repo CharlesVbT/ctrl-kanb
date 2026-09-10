@@ -134,14 +134,14 @@ assert(adapterMessages.length>0&&bridgeMessages.length===0,"L’adaptateur natif
 delete context.window.ctrlKanbNative;
 
 load([
-  card("c1","Livrable terminé","done",{completedAt:iso(0)}),
-  card("c2","Ancienne réalisation","done",{completedAt:iso(0),archived:true,archivedAt:iso(0),archiveReason:"manual"}),
-  card("c3","Priorité urgente","ready",{priorityLevelID:"urgent"}),
-  card("c4","Planifiée aujourd’hui","ready",{launchMode:"scheduled",scheduledAt:iso(0),dueDate:iso(0).slice(0,10)}),
-  card("c5","Travail suspendu","running",{executionState:"paused"}),
-  card("c6","Résultat à revoir","review",{lastRun:{summary:"Résultat disponible"}}),
-  card("c7","Prévue ensuite","ready",{launchMode:"scheduled",scheduledAt:iso(3),pinned:true}),
-  card("c8","Tâche masquée","ready")
+  card("c1","Livrable terminé","done",{updatedAt:iso(-8),completedAt:iso(0)}),
+  card("c2","Ancienne réalisation","done",{updatedAt:iso(-7),completedAt:iso(0),archived:true,archivedAt:iso(0),archiveReason:"manual"}),
+  card("c3","Priorité urgente","ready",{updatedAt:iso(-2),priorityLevelID:"urgent"}),
+  card("c4","Planifiée aujourd’hui","ready",{updatedAt:iso(-3),launchMode:"scheduled",scheduledAt:iso(0),dueDate:iso(0).slice(0,10)}),
+  card("c5","Travail suspendu","running",{updatedAt:iso(-4),executionState:"paused"}),
+  card("c6","Résultat à revoir","review",{updatedAt:iso(-5),lastRun:{summary:"Résultat disponible"}}),
+  card("c7","Prévue ensuite","ready",{updatedAt:iso(-6),launchMode:"scheduled",scheduledAt:iso(3),pinned:true}),
+  card("c8","Tâche masquée","ready",{updatedAt:iso(-1)})
 ]);
 assert(sidebar().includes('<span class="nav-label">Projet test</span>'),"Le nom du projet manque dans le panneau latéral.");
 click({action:"toggle-project",id:"space-1"});
