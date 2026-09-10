@@ -4,7 +4,7 @@
 
 CTRL KANB possède un hôte Windows Tauri 2 fonctionnel qui réutilise la même interface, le même schéma de données et les mêmes règles métier que la version macOS. Il exécute Codex et Claude Code installés nativement dans Windows. WSL n’est pas utilisé implicitement.
 
-Le contrôle du 10 septembre 2026 a été réalisé sur Windows 11 Professionnel x64 avec WebView2, l’application Codex 26.903.9818.0 qui embarque `codex-cli 0.153.4`, et Claude Code 2.1.165. Un installateur NSIS a été construit, installé, lancé et désinstallé sur cette machine.
+Le contrôle du 10 septembre 2026 a été réalisé sur Windows 11 Professionnel x64 avec WebView2, Codex CLI 0.154.0 et Claude Code 2.1.165. Codex a été actualisé depuis la version 0.137.0 avec sa commande officielle `codex update`. Un installateur NSIS a été construit, installé, lancé et désinstallé sur cette machine.
 
 ## Architecture
 
@@ -39,7 +39,7 @@ Les données sont conservées dans `%LOCALAPPDATA%\CTRL KANB Data`, séparément
 | Récurrence | la validation d’une occurrence hebdomadaire crée la suivante et l’Agenda projette les semaines futures |
 | Arrière-plan | fermeture de la fenêtre, zone de notification et démarrage à la connexion sans droit administrateur |
 
-Le test de bout en bout a atteint les deux exécutables. Claude Code a répondu qu’aucun compte n’était connecté. Un ancien alias Codex 0.137.0 coexistait avec le binaire 0.153.4 de l’application ; la détection privilégie maintenant la version active de l’application avant cet alias et le `PATH`. Le binaire 0.153.4 a accepté `gpt-5.6-sol`, initialisé la session et signalé ensuite la limite d’usage du compte. Les réponses externes en erreur restent affichées comme des blocages et ne sont pas transformées en faux succès.
+Le test de bout en bout a atteint les deux exécutables. Claude Code a répondu qu’aucun compte n’était connecté ; CTRL KANB affiche maintenant cette cause précise en français. Après sa mise à jour, Codex 0.154.0 a accepté `gpt-5.6-sol`, initialisé la session et signalé ensuite la limite d’usage du compte. Les réponses externes en erreur restent affichées comme des blocages et ne sont pas transformées en faux succès.
 
 ## Détection des agents
 
