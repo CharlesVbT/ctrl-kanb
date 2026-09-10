@@ -126,6 +126,13 @@ assert(sidebar().includes('class="project-task-archive" data-action="archive-car
 click({action:"archive-card",id:"side-done"});
 assert(saves().at(-1).data.cards.find(item=>item.id==="side-done").archived===true&&!sidebar().includes("Tâche à archiver"),"L’archivage depuis le panneau latéral ne retire pas la tâche de la liste active.");
 
+const adapterMessages=[];
+context.window.ctrlKanbNative={postMessage(message){adapterMessages.push(structuredClone(message));}};
+bridgeMessages.length=0;
+click({action:"sync"});
+assert(adapterMessages.length>0&&bridgeMessages.length===0,"L’adaptateur natif multiplateforme n’a pas la priorité sur le pont WebKit macOS.");
+delete context.window.ctrlKanbNative;
+
 load([
   card("c1","Livrable terminé","done",{completedAt:iso(0)}),
   card("c2","Ancienne réalisation","done",{completedAt:iso(0),archived:true,archivedAt:iso(0),archiveReason:"manual"}),
