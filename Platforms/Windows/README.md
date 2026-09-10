@@ -32,6 +32,8 @@ npm run dev
 .\build.ps1
 ```
 
+`npm run dev` est un lancement de développement : la fenêtre PowerShell qui exécute la commande reste attachée tant que le serveur de développement fonctionne. Elle n’est pas nécessaire avec l’installateur NSIS et ne doit pas être utilisée comme raccourci de lancement quotidien.
+
 L’installateur NSIS est produit sous `src-tauri\target\release\bundle\nsis`.
 
 ## Vérifier le paquet installé
