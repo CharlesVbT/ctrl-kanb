@@ -107,7 +107,7 @@
   };
   const technicalFailure = value => {
     const raw=String(value||"").trim(),plain=errorText(value);
-    return /^[\[{]/.test(raw)||/\b(?:error|exception|stack trace|traceback|status\s*[:=]?\s*[45]\d\d|econn\w*|enoent|eacces|eperm|oauth|unauthorized|forbidden)\b/i.test(`${raw}\n${plain}`)||/\bat\s+\S+\s*\([^\n]+:\d+:\d+\)/.test(raw);
+    return /^[\[{]/.test(raw)||/\b(?:error|exception|stack trace|traceback|status\s*[:=]?\s*[45]\d\d|econn\w*|enoent|eacces|eperm|oauth|unauthorized|forbidden|not logged in|login required|usage limit|rate.?limit|quota|too many requests|limit reached|command not found|executable not found|no such file or directory|timed? out|timeout|deadline exceeded|access denied|permission denied)\b/i.test(`${raw}\n${plain}`)||/model.*(?:not found|unsupported|unavailable|requires? (?:a )?newer version)|connection (?:failed|refused|reset)|\bat\s+\S+\s*\([^\n]+:\d+:\d+\)/i.test(`${raw}\n${plain}`);
   };
   const friendlyAgentError = (value,engine="") => {
     const detail=errorText(value),label=engineLabel(normalizeEngine(engine||"codex"));
