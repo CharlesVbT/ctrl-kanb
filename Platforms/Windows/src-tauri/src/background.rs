@@ -46,6 +46,13 @@ pub fn should_keep_alive(app: &AppHandle) -> bool {
     board_enabled(app)
 }
 
+pub fn restore_if_enabled(app: &AppHandle) -> Result<(), String> {
+    if board_enabled(app) && !startup_installed() {
+        configure(app, true)?;
+    }
+    Ok(())
+}
+
 pub fn status(app: &AppHandle, error: Option<&str>) -> Value {
     let enabled = board_enabled(app);
     let installed = startup_installed();

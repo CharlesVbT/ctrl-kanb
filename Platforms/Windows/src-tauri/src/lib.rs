@@ -339,6 +339,7 @@ pub fn run() {
             })
             .build(app)?;
             let background = std::env::args_os().any(|argument| argument == "--background");
+            background::restore_if_enabled(app.handle()).map_err(std::io::Error::other)?;
             let manager = app.state::<security::SecurityManager>();
             security::initialize(app.handle(), &manager, background)
                 .map_err(std::io::Error::other)?;
