@@ -39,16 +39,8 @@ fn shell() -> CommandBuilder {
     {
         let mut command = CommandBuilder::new("powershell.exe");
         // The app renders its own prompt and submits complete command lines.
-        // Script input avoids PowerShell's cursor-position handshake, which a
-        // line-oriented embedded terminal cannot answer like a full emulator.
-        command.args([
-            "-NoLogo",
-            "-NoProfile",
-            "-NonInteractive",
-            "-NoExit",
-            "-Command",
-            "-",
-        ]);
+        // NoProfile prevents a user's shell decoration from leaking into it.
+        command.args(["-NoLogo", "-NoProfile", "-NonInteractive", "-NoExit"]);
         command.env("TERM", "xterm-256color");
         command
     }
