@@ -53,6 +53,20 @@ fn shell() -> CommandBuilder {
     }
 }
 
+fn interactive_root(root: &std::path::Path) -> std::path::PathBuf {
+    #[cfg(target_os = "windows")]
+    {
+        let value = root.to_string_lossy();
+        if let Some(rest) = value.strip_prefix(r"\\?\UNC\") {
+            return std::path::PathBuf::from(format!(r"\\{rest}"));
+        }
+        if let Some(rest) = value.strip_prefix(r"\\?\") {
+            return std::path::PathBuf::from(rest);
+        }
+    }
+    root.to_path_buf()
+}
+
 fn start(
     payload: &Value,
     app: &AppHandle,
@@ -80,7 +94,8 @@ fn start(
         })
         .map_err(|error| error.to_string())?;
     let mut command = shell();
-    command.cwd(&root);
+    let display_root = interactive_root(&root);
+    command.cwd(&display_root);
     let mut child = pair
         .slave
         .spawn_command(command)
@@ -154,7 +169,7 @@ fn start(
     });
     Ok(vec![message(
         "terminalStarted",
-        json!({"terminalID":id,"path":root}),
+        json!({"terminalID":id,"path":display_root}),
     )])
 }
 

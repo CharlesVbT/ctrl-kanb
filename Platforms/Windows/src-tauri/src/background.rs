@@ -7,18 +7,20 @@ use std::{env, process::Command};
 use tauri::AppHandle;
 
 #[cfg(target_os = "windows")]
-const TASK_NAME: &str = "CTRL KANB Scheduler";
+const RUN_KEY: &str = r"HKCU\Software\Microsoft\Windows\CurrentVersion\Run";
+#[cfg(target_os = "windows")]
+const RUN_VALUE: &str = "CTRL KANB";
 
 #[cfg(target_os = "windows")]
 fn hidden(command: &mut Command) {
     agents::hidden(command);
 }
 
-fn task_installed() -> bool {
+fn startup_installed() -> bool {
     #[cfg(target_os = "windows")]
     {
-        let mut command = Command::new("schtasks.exe");
-        command.args(["/Query", "/TN", TASK_NAME]);
+        let mut command = Command::new("reg.exe");
+        command.args(["query", RUN_KEY, "/v", RUN_VALUE]);
         hidden(&mut command);
         command.status().is_ok_and(|status| status.success())
     }
@@ -46,7 +48,7 @@ pub fn should_keep_alive(app: &AppHandle) -> bool {
 
 pub fn status(app: &AppHandle, error: Option<&str>) -> Value {
     let enabled = board_enabled(app);
-    let installed = task_installed();
+    let installed = startup_installed();
     let state = if error.is_some() {
         "error"
     } else if !enabled {
@@ -83,23 +85,22 @@ fn store_enabled(app: &AppHandle, enabled: bool) -> Result<(), String> {
 fn configure(app: &AppHandle, enabled: bool) -> Result<Vec<NativeMessage>, String> {
     #[cfg(target_os = "windows")]
     {
-        if !enabled && !task_installed() {
+        if !enabled && !startup_installed() {
             store_enabled(app, false)?;
             return Ok(vec![message(
                 "backgroundSchedulerStatus",
                 status(app, None),
             )]);
         }
-        let mut command = Command::new("schtasks.exe");
+        let mut command = Command::new("reg.exe");
         if enabled {
             let executable = env::current_exe().map_err(|error| error.to_string())?;
             let launch = format!("\"{}\" --background", executable.display());
             command.args([
-                "/Create", "/SC", "ONLOGON", "/TN", TASK_NAME, "/TR", &launch, "/RL", "LIMITED",
-                "/F",
+                "add", RUN_KEY, "/v", RUN_VALUE, "/t", "REG_SZ", "/d", &launch, "/f",
             ]);
         } else {
-            command.args(["/Delete", "/TN", TASK_NAME, "/F"]);
+            command.args(["delete", RUN_KEY, "/v", RUN_VALUE, "/f"]);
         }
         hidden(&mut command);
         let output = command.output().map_err(|error| error.to_string())?;
@@ -110,9 +111,9 @@ fn configure(app: &AppHandle, enabled: bool) -> Result<Vec<NativeMessage>, Strin
             }
             return Err(if detail.is_empty() {
                 if enabled {
-                    "Windows a refusé d’installer le lancement automatique.".into()
+                    "Windows a refusé d’activer le lancement à la connexion.".into()
                 } else {
-                    "Windows n’a pas pu retirer le lancement automatique.".into()
+                    "Windows n’a pas pu retirer le lancement à la connexion.".into()
                 }
             } else {
                 detail
