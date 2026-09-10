@@ -147,7 +147,7 @@ CTRL_KANB_CLAUDE_PATH
 
 Les anciens alias `CODEX_PATH` et `CLAUDE_PATH` restent reconnus. Les identifiants demeurent gérés par les outils officiels ; CTRL KANB ne copie ni jeton ni mot de passe dans son tableau.
 
-L’exécution des tâches utilise les interfaces locales documentées par les fournisseurs : Codex App Server et le mode non interactif de Claude Code CLI. CTRL KANB ne fournit pas l’accès à d’autres utilisateurs et ne revend pas de compte fournisseur. La synchronisation Claude relit seulement les sessions déjà présentes dans le profil local de l’utilisateur ; elle ne s’authentifie pas et n’envoie aucune consigne.
+L’exécution des tâches utilise les interfaces locales documentées par les fournisseurs : Codex App Server et le mode non interactif de Claude Code CLI. Lors de l’initialisation de Codex App Server, CTRL KANB s’identifie comme `ctrl-kanb`. L’application ne fournit pas l’accès à d’autres utilisateurs et ne revend pas de compte fournisseur. La synchronisation Claude relit seulement les sessions déjà présentes dans le profil local de l’utilisateur ; elle ne s’authentifie pas et n’envoie aucune consigne.
 
 ## Données et permissions
 

@@ -1127,9 +1127,13 @@ assert(customFiles?.spaceID==="utility-custom"&&customFiles.rootPath==="/private
 const nativeSource=fs.readFileSync(`${__dirname}/../Sources/App/main.m`,"utf8");
 const cliSource=fs.readFileSync(`${__dirname}/../Sources/CLI/main.m`,"utf8");
 const packageScript=fs.readFileSync(`${__dirname}/package_app.sh`,"utf8");
+const windowsAgentSource=fs.readFileSync(`${__dirname}/../Platforms/Windows/src-tauri/src/agents.rs`,"utf8");
+const windowsConversationSource=fs.readFileSync(`${__dirname}/../Platforms/Windows/src-tauri/src/conversations.rs`,"utf8");
 assert(nativeSource.includes('snapshot[@"version"] = @22;')&&nativeSource.includes('@{ @"version":@22'),"L application native ne conserve pas le schema 22 lors d une sauvegarde ou d une premiere ouverture.");
 assert(cliSource.includes('board[@"version"] = @22;')&&!cliSource.includes('board[@"version"] = @19;'),"L outil en ligne de commande peut encore ramener les donnees au schema 19.");
 assert(!packageScript.includes('Resources/Brands'),"Le paquet macOS copie encore des ressources de marque tierces.");
+assert(nativeSource.includes('@"name":@"ctrl-kanb"')&&!nativeSource.includes('@"name":@"Codex Desktop"'),"Le client macOS ne s identifie pas correctement auprès de Codex App Server.");
+assert(windowsAgentSource.includes('"name":"ctrl-kanb"')&&windowsConversationSource.includes('"name":"ctrl-kanb"')&&!windowsAgentSource.includes('"name":"Codex Desktop"')&&!windowsConversationSource.includes('"name":"Codex Desktop"'),"Le client Windows ne s identifie pas correctement auprès de Codex App Server.");
 for(const title of ["Fichier", "Édition", "Affichage", "Fenêtre", "Aide"])
   assert(nativeSource.includes(`@"${title}"`),`Le menu macOS « ${title} » manque du code natif.`);
 for(const action of ["setAppearance", "notificationStatus", "requestNotifications", "openNotificationSettings", "chooseUtilityFolder", "chooseUtilityAttachments", "startTerminal", "terminalCommand", "terminalInterrupt", "stopTerminal", "openSystemTerminal", "listProjectFiles", "openProjectFile", "revealProjectFile", "openProjectFileWith", "saveProjectFileAs", "copyProjectFilePath", "resolveProjectFileForChat", "syncClaudeSessions"])

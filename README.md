@@ -149,7 +149,7 @@ CTRL_KANB_CLAUDE_PATH
 
 The older `CODEX_PATH` and `CLAUDE_PATH` aliases remain supported for compatibility. Credentials remain managed by the official CLIs; CTRL KANB does not copy tokens or passwords into its board.
 
-Task execution uses the providers’ documented local interfaces: Codex App Server over its local protocol, and Claude Code CLI in non-interactive mode. CTRL KANB neither proxies access for other users nor resells a provider account. Claude conversation sync only reads session records already stored in the user’s local profile; it does not authenticate or send a prompt.
+Task execution uses the providers’ documented local interfaces: Codex App Server over its local protocol, and Claude Code CLI in non-interactive mode. CTRL KANB identifies itself as `ctrl-kanb` when initializing Codex App Server. It neither proxies access for other users nor resells a provider account. Claude conversation sync only reads session records already stored in the user’s local profile; it does not authenticate or send a prompt.
 
 ## Data, files, and permissions
 

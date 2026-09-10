@@ -1445,13 +1445,11 @@ static BOOL SetAppLockEnabled(BOOL enabled) {
 }
 
 - (NSDictionary *)initializeMessage {
-    // Codex enregistre clientInfo.name comme « originator » de la session, et
-    // l application Codex ne liste que les conversations dont l originator est le
-    // sien. Avec « ctrl-kanb », les conversations lancees ici existaient bien dans
-    // ~/.codex/sessions mais restaient introuvables et donc impossibles a reprendre
-    // dans Codex. Le titre reste CTRL KANB : c est lui qui s affiche.
+    // Codex enregistre clientInfo.name comme « originator » de la session. CTRL
+    // KANB s identifie donc avec son propre nom stable. threadSource="user" gere
+    // separement la visibilite des conversations dans les interfaces Codex.
     return @{ @"id":@1, @"method":@"initialize", @"params":@{
-        @"clientInfo":@{ @"name":@"Codex Desktop", @"title":@"CTRL KANB", @"version":(NSBundle.mainBundle.infoDictionary[@"CFBundleShortVersionString"] ?: @"0") },
+        @"clientInfo":@{ @"name":@"ctrl-kanb", @"title":@"CTRL KANB", @"version":(NSBundle.mainBundle.infoDictionary[@"CFBundleShortVersionString"] ?: @"0") },
         // project/list et l affectation projectId font partie de l API
         // experimentale negociee. Sans cette capacite, le serveur refuse la
         // liste et la tache retombe silencieusement hors de son workspace Codex.

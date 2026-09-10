@@ -26,7 +26,7 @@ fn emit(app: &AppHandle, function: &str, object: Value) {
 }
 
 fn initialize() -> Value {
-    json!({"id":1,"method":"initialize","params":{"clientInfo":{"name":"Codex Desktop","title":"CTRL KANB","version":env!("CARGO_PKG_VERSION")},"capabilities":{"experimentalApi":true}}})
+    json!({"id":1,"method":"initialize","params":{"clientInfo":{"name":"ctrl-kanb","title":"CTRL KANB","version":env!("CARGO_PKG_VERSION")},"capabilities":{"experimentalApi":true}}})
 }
 
 fn write_line(writer: &mut impl Write, value: &Value) -> Result<(), String> {

@@ -29,6 +29,7 @@ Ce fichier suit les changements visibles de CTRL KANB. Le projet utilise une num
 - archivage et suppression accessibles depuis les vues où une tâche apparaît ;
 - détection des CLI adaptée aux installations graphiques macOS et aux emplacements natifs Windows ;
 - identification de Codex et Claude par des pictogrammes génériques propres à CTRL KANB, sans logo de fournisseur embarqué.
+- identification explicite de CTRL KANB auprès de Codex App Server sous le nom `ctrl-kanb`.
 
 ### Sécurité
 
