@@ -287,7 +287,13 @@
   let historyCurrentLimit = historyPageSize, historyArchiveLimit = historyPageSize;
   let backgroundSchedulerState = {enabled:false,installed:false,state:"disabled",message:"Aucun service ne tourne sans ton accord.",lastCheck:"",error:""};
 
-  const bridge = payload => window.webkit?.messageHandlers?.bridge?.postMessage(payload);
+  const bridge = payload => {
+    if(typeof window.ctrlKanbNative?.postMessage==="function"){
+      window.ctrlKanbNative.postMessage(payload);
+      return;
+    }
+    window.webkit?.messageHandlers?.bridge?.postMessage(payload);
+  };
   const esc = (value="") => String(value ?? "").replace(/[&<>'"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[c]));
   const safeHex = (value, fallback="6E75FF") => /^[0-9a-f]{6}$/i.test(String(value||"").replace(/^#/,"")) ? String(value).replace(/^#/,"") : fallback;
   const uid = () => crypto.randomUUID().toLowerCase();
