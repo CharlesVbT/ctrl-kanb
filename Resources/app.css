@@ -937,6 +937,7 @@ button:disabled { opacity: .42; cursor: not-allowed; }
 .sidebar-sync-state small{overflow:hidden;font-size:calc(9.5px + var(--font-size-offset));font-weight:540;text-overflow:ellipsis;white-space:nowrap}
 .sidebar-sync.sync-running .sidebar-sync-state,.sidebar-sync.sync-slow .sidebar-sync-state{color:var(--accent)}
 .sidebar-sync.sync-error .sidebar-sync-state{color:var(--bad)}
+.sidebar-sync.sync-partial .sidebar-sync-state{color:var(--warning)}
 .sidebar-sync.sync-success .sidebar-sync-state{color:var(--ok)}
 .sidebar-sync.sync-running .sidebar-sync-state .ui-icon,.sidebar-sync.sync-slow .sidebar-sync-state .ui-icon,.is-busy .ui-icon{animation:spin .85s linear infinite}
 @media(max-width:800px) {
@@ -2027,6 +2028,7 @@ body.resizing-sidebar .sidebar-resizer{background:var(--surface-3)}
 .settings-sync-state{max-width:210px;padding:4px 8px;overflow:hidden;border-radius:999px;background:var(--surface-3);color:var(--ink-3);font-size:calc(9.5px + var(--font-size-offset));font-style:normal;font-weight:590;text-overflow:ellipsis;white-space:nowrap}
 .settings-sync-state.sync-success{color:var(--ok);background:color-mix(in srgb,var(--ok) 10%,var(--surface))}
 .settings-sync-state.sync-error{color:var(--danger);background:color-mix(in srgb,var(--danger) 9%,var(--surface))}
+.settings-sync-state.sync-partial{color:var(--warning);background:color-mix(in srgb,var(--warning) 10%,var(--surface))}
 .settings-sync-state.sync-running,.settings-sync-state.sync-slow{color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,var(--surface))}
 .sync-controls{margin-top:10px}
 .sync-settings-note{margin:9px 2px 0;display:flex;align-items:flex-start;gap:8px;color:var(--ink-3);font-size:calc(10.5px + var(--font-size-offset));line-height:1.55}

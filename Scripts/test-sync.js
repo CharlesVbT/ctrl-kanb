@@ -87,6 +87,15 @@ test('a native failure is visible and immediately retryable',()=>{
   w.CodexBoard.syncFailed({message:'Fin du test',completed:0,total:1});
 });
 
+test('a partly refreshed Codex set is reported honestly',()=>{
+  syncButton().click();
+  w.CodexBoard.conversationsSynced({conversations:[{id:mainID,name:'Principale relue',status:{type:'idle'},turns:[]}],total:3,failed:1,durationMs:20});
+  assert.equal(syncButton().disabled,false);
+  assert.equal(syncButton().querySelector('.sidebar-sync-state small').textContent,'2/3');
+  assert.match(syncButton().title,/2\/3 conversations Codex relues/);
+  assert.equal(state.settings.conversationSyncChecks.codex.phase,'partial');
+});
+
 test('new Codex conversations explain their delayed appearance',()=>{
   w.CodexBoard.conversationAssociated({cardID:card.id,threadID:'55555555-1234-4234-8234-123456789abc',name:'Nouvelle conversation',engine:'codex',created:true});
   assert.match(d.querySelector('#toast-root').textContent,/apparition dans la liste peut prendre quelques secondes/);
@@ -115,6 +124,15 @@ test('a missing Claude session is never presented as up to date',()=>{
   w.CodexBoard.claudeSessionsSynced({sessions:[{sessionID:claudeID,accountID:'claude-code:default',found:false,error:'Session locale Claude introuvable.'}],total:1,failed:1,durationMs:3});
   assert.equal(claudeSyncButton().querySelector('.sidebar-sync-state small').textContent,'À vérifier');
   assert.match(claudeSyncButton().title,/session Claude locale est introuvable/);
+});
+
+test('a partly refreshed Claude set is reported honestly',()=>{
+  claudeSyncButton().click();
+  w.CodexBoard.claudeSyncStarted({total:2});
+  w.CodexBoard.claudeSessionsSynced({sessions:[{sessionID:claudeID,accountID:'claude-code:default',found:true,preview:'Réponse relue'}],total:2,failed:1,durationMs:4});
+  assert.equal(claudeSyncButton().querySelector('.sidebar-sync-state small').textContent,'1/2');
+  assert.match(claudeSyncButton().title,/1\/2 sessions Claude relues/);
+  assert.equal(state.settings.conversationSyncChecks['claude-code'].phase,'partial');
 });
 
 test('no linked Codex conversation is never presented as up to date',()=>{
