@@ -14,7 +14,7 @@
     "test:privacy": "python3 Scripts/privacy-scan.py && python3 Scripts/test-privacy-scan.py && python3 Scripts/test-security-docs.py"
   },
   "devDependencies": {
-    "jsdom": "^26.1.0"
+    "jsdom": "^30.0.1"
   },
   "engines": {
     "node": ">=20"
