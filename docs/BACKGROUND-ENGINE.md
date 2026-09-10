@@ -42,4 +42,4 @@ CTRL_KANB_SKIP_LAUNCHCTL=1 \
 
 ## Traçabilité de l’automatisation
 
-L’état livré et installé par défaut est **désactivé** : aucune automatisation récurrente n’est créée sur le Mac et aucune trace calendrier n’est donc requise à l’installation de la V1.1. Si l’utilisateur active durablement le moteur dans un environnement qui impose un registre calendrier des automatisations, cette activation doit être ajoutée à ce registre. CTRL KANB fournit parallèlement une trace opérationnelle locale dans Réglages, le heartbeat et les journaux.
+L’état livré et installé par défaut est **désactivé** : aucune automatisation récurrente n’est créée sur le Mac pendant l’installation. Si l’utilisateur active durablement le moteur dans un environnement qui impose un registre des automatisations, cette activation doit y être ajoutée. CTRL KANB conserve parallèlement une trace opérationnelle locale dans Réglages, le heartbeat et les journaux.

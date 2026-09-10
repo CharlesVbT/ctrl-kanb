@@ -1,152 +1,186 @@
 # CTRL KANB
 
-![Aperçu de CTRL KANB](docs/assets/ctrl-kanb-hero.png)
+**English** · [Français](README.fr.md)
 
-**Le poste de pilotage local pour macOS et Windows qui organise, planifie et suit le travail confié à Codex et Claude Code.**
+![CTRL KANB overview](docs/assets/ctrl-kanb-hero.png)
 
-## Pourquoi CTRL KANB existe
+**A local control center for organizing, scheduling, and tracking work delegated to Codex and Claude Code on macOS and Windows.**
 
-Codex et Claude Code savent accomplir des tâches complexes. Dès que plusieurs projets, conversations, validations et routines s’accumulent, il devient cependant difficile de garder une vision claire du travail en cours.
+> **Project status — 6.11.2 release candidate.** The source runs on macOS and Windows. Core flows are covered by automated checks and real-machine testing. No signed binary has been published yet. Read the [compatibility and validation report](docs/COMPATIBILITY.md) before relying on CTRL KANB for important work.
 
-CTRL KANB est né de ce problème.
+## Why CTRL KANB exists
 
-Je suis un utilisateur régulier de Codex et de Claude Code, sans être développeur de métier. Les files d’attente existantes ne suffisaient pas à organiser mon travail, et je n’ai trouvé aucune application Kanban qui réunissait les fonctions dont j’avais besoin.
+Codex and Claude Code can complete complex tasks, but their queues stop being enough when projects, conversations, approvals, scheduled work, and routines accumulate.
 
-J’ai donc demandé à Codex de m’aider à construire l’application que je cherchais.
+CTRL KANB grew out of that gap. **Charles VbT** uses both agents extensively but is not a professional developer. No existing Kanban combined project organization, agent conversations, scheduled tasks, and recurring work in the way he needed. He therefore built this application with intensive help from Codex and Claude Code, then hardened it through interface, functional, and security reviews.
 
-Le projet a commencé avec un Kanban capable de suivre les tâches confiées à un agent. Il s’est progressivement enrichi d’un agenda, de tâches programmées, de routines, d’un suivi des conversations, de validations humaines, puis de la prise en charge de Claude Code.
+CTRL KANB brings together:
 
-CTRL KANB propose aujourd’hui un espace de travail local qui réunit :
+- a Kanban designed around tasks delegated to coding agents;
+- a calendar for scheduled runs, deadlines, and routines;
+- a Flow view for priorities, active work, and decisions;
+- result and conversation follow-up;
+- a project chat, terminal, and file browser;
+- independent Codex and Claude Code integration;
+- local storage with no CTRL KANB account or server.
 
-- un Kanban pensé pour le travail avec des agents ;
-- un agenda pour planifier les tâches et les routines ;
-- une vue claire des exécutions, résultats et décisions en attente ;
-- un chat, un terminal et un navigateur de fichiers intégrés ;
-- une prise en charge distincte de Codex et Claude Code ;
-- des données conservées localement sur l’ordinateur.
+The architecture may support more engines in the future, provided their permissions, diagnostics, and storage behavior remain explicit.
 
-L’objectif est de construire la couche d’organisation qui manque encore entre l’utilisateur et ses agents. L’architecture pourra ensuite accueillir d’autres moteurs et outils, sans enfermer l’utilisateur dans un seul fournisseur.
+## The app in action
 
-CTRL KANB est aussi un projet réalisé avec l’aide intensive de l’IA. Son code est public, ses principaux comportements sont testés et sa documentation décrit clairement son fonctionnement et ses limites.
+Every screenshot below is generated from a fictional presentation dataset. It contains no real account, conversation, project path, or user data.
 
-La version actuelle constitue la première étape publique du projet. Elle fonctionne sans serveur CTRL KANB ni compte propre à l’application.
+| Board | Calendar |
+|---|---|
+| ![CTRL KANB Classic board with fictional tasks](docs/assets/ctrl-kanb-board.png) | ![CTRL KANB weekly calendar with fictional tasks](docs/assets/ctrl-kanb-agenda.png) |
 
-## Fonctions principales
+![CTRL KANB project chat in a dark theme with a fictional conversation](docs/assets/ctrl-kanb-chat.png)
 
-- plusieurs projets associés à des dossiers locaux ;
-- deux tableaux protégés : **Classique** pour les tâches ponctuelles et **Routines** pour les tâches récurrentes ;
-- vue **Flux** pour les priorités, les tâches prêtes, les exécutions et les décisions en attente ;
-- agenda Jour, Semaine et Mois avec fuseau horaire, premier jour de semaine et format 12/24 heures configurables ;
-- aperçu des occurrences futures quotidiennes, hebdomadaires ou mensuelles dans l’agenda, sans dupliquer les cartes dans le Kanban ;
-- historique, archivage réversible, restauration et suppression avec confirmation ;
-- suivi des réponses et poursuite d’une conversation existante ;
-- centre de validations pour les commandes, modifications de fichiers et questions des agents ;
-- chat latéral Codex ou Claude Code avec choix du modèle, pièces jointes et conversations séparées ;
-- navigateur de fichiers limité au dossier sélectionné ;
-- terminal intégré démarrant dans ce dossier : zsh sur macOS, PowerShell sur Windows ;
-- synchronisation explicite des conversations Codex et Claude Code ;
-- comptes séparés par agent, sans copie des identifiants dans le tableau ;
-- thèmes clairs et sombres, palettes de couleurs et taille de police réglable ;
-- premier lancement guidé, sans projet ni tâche d’exemple imposés ;
-- export JSON et restauration avec copie de sécurité automatique ;
-- raccourcis natifs, palette de commandes avec `⌘ K` sur macOS ou `Ctrl K` sur Windows, et panneaux redimensionnables ;
-- planificateur facultatif, livré désactivé, avec reprise après relance.
+## Main features
 
-## Prérequis d’utilisation
+- local-folder projects with pinning and progressive task lists;
+- two fixed workflows: **Classic** for one-off work and **Routines** for recurring work;
+- quick capture plus advanced prompts, dependencies, priorities, and categories;
+- Day, Week, and Month calendar views with configurable time zone, week start, and 12/24-hour time;
+- manual tasks, scheduled runs, and daily, weekly, or monthly recurrence;
+- future recurrence previews without duplicating executable cards;
+- separate queues and concurrency limits for Codex and Claude Code;
+- serialization of instructions targeting the same conversation;
+- human approval flows for commands, file changes, and agent questions;
+- history, reversible archives, restoration, and confirmed deletion;
+- independent, timestamped Codex and Claude Code conversation sync;
+- project chat with model selection, attachments, and multiple conversations;
+- a full local shell: zsh on macOS and PowerShell on Windows;
+- a file browser constrained to the project folder;
+- notification rules by event and by task;
+- light and dark themes, color palettes, and adjustable font size;
+- JSON export and validated restore with a pre-import backup;
+- a command palette with `⌘ K` on macOS or `Ctrl K` on Windows;
+- an optional background scheduler, disabled by default.
 
-- macOS 14 Sonoma ou une version plus récente, ou Windows 11 x64 ;
-- Codex et/ou Claude Code installés et connectés si vous souhaitez exécuter des tâches avec ces agents.
+## Compatibility
 
-L’installateur Windows prend en charge WebView2. Node.js, Python, Rust et les outils de développement ne sont nécessaires que pour construire ou tester l’application depuis les sources.
+| Component | Current support |
+|---|---|
+| macOS | macOS 14 or later; tested on Apple Silicon; Apple Command Line Tools required to build |
+| Windows | Windows 11 x64 tested; NSIS installer and WebView2 host |
+| Codex | optional; required only for Codex features |
+| Claude Code | optional; required only for Claude Code features |
+| Offline use | board, calendar, and local data remain available; agents and their sync require their services |
 
-## Codex, Claude Code ou les deux
+CTRL KANB works with Codex alone, Claude Code alone, both, or neither when used only for local organization. Executable detection, account authentication, and conversation sync freshness are displayed as separate states.
 
-Les deux agents sont indépendants. CTRL KANB fonctionne avec **Codex seul**, **Claude Code seul** ou **les deux**. Sans agent installé, le Kanban et l’agenda restent utilisables pour organiser le travail, mais les lancements, le chat et la synchronisation correspondante restent indisponibles.
+The exact versions tested and the remaining limitations are recorded in [COMPATIBILITY.md](docs/COMPATIBILITY.md). That detailed report is currently maintained in French.
 
-Au démarrage, l’application cherche séparément les commandes `codex` et `claude` :
+## Quick start
 
-- dans les applications officielles qui embarquent Codex ;
-- dans les emplacements Homebrew et Unix habituels ;
-- dans les emplacements Windows officiels et utilisateur connus ;
-- dans le `PATH` reçu par l’application ;
-- dans les installations utilisateur et les gestionnaires courants : NVM, fnm, Volta, mise, asdf, Bun et pnpm.
+### Optional agent CLIs
 
-**Disponible sur cet ordinateur** signifie seulement que la commande a été trouvée. **Connexion testée** signifie qu’un aller-retour réel a réussi avec le compte sélectionné. Ces deux états sont affichés séparément dans **Réglages → Agents et modèles**. Le bouton **Actualiser la détection** relance la recherche après une installation.
+Install and sign in only to the agents you intend to use:
 
-Pour une installation personnalisée, les variables `CTRL_KANB_CODEX_PATH` et `CTRL_KANB_CLAUDE_PATH` peuvent désigner les exécutables avec des chemins absolus. CTRL KANB utilise ensuite les sessions et identifiants conservés par chaque outil ; il ne copie pas leurs clés dans ses données.
+- [Codex CLI — official documentation](https://developers.openai.com/codex/cli)
+- [Claude Code — official setup](https://docs.anthropic.com/en/docs/claude-code/getting-started)
 
-## Construction macOS depuis les sources
+CTRL KANB does not provide a subscription, quota, or credentials for either service.
+
+### Build and install on macOS
 
 ```sh
-git clone <url-du-depot> ctrl-kanb
+git clone https://github.com/charlesvbtpro-ship-it/ctrl-kanb.git
 cd ctrl-kanb
+npm ci
 ./Scripts/install.sh
 ```
 
-Le script compile l’application, exécute les contrôles disponibles, puis l’installe dans `/Applications`. Pour choisir une autre destination :
+The script builds the application, runs the installed checks, and installs it in `/Applications`. To install it for the current user instead:
 
 ```sh
 CTRL_KANB_INSTALL_DIR="$HOME/Applications" ./Scripts/install.sh
 ```
 
-Pour compiler sans installer :
+### Build the Windows installer
 
-```sh
-./Scripts/package_app.sh
-open "dist/CTRL KANB.app"
-```
-
-L’application produite localement utilise une signature ad hoc. Une distribution binaire publique devra être signée avec un certificat Developer ID et notariée pour éviter les avertissements Gatekeeper.
-
-## Construction Windows depuis les sources
-
-### Installation pour utiliser l’application
-
-Téléchargez `CTRL KANB_<version>_x64-setup.exe` depuis la page des releases GitHub, puis double-cliquez sur l’installateur. Il installe CTRL KANB dans votre profil Windows et crée le raccourci du menu Démarrer. Aucun terminal, Node.js, Python, Rust ou outil de développement n’est nécessaire pour utiliser cette version ; WebView2 est installé ou complété par l’installateur si Windows en a besoin.
-
-La première version publiée peut afficher l’avertissement SmartScreen tant que l’installateur n’est pas signé Authenticode. Vérifiez alors l’empreinte SHA-256 publiée avec la release avant de choisir **Informations complémentaires → Exécuter quand même**. L’application se lance ensuite directement depuis le menu Démarrer, sans fenêtre PowerShell ou Invite de commandes persistante.
-
-### Construire depuis le dépôt
-
-Depuis PowerShell, avec Git, Node.js, Rust MSVC, WebView2 et les outils C++ de Visual Studio installés :
+Run this in PowerShell with Git, Node.js, Rust MSVC, WebView2, and the Visual Studio C++ build tools installed:
 
 ```powershell
-git clone <url-du-depot> ctrl-kanb
+git clone https://github.com/charlesvbtpro-ship-it/ctrl-kanb.git
 cd ctrl-kanb\Platforms\Windows
 .\setup.ps1
 .\build.ps1
 ```
 
-L’installateur NSIS est créé dans `Platforms\Windows\src-tauri\target\release\bundle\nsis`. Une construction publique devra recevoir une signature Authenticode ; l’installateur local non signé reste utilisable avec l’avertissement de sécurité Windows habituel.
+The installer is written under `Platforms\Windows\src-tauri\target\release\bundle\nsis`.
 
-## Première configuration
+### Prebuilt binaries
 
-1. Ajoutez un projet et choisissez son dossier.
-2. Ouvrez **Réglages → Agents et modèles**, puis **Comptes** si vous utilisez plusieurs connexions.
-3. Vérifiez la disponibilité et la connexion de Codex et/ou Claude Code.
-4. Choisissez l’agent utilisé par défaut et le niveau d’effort souhaité.
-5. Créez une tâche dans **Classique** ou configurez une tâche dans **Routines**.
+Check the repository's **Releases** page. If no signed release and SHA-256 checksum are available, build from source. Current local macOS packages use an ad hoc signature and current Windows packages are not Authenticode-signed. They are suitable for development and evaluation, not for warning-free public distribution.
 
-Un état **Connexion testée** signifie qu’un aller-retour réel a réussi à la date affichée. La synchronisation des conversations possède un état séparé pour Codex et Claude Code.
+The complete installation, update, and removal instructions are in [INSTALLATION.md](docs/INSTALLATION.md).
 
-Dans **Routines**, seule la prochaine occurrence est une carte exécutable. L’agenda affiche aussi les répétitions futures en pointillé, semaine après semaine. Valider le passage courant crée la prochaine carte réelle ; modifier la routine met à jour les aperçus suivants.
+## First setup
 
-## Données et confidentialité
+1. Add a project and select its local folder.
+2. Open **Settings → Agents and models**.
+3. Refresh detection, then test Codex and/or Claude Code independently.
+4. Choose the default agent and models.
+5. Create a task in **Classic** or configure a routine.
 
-Les données de CTRL KANB restent dans le profil de l’utilisateur :
+Status labels have distinct meanings:
+
+- **Available on this computer** means the executable was found;
+- **Connection tested** means a real round trip succeeded at the displayed time;
+- **Synchronized** means linked conversations or local sessions were read at the displayed time;
+- **No session** means no matching local conversation was found.
+
+A successful connection test does not guarantee remaining quota or access to every model. Synchronization does not authenticate an account, and Claude Code sync does not send a new prompt.
+
+## Codex and Claude Code detection
+
+At startup, CTRL KANB searches for `codex` and `claude` independently in known application locations, the `PATH` inherited by the app, and common user-level package locations. A graphical app may receive a different `PATH` from an interactive terminal.
+
+For a custom installation, provide an absolute executable path:
+
+```text
+CTRL_KANB_CODEX_PATH
+CTRL_KANB_CLAUDE_PATH
+```
+
+The older `CODEX_PATH` and `CLAUDE_PATH` aliases remain supported for compatibility. Credentials remain managed by the official CLIs; CTRL KANB does not copy tokens or passwords into its board.
+
+## Data, files, and permissions
+
+User data is stored in the operating-system profile:
 
 ```text
 macOS   ~/Library/Application Support/CTRL KANB/
 Windows %LOCALAPPDATA%\CTRL KANB Data\
 ```
 
-Le dépôt ne contient pas ce dossier. Les identifiants Codex et Claude Code restent dans les dossiers gérés par leurs outils respectifs. CTRL KANB ne contient aucun service de télémétrie et ne stocke pas de clé d’API dans son tableau.
+It may contain prompts, responses, project paths, conversation identifiers, settings, and diagnostic logs. A JSON export contains the same private information and should be handled accordingly.
 
-Dans **Réglages → Données**, vous pouvez exporter l’organisation complète dans un fichier JSON. Une restauration remplace les données visibles après confirmation et conserve automatiquement une copie privée de l’état précédent. L’export contient les briefs, résultats, historiques et chemins configurés dans l’application ; il ne contient ni les fichiers des projets ni les secrets de connexion gérés par les agents.
+The file browser remains inside the selected project folder. The terminal and agent processes run locally with the user's operating-system permissions and may have broader access according to their own configuration. The application lock protects the window; it does not encrypt `board.json`.
 
-Une consigne envoyée à Codex ou Claude Code suit ensuite les règles de confidentialité du service choisi. Consultez [PRIVACY.md](PRIVACY.md) pour le détail des données locales, des échanges externes et des journaux.
+Read [PRIVACY.md](PRIVACY.md) for data handling and [SECURITY.md](SECURITY.md) for the security model and private reporting process. These detailed policies are currently maintained in French.
 
-## Développement
+## Documentation
+
+The full technical and user documentation is currently maintained in French:
+
+| Document | Scope |
+|---|---|
+| [User guide](docs/USER-GUIDE.md) | projects, tasks, calendar, routines, conversations, and settings |
+| [Installation](docs/INSTALLATION.md) | requirements, builds, updates, and removal |
+| [Compatibility](docs/COMPATIBILITY.md) | tested systems, evidence, and open limits |
+| [Troubleshooting](docs/TROUBLESHOOTING.md) | detection, authentication, models, sync, scheduling, and terminal |
+| [Architecture](docs/ARCHITECTURE.md) | native hosts, storage, queues, permissions, and scheduler |
+| [Data model](docs/DATA-MODEL.md) | persistent schema and migrations |
+| [macOS background engine](docs/BACKGROUND-ENGINE.md) | optional `launchd` behavior |
+| [Windows port](docs/WINDOWS-PORT.md) | Tauri host implementation and real-machine validation |
+| [Release checklist](docs/RELEASE-CHECKLIST.md) | controls required before a public release |
+| [Changelog](CHANGELOG.md) | user-visible changes by version |
+| [Support](SUPPORT.md) | bug reports and feature requests |
+
+## Development
 
 ```sh
 npm ci
@@ -154,40 +188,50 @@ npm test
 npm run build
 ```
 
-Les contrôles couvrent l’interface, les traductions, le câblage des actions, les injections HTML, les conversations, la synchronisation, les ponts natifs, les notifications et les données publiables.
+Windows checks and the Tauri build run from the repository root:
 
-Structure du dépôt :
-
-```text
-Resources/  Interface, icônes et ressources de marque
-Scripts/    Construction, installation et contrôles
-Sources/    Application macOS, helper et CLI
-Platforms/  Hôte Windows Tauri et scripts PowerShell
-Tests/      Doubles de test et scénarios natifs
-docs/       Architecture, modèle de données et revue UI
+```powershell
+npm ci
+npm run test:static
+npm run test:ui
+npm ci --prefix Platforms/Windows
+cargo fmt --manifest-path Platforms/Windows/src-tauri/Cargo.toml --check
+cargo clippy --manifest-path Platforms/Windows/src-tauri/Cargo.toml --all-targets -- -D warnings
+cargo test --manifest-path Platforms/Windows/src-tauri/Cargo.toml
+npm --prefix Platforms/Windows run build
 ```
 
-Documentation technique :
+Repository layout:
 
-- [Architecture](docs/ARCHITECTURE.md)
-- [État et validation de la version Windows](docs/WINDOWS-PORT.md)
-- [Modèle de données](docs/DATA-MODEL.md)
-- [Moteur macOS facultatif](docs/BACKGROUND-ENGINE.md)
-- [Revue de l’interface](docs/UI-REVIEW.md)
-- [Contrôles avant publication](docs/RELEASE-CHECKLIST.md)
-- [Politique de sécurité](SECURITY.md)
+```text
+Resources/  shared interface, styles, translations, and icons
+Scripts/    build, install, documentation, and verification scripts
+Sources/    macOS host, helper, and local CLI
+Platforms/  Windows Tauri host and PowerShell scripts
+Tests/      native scenarios and test doubles
+docs/       user and technical documentation
+```
 
-Les deux hôtes réutilisent la même interface et le même format de données. Les paquets produits localement restent non signés tant que la chaîne de publication macOS et Windows n’a pas reçu ses certificats.
+Read [CONTRIBUTING.md](CONTRIBUTING.md) before submitting a change.
 
-## Limites connues
+## Known limitations
 
-- l’ordinateur doit être allumé et la session utilisateur ouverte pour lancer une tâche programmée ;
-- les demandes de validation en cours ne survivent pas à l’arrêt du processus d’agent ;
-- la signature ad hoc macOS et l’installateur Windows non signé conviennent aux essais locaux, pas à une distribution binaire fluide ;
-- les logos Codex et Claude Code restent la propriété de leurs détenteurs respectifs.
+- the computer must be on and the user session open for a scheduled task to run;
+- active approval requests cannot survive termination of their agent process;
+- the embedded terminal is a full shell, not a sandbox;
+- model availability, quotas, and service uptime depend on the selected provider;
+- WSL is not supported by the current Windows host;
+- packages are not yet signed for frictionless public distribution;
+- long-duration sleep/wake tests and several Windows display scales remain open.
 
-## Licence
+These limits are tracked with their evidence level in [COMPATIBILITY.md](docs/COMPATIBILITY.md).
 
-CTRL KANB est imaginé et piloté par **Charles VbT**. Son code source original et sa documentation sont distribués sous [Apache License 2.0](LICENSE). Les conditions d’attribution figurent dans [NOTICE](NOTICE).
+## Independent project
 
-Cette licence permet d’utiliser, modifier et redistribuer le projet, y compris dans un cadre commercial, sous réserve d’en conserver les mentions requises. Elle ne confère aucun droit sur les marques et ressources tierces répertoriées dans [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md), ni le droit de présenter une version modifiée comme une version officielle de CTRL KANB.
+CTRL KANB is an independent project. It is not affiliated with, endorsed by, or sponsored by OpenAI or Anthropic. Codex, OpenAI, Claude, Claude Code, and Anthropic names and logos belong to their respective owners; see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+
+## License
+
+CTRL KANB is conceived and directed by **Charles VbT**. Its original source code and documentation are licensed under the [Apache License 2.0](LICENSE). Attribution details are in [NOTICE](NOTICE).
+
+The license permits use, modification, and redistribution, including commercial use, subject to its notice requirements. It grants no trademark rights and does not permit a modified build to be presented as an official CTRL KANB release.

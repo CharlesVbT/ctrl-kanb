@@ -28,6 +28,9 @@ jobs:
       - name: Exécuter les contrôles
         run: npm test
 
+      - name: Contrôler le générateur de captures
+        run: node --check Scripts/capture-docs.js
+
       - name: Compiler l’application
         run: npm run build
 
