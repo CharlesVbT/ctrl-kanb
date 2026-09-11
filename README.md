@@ -76,9 +76,9 @@ The exact versions tested and the remaining limitations are recorded in [COMPATI
 
 ## Download CTRL KANB
 
-- **Ready-to-install applications:** the [Releases](https://github.com/charlesvbtpro-ship-it/ctrl-kanb/releases/latest) page collects the macOS and Windows packages, release notes, and `SHA256SUMS.txt` file for every published version.
+- **Ready-to-install applications:** the [Releases](https://github.com/CharlesVbT/ctrl-kanb/releases/latest) page collects the macOS and Windows packages, release notes, and `SHA256SUMS.txt` file for every published version.
 - **Versioned source:** every GitHub release automatically includes `Source code (zip)` and `Source code (tar.gz)` archives for its tag.
-- **Current source:** use GitHub’s **Code → Download ZIP** button or download the [`main` archive](https://github.com/charlesvbtpro-ship-it/ctrl-kanb/archive/refs/heads/main.zip) without installing Git.
+- **Current source:** use GitHub’s **Code → Download ZIP** button or download the [`main` archive](https://github.com/CharlesVbT/ctrl-kanb/archive/refs/heads/main.zip) without installing Git.
 
 If no package is available for the version you need, use the source build instructions below.
 
@@ -96,7 +96,7 @@ CTRL KANB does not provide a subscription, quota, or credentials for either serv
 ### Build and install on macOS
 
 ```sh
-git clone https://github.com/charlesvbtpro-ship-it/ctrl-kanb.git
+git clone https://github.com/CharlesVbT/ctrl-kanb.git
 cd ctrl-kanb
 npm ci
 npm run install:macos
@@ -113,7 +113,7 @@ CTRL_KANB_INSTALL_DIR="$HOME/Applications" npm run install:macos
 Run this in PowerShell with Git, Node.js, Rust 1.88 or later using MSVC, WebView2, and the Visual Studio C++ build tools installed:
 
 ```powershell
-git clone https://github.com/charlesvbtpro-ship-it/ctrl-kanb.git
+git clone https://github.com/CharlesVbT/ctrl-kanb.git
 cd ctrl-kanb\Platforms\Windows
 .\setup.ps1
 .\build.ps1

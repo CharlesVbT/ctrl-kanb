@@ -4,7 +4,7 @@ CTRL KANB fonctionne sans compte propre. Codex et Claude sont facultatifs. Les f
 
 ## Télécharger ou construire
 
-La page [Releases](https://github.com/charlesvbtpro-ship-it/ctrl-kanb/releases/latest) fournit les applications macOS et Windows, les notes de version et `SHA256SUMS.txt` pour chaque version disponible. GitHub ajoute aussi les archives du code source correspondant au tag. Pour une révision sans paquet, utilisez les instructions de construction ci-dessous.
+La page [Releases](https://github.com/CharlesVbT/ctrl-kanb/releases/latest) fournit les applications macOS et Windows, les notes de version et `SHA256SUMS.txt` pour chaque version disponible. GitHub ajoute aussi les archives du code source correspondant au tag. Pour une révision sans paquet, utilisez les instructions de construction ci-dessous.
 
 ## Installer un agent
 
@@ -29,7 +29,7 @@ La version actuellement validée l’a été sur Apple Silicon. Les Mac Intel ne
 ### Construire et installer
 
 ```sh
-git clone https://github.com/charlesvbtpro-ship-it/ctrl-kanb.git
+git clone https://github.com/CharlesVbT/ctrl-kanb.git
 cd ctrl-kanb
 npm ci
 npm run install:macos
@@ -68,7 +68,7 @@ Le résultat se trouve dans `dist/CTRL KANB.app`.
 Dans PowerShell :
 
 ```powershell
-git clone https://github.com/charlesvbtpro-ship-it/ctrl-kanb.git
+git clone https://github.com/CharlesVbT/ctrl-kanb.git
 cd ctrl-kanb\Platforms\Windows
 .\setup.ps1
 .\build.ps1

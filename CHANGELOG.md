@@ -4,13 +4,20 @@ Ce fichier suit les changements visibles de CTRL KANB. Le projet utilise une num
 
 ## Non publié
 
-- organisation explicite du dépôt entre interface partagée, hôtes macOS et Windows, tests transversaux et outils de documentation ;
-- mise à jour des dépendances Rust `time` et `serde_with` vers leurs versions corrigées ;
-- maintenance des livrables GitHub ;
-- préparation automatisée des paquets et empreintes de release ;
-- validation prolongée veille, réseau et échelles Windows à compléter.
+Aucun changement pour le moment.
 
 ## 6.11.3 — 11 septembre 2026
+
+### Ajouté
+
+- préparation automatisée d’une release GitHub brouillon avec l’application macOS, l’installateur Windows et leurs empreintes SHA-256 ;
+- documentation explicite de l’organisation du dépôt et des responsabilités de chaque dossier.
+
+### Modifié
+
+- rangement de l’interface partagée, des hôtes macOS et Windows, des tests transversaux et des outils de documentation dans des zones de premier niveau cohérentes ;
+- mise à jour des dépendances Rust `time` et `serde_with` vers leurs versions corrigées ;
+- adaptation de l’hôte Windows à Rust 1.88.
 
 ### Corrigé
 

@@ -1,5 +1,5 @@
 blank_issues_enabled: false
 contact_links:
   - name: Signaler une vulnérabilité
-    url: https://github.com/charlesvbtpro-ship-it/ctrl-kanb/security/advisories/new
+    url: https://github.com/CharlesVbT/ctrl-kanb/security/advisories/new
     about: Utilisez le canal privé et ne publiez aucune preuve sensible dans une issue.

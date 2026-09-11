@@ -6,7 +6,7 @@ Les correctifs sont appliqués à la branche `main` et à la version distribuée
 
 ## Signaler une vulnérabilité
 
-Utilisez le [signalement privé GitHub](https://github.com/charlesvbtpro-ship-it/ctrl-kanb/security/advisories/new). N’ouvrez pas d’issue publique pour une vulnérabilité exploitable.
+Utilisez le [signalement privé GitHub](https://github.com/CharlesVbT/ctrl-kanb/security/advisories/new). N’ouvrez pas d’issue publique pour une vulnérabilité exploitable.
 
 Le rapport doit contenir :
 

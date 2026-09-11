@@ -4,7 +4,7 @@ Ce dossier contient l’hôte Tauri 2 de CTRL KANB. Il charge l’interface part
 
 ## Installer CTRL KANB (utilisateur)
 
-Depuis une release GitHub, téléchargez `CTRL KANB_<version>_x64-setup.exe` et ouvrez-le par double-clic. L’installateur NSIS place le programme dans votre profil utilisateur et ajoute le raccourci du menu Démarrer. Aucun terminal ne doit rester ouvert pour que CTRL KANB fonctionne : l’exécutable Windows est construit comme une application graphique et lance ses agents et son terminal intégré en arrière-plan.
+Depuis une release GitHub, téléchargez `CTRL-KANB-<version>-Windows-x64-setup.exe` et ouvrez-le par double-clic. L’installateur NSIS place le programme dans votre profil utilisateur et ajoute le raccourci du menu Démarrer. Aucun terminal ne doit rester ouvert pour que CTRL KANB fonctionne : l’exécutable Windows est construit comme une application graphique et lance ses agents et son terminal intégré en arrière-plan.
 
 WebView2 est pris en charge par l’installateur. Codex et Claude restent facultatifs. Les fonctions Claude nécessitent Claude Code CLI installé et connecté localement ; installez uniquement l’agent que vous souhaitez utiliser. Vérifiez l’empreinte SHA-256 publiée avec la release avant l’installation.
 

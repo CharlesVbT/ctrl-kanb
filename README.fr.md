@@ -76,9 +76,9 @@ Les versions testées et les limites observées sont consignées dans [COMPATIBI
 
 ## Télécharger CTRL KANB
 
-- **Applications prêtes à installer** : la page [Releases](https://github.com/charlesvbtpro-ship-it/ctrl-kanb/releases/latest) regroupe les paquets macOS et Windows, les notes de version et le fichier `SHA256SUMS.txt` de chaque version publiée.
+- **Applications prêtes à installer** : la page [Releases](https://github.com/CharlesVbT/ctrl-kanb/releases/latest) regroupe les paquets macOS et Windows, les notes de version et le fichier `SHA256SUMS.txt` de chaque version publiée.
 - **Sources d’une version** : chaque release GitHub propose automatiquement les archives `Source code (zip)` et `Source code (tar.gz)` correspondant à son tag.
-- **Code courant** : le bouton **Code → Download ZIP** de GitHub ou [l’archive de `main`](https://github.com/charlesvbtpro-ship-it/ctrl-kanb/archive/refs/heads/main.zip) permet de télécharger le dépôt sans utiliser Git.
+- **Code courant** : le bouton **Code → Download ZIP** de GitHub ou [l’archive de `main`](https://github.com/CharlesVbT/ctrl-kanb/archive/refs/heads/main.zip) permet de télécharger le dépôt sans utiliser Git.
 
 Si aucun paquet n’est disponible pour la version souhaitée, utilisez les instructions de construction ci-dessous.
 
@@ -94,7 +94,7 @@ CTRL KANB ne fournit aucun abonnement, quota ou identifiant pour ces services.
 ### macOS depuis les sources
 
 ```sh
-git clone https://github.com/charlesvbtpro-ship-it/ctrl-kanb.git
+git clone https://github.com/CharlesVbT/ctrl-kanb.git
 cd ctrl-kanb
 npm ci
 npm run install:macos
@@ -111,7 +111,7 @@ CTRL_KANB_INSTALL_DIR="$HOME/Applications" npm run install:macos
 Avec Git, Node.js, Rust 1.88 ou plus récent avec MSVC, WebView2 et les outils C++ de Visual Studio :
 
 ```powershell
-git clone https://github.com/charlesvbtpro-ship-it/ctrl-kanb.git
+git clone https://github.com/CharlesVbT/ctrl-kanb.git
 cd ctrl-kanb\Platforms\Windows
 .\setup.ps1
 .\build.ps1
