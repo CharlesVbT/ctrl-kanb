@@ -22,9 +22,9 @@ Les thèmes clairs et sombres utilisent les mêmes niveaux de surface, bordure, 
 
 Les barres d’actions conservent des boutons compacts. Les textes secondaires se replient avant les actions essentielles. Le chat garde sa zone de saisie visible et l’historique utilise un seul défilement.
 
-## Contrôles avant publication
+## Contrôles visuels
 
 - parcourir toutes les vues en mode clair et sombre ;
 - vérifier le panneau gauche replié et les différentes largeurs du panneau droit ;
 - tester les états vides, chargés, en erreur et en synchronisation ;
-- utiliser uniquement des données fictives dans les captures et exemples publics.
+- utiliser uniquement des données fictives dans les captures et exemples distribués.

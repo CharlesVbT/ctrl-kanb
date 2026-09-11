@@ -4,9 +4,9 @@ Ce document sépare les comportements contrôlés automatiquement, les observati
 
 ## Version examinée
 
-- CTRL KANB : 6.11.3 candidate ;
+- CTRL KANB : 6.11.3 ;
 - schéma de données : 22 ;
-- date du dernier passage complet : 10 septembre 2026.
+- date du dernier passage complet : 11 septembre 2026.
 
 ## Systèmes testés
 
@@ -66,4 +66,4 @@ Les détails techniques sont consignés dans [WINDOWS-PORT.md](WINDOWS-PORT.md).
 - réponse finale réussie des deux agents sur la machine Windows avec des comptes connectés et des quotas disponibles ;
 - mécanisme de mise à jour automatique vérifié.
 
-Ces points ne doivent pas être présentés comme terminés dans une release. La [liste de publication](RELEASE-CHECKLIST.md) reste la source de contrôle avant chaque paquet public.
+Ces points restent explicitement non validés dans les notes de version. La [liste de contrôle](RELEASE-CHECKLIST.md) encadre la construction, la vérification et la livraison de chaque paquet.

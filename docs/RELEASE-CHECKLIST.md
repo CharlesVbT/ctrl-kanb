@@ -1,6 +1,6 @@
-# Contrôles avant publication
+# Contrôles d’une version
 
-Cette liste fige le périmètre de la première version publique. Une nouvelle fonction n’entre dans la version que si elle corrige un défaut bloquant.
+Cette liste encadre chaque version distribuée de CTRL KANB. Chaque paquet regroupe uniquement des changements vérifiés et documentés.
 
 ## Contrôles automatiques
 
@@ -44,7 +44,7 @@ npm --prefix Platforms/Windows run build
 ```
 
 - installer le paquet avec `Platforms\Windows\validate-installed.ps1` ;
-- lancer le raccourci du menu Démarrer et confirmer que la release démarre sans fenêtre PowerShell, Invite de commandes ou Windows Terminal ;
+- lancer le raccourci du menu Démarrer et confirmer que l’application installée démarre sans fenêtre PowerShell, Invite de commandes ou Windows Terminal ;
 - vérifier le terminal PowerShell dans un dossier contenant des espaces ;
 - tester une tâche programmée, une récurrence et deux conversations simultanées ;
 - fermer la fenêtre avec le moteur activé, rouvrir depuis la zone de notification puis redémarrer la session ;
@@ -58,8 +58,7 @@ npm --prefix Platforms/Windows run build
 - vérifier qu’aucune donnée personnelle, clé, jeton ou chemin privé n’est suivi par Git ;
 - exécuter `npm run test:privacy` sur l’arbre propre juste avant le tag ;
 - mettre à jour la version et les notes de version ;
-- confirmer que le dépôt reste privé tant que les paquets, la documentation et le signalement de sécurité ne sont pas prêts ;
-- activer le signalement privé de vulnérabilités et protéger la branche `main` avant le passage public ;
+- vérifier le signalement privé de vulnérabilités et la protection de la branche `main` ;
 - déclencher le workflow de release depuis un tag, contrôler les deux paquets et leurs empreintes, puis publier manuellement le brouillon ;
 - vérifier chaque téléchargement sur un environnement distinct de celui qui a produit le paquet ;
 - ne publier les mises à jour automatiques qu’après mise en place d’un flux vérifié.

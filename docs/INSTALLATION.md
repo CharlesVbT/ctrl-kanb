@@ -4,7 +4,7 @@ CTRL KANB fonctionne sans compte propre. Codex et Claude sont facultatifs. Les f
 
 ## Télécharger ou construire
 
-La page [Releases](https://github.com/charlesvbtpro-ship-it/ctrl-kanb/releases/latest) fournit les applications macOS et Windows, les notes de version et `SHA256SUMS.txt` lorsqu’une version est publiée. GitHub ajoute aussi les archives du code source correspondant au tag. En l’absence de release, utilisez les instructions de construction ci-dessous.
+La page [Releases](https://github.com/charlesvbtpro-ship-it/ctrl-kanb/releases/latest) fournit les applications macOS et Windows, les notes de version et `SHA256SUMS.txt` pour chaque version disponible. GitHub ajoute aussi les archives du code source correspondant au tag. Pour une révision sans paquet, utilisez les instructions de construction ci-dessous.
 
 ## Installer un agent
 

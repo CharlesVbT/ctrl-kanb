@@ -2,7 +2,7 @@
 
 ## Versions prises en charge
 
-Avant la première release publique signée, seule la branche `main` et la dernière version candidate font l’objet de corrections. Une version ancienne peut être utilisée pour reproduire un problème, mais aucun calendrier de support rétroactif n’est garanti.
+Les correctifs sont appliqués à la branche `main` et à la version distribuée la plus récente. Les versions précédentes peuvent servir à reproduire un problème, mais ne bénéficient pas d’un calendrier de maintenance rétroactive.
 
 ## Signaler une vulnérabilité
 
@@ -16,7 +16,7 @@ Le rapport doit contenir :
 - l’impact concret ;
 - une preuve utilisant uniquement des projets, chemins et contenus fictifs.
 
-Ne transmettez jamais de jeton, clé, donnée de compte, export, conversation, chemin personnel ou journal réel. Aucun délai de réponse ou de correction n’est encore garanti.
+Ne transmettez jamais de jeton, clé, donnée de compte, export, conversation, chemin personnel ou journal réel. Le projet ne garantit aucun délai contractuel de réponse ou de correction.
 
 ## Périmètre
 
@@ -54,6 +54,4 @@ CTRL KANB est une application locale, mais les processus qu’elle lance ne sont
 - actions natives accessibles par une liste fermée et arguments de processus structurés ;
 - sérialisation des instructions visant une même conversation ;
 - demandes d’autorisation liées à leur identifiant natif exact ;
-- contrôle `npm run test:privacy` avant publication.
-
-Les paquets publics devront être signés, accompagnés d’une empreinte SHA-256 et produits par un workflow de release contrôlé. La signature ad hoc macOS et l’absence actuelle de signature Authenticode conviennent aux constructions locales, pas à une chaîne de confiance publique.
+- contrôle `npm run test:privacy` sur l’ensemble des fichiers suivis par Git.

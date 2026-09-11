@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Bloque les informations locales et secrets courants avant publication."""
+"""Bloque les informations locales et secrets courants dans les fichiers suivis."""
 
 from __future__ import annotations
 

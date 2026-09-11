@@ -6,7 +6,7 @@
 
 **Le poste de pilotage local pour organiser, planifier et suivre le travail confié à Codex et Claude sur macOS et Windows.**
 
-> **Statut — version 6.11.3 candidate.** Le code source fonctionne sur macOS et Windows et les principaux parcours sont couverts par des contrôles automatisés et des essais réels. Consultez [la compatibilité et les validations](docs/COMPATIBILITY.md) avant toute utilisation importante.
+> **Version actuelle — 6.11.3.** Le code source fonctionne sur macOS et Windows et les principaux parcours sont couverts par des contrôles automatisés et des essais réels. Consultez [la compatibilité et les validations](docs/COMPATIBILITY.md) avant toute utilisation importante.
 
 ## Pourquoi CTRL KANB existe
 
@@ -80,7 +80,7 @@ Les versions testées et les limites observées sont consignées dans [COMPATIBI
 - **Sources d’une version** : chaque release GitHub propose automatiquement les archives `Source code (zip)` et `Source code (tar.gz)` correspondant à son tag.
 - **Code courant** : le bouton **Code → Download ZIP** de GitHub ou [l’archive de `main`](https://github.com/charlesvbtpro-ship-it/ctrl-kanb/archive/refs/heads/main.zip) permet de télécharger le dépôt sans utiliser Git.
 
-Tant qu’aucune release n’est publiée, l’installation se fait depuis les sources. Le dépôt reste privé pendant sa préparation ; ces liens deviendront accessibles aux visiteurs lors de son ouverture.
+Si aucun paquet n’est disponible pour la version souhaitée, utilisez les instructions de construction ci-dessous.
 
 ## Démarrage rapide
 
@@ -177,7 +177,7 @@ Consultez [PRIVACY.md](PRIVACY.md) et [SECURITY.md](SECURITY.md).
 | [Architecture](docs/ARCHITECTURE.md) | hôtes, stockage, files, permissions et planificateur |
 | [Modèle de données](docs/DATA-MODEL.md) | schéma persistant et migrations |
 | [Version Windows](docs/WINDOWS-PORT.md) | implémentation et validation Tauri |
-| [Publication](docs/RELEASE-CHECKLIST.md) | contrôles avant une release |
+| [Contrôles de version](docs/RELEASE-CHECKLIST.md) | construction, validation et livraison des paquets |
 | [Historique](CHANGELOG.md) | changements visibles par version |
 | [Assistance](SUPPORT.md) | rapports de bugs et demandes d’évolution |
 

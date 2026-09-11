@@ -113,7 +113,7 @@ const demo = String.raw`
       scheduledAt: instant(1, 9), scheduleState: "pending", durationMinutes: 45,
       labels: ["Routine"]
     }),
-    card("publish-check", "atlas", tx("Contrôle avant publication", "Pre-release check"), "done", "normal", 3, {
+    card("publish-check", "atlas", tx("Vérifier les notes de version", "Review the release notes"), "done", "normal", 3, {
       completedAt: instant(-1, 17), lastRun: { finishedAt: instant(-1, 17), exitCode: 0, summary: tx("La liste de publication est complète.", "The release checklist is complete.") }
     }),
     card("agenda-plan", "lumen", tx("Planifier la démonstration produit", "Schedule the product demo"), "ready", "normal", 2, {

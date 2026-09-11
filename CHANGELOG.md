@@ -4,7 +4,7 @@ Ce fichier suit les changements visibles de CTRL KANB. Le projet utilise une num
 
 ## Non publié
 
-- préparation de la première publication GitHub ;
+- maintenance des livrables GitHub ;
 - préparation automatisée des paquets et empreintes de release ;
 - validation prolongée veille, réseau et échelles Windows à compléter.
 

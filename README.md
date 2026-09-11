@@ -6,7 +6,7 @@
 
 **A local control center for organizing, scheduling, and tracking work delegated to Codex and Claude on macOS and Windows.**
 
-> **Project status — 6.11.3 release candidate.** The source runs on macOS and Windows. Core flows are covered by automated checks and real-machine testing. Read the [compatibility and validation report](docs/COMPATIBILITY.md) before relying on CTRL KANB for important work.
+> **Current version — 6.11.3.** The source runs on macOS and Windows. Core flows are covered by automated checks and real-machine testing. Read the [compatibility and validation report](docs/COMPATIBILITY.md) before relying on CTRL KANB for important work.
 
 ## Why CTRL KANB exists
 
@@ -80,7 +80,7 @@ The exact versions tested and the remaining limitations are recorded in [COMPATI
 - **Versioned source:** every GitHub release automatically includes `Source code (zip)` and `Source code (tar.gz)` archives for its tag.
 - **Current source:** use GitHub’s **Code → Download ZIP** button or download the [`main` archive](https://github.com/charlesvbtpro-ship-it/ctrl-kanb/archive/refs/heads/main.zip) without installing Git.
 
-Until a release is published, install CTRL KANB from source. The repository remains private while it is being prepared; these links will become available to visitors when the repository opens.
+If no package is available for the version you need, use the source build instructions below.
 
 ## Quick start
 
@@ -184,7 +184,7 @@ The full technical and user documentation is currently maintained in French:
 | [Data model](docs/DATA-MODEL.md) | persistent schema and migrations |
 | [macOS background engine](docs/BACKGROUND-ENGINE.md) | optional `launchd` behavior |
 | [Windows port](docs/WINDOWS-PORT.md) | Tauri host implementation and real-machine validation |
-| [Release checklist](docs/RELEASE-CHECKLIST.md) | controls required before a public release |
+| [Version checklist](docs/RELEASE-CHECKLIST.md) | package build, validation, and delivery controls |
 | [Changelog](CHANGELOG.md) | user-visible changes by version |
 | [Support](SUPPORT.md) | bug reports and feature requests |
 

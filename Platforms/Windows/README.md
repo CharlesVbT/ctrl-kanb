@@ -42,4 +42,4 @@ L’installateur NSIS est produit sous `src-tauri\target\release\bundle\nsis`.
 .\validate-installed.ps1 -Installer "src-tauri\target\release\bundle\nsis\CTRL KANB_6.11.3_x64-setup.exe"
 ```
 
-Le script vérifie l’installation, le lancement dans la session interactive, le verrou d’instance unique, la séparation des données et l’empreinte du programme. L’état détaillé des essais réels et les limites de publication sont consignés dans [`docs/WINDOWS-PORT.md`](../../docs/WINDOWS-PORT.md).
+Le script vérifie l’installation, le lancement dans la session interactive, le verrou d’instance unique, la séparation des données et l’empreinte du programme. L’état détaillé des essais réels et les limites techniques sont consignés dans [`docs/WINDOWS-PORT.md`](../../docs/WINDOWS-PORT.md).

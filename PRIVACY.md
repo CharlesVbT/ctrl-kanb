@@ -51,4 +51,4 @@ Les journaux locaux servent au diagnostic du démarrage, du planificateur et des
 
 ## Publication et contributions
 
-Le dépôt ne doit contenir aucun tableau réel, journal, export, capture utilisateur, configuration d’agent, secret ou chemin personnel. Les captures officielles sont générées avec des données fictives. Le contrôle `npm run test:privacy` recherche les chemins absolus, emails, secrets courants, métadonnées PNG et artefacts locaux avant publication.
+Le dépôt ne doit contenir aucun tableau réel, journal, export, capture utilisateur, configuration d’agent, secret ou chemin personnel. Les captures officielles sont générées avec des données fictives. Le contrôle `npm run test:privacy` recherche les chemins absolus, emails, secrets courants, métadonnées PNG et artefacts locaux dans l’ensemble des fichiers suivis par Git.
