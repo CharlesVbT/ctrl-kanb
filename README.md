@@ -6,13 +6,13 @@
 
 **A local control center for organizing, scheduling, and tracking work delegated to Codex and Claude on macOS and Windows.**
 
-> **Project status — 6.11.2 release candidate.** The source runs on macOS and Windows. Core flows are covered by automated checks and real-machine testing. No signed binary has been published yet. Read the [compatibility and validation report](docs/COMPATIBILITY.md) before relying on CTRL KANB for important work.
+> **Project status — 6.11.2 release candidate.** The source runs on macOS and Windows. Core flows are covered by automated checks and real-machine testing. Read the [compatibility and validation report](docs/COMPATIBILITY.md) before relying on CTRL KANB for important work.
 
 ## Why CTRL KANB exists
 
 Codex and Claude can complete complex tasks, but their queues stop being enough when projects, conversations, approvals, scheduled work, and routines accumulate.
 
-CTRL KANB grew out of that gap. **Charles VbT** uses both agents extensively but is not a professional developer. No existing Kanban combined project organization, agent conversations, scheduled tasks, and recurring work in the way he needed. He therefore built this application with intensive help from Codex and Claude, then hardened it through interface, functional, and security reviews.
+CTRL KANB is one proposal among the tools that already exist. Hermes and other projects show different ways to organize work with agents. **Charles VbT** uses Codex and Claude regularly but is not a professional developer. He wanted a simple, local approach that brought together the exact criteria useful in his daily work: projects, conversations, scheduled tasks, and routines. When he could not find that combination in the form he wanted, he shaped CTRL KANB with intensive help from Codex and Claude, then hardened it through interface, functional, and security reviews.
 
 CTRL KANB brings together:
 
@@ -74,6 +74,14 @@ CTRL KANB works with Codex alone, Claude alone, both, or neither when used only 
 
 The exact versions tested and the remaining limitations are recorded in [COMPATIBILITY.md](docs/COMPATIBILITY.md). That detailed report is currently maintained in French.
 
+## Download CTRL KANB
+
+- **Ready-to-install applications:** the [Releases](https://github.com/charlesvbtpro-ship-it/ctrl-kanb/releases/latest) page collects the macOS and Windows packages, release notes, and `SHA256SUMS.txt` file for every published version.
+- **Versioned source:** every GitHub release automatically includes `Source code (zip)` and `Source code (tar.gz)` archives for its tag.
+- **Current source:** use GitHub’s **Code → Download ZIP** button or download the [`main` archive](https://github.com/charlesvbtpro-ship-it/ctrl-kanb/archive/refs/heads/main.zip) without installing Git.
+
+Until a release is published, install CTRL KANB from source. The repository remains private while it is being prepared; these links will become available to visitors when the repository opens.
+
 ## Quick start
 
 ### Optional agent CLIs
@@ -112,10 +120,6 @@ cd ctrl-kanb\Platforms\Windows
 ```
 
 The installer is written under `Platforms\Windows\src-tauri\target\release\bundle\nsis`.
-
-### Prebuilt binaries
-
-Check the repository's **Releases** page. If no signed release and SHA-256 checksum are available, build from source. Current local macOS packages use an ad hoc signature and current Windows packages are not Authenticode-signed. They are suitable for development and evaluation, not for warning-free public distribution.
 
 The complete installation, update, and removal instructions are in [INSTALLATION.md](docs/INSTALLATION.md).
 
@@ -225,7 +229,6 @@ Read [CONTRIBUTING.md](CONTRIBUTING.md) before submitting a change.
 - the embedded terminal is a full shell, not a sandbox;
 - model availability, quotas, and service uptime depend on the selected provider;
 - WSL is not supported by the current Windows host;
-- packages are not yet signed for frictionless public distribution;
 - long-duration sleep/wake tests and several Windows display scales remain open.
 
 These limits are tracked with their evidence level in [COMPATIBILITY.md](docs/COMPATIBILITY.md).

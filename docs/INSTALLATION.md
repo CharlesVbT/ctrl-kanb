@@ -2,15 +2,9 @@
 
 CTRL KANB fonctionne sans compte propre. Codex et Claude sont facultatifs. Les fonctions Codex nécessitent Codex CLI ; les fonctions Claude nécessitent Claude Code CLI. Installez seulement l’agent que vous souhaitez utiliser. Le Kanban, l’Agenda et les données locales restent utilisables sans eux.
 
-## État des paquets
+## Télécharger ou construire
 
-La version 6.11.2 est une candidate à la première publication. Aucun binaire signé n’est encore distribué dans les releases GitHub.
-
-- l’application macOS construite localement possède une signature ad hoc ;
-- l’installateur Windows construit localement ne possède pas encore de signature Authenticode ;
-- les installations depuis les sources sont destinées à l’évaluation et au développement jusqu’à la publication de paquets signés avec leurs empreintes SHA-256.
-
-Il n’est pas nécessaire de désactiver Gatekeeper, SmartScreen ou l’antivirus. Un avertissement lié à un paquet non signé doit être considéré comme attendu pour une construction locale, pas contourné pour un fichier dont l’origine est incertaine.
+La page [Releases](https://github.com/charlesvbtpro-ship-it/ctrl-kanb/releases/latest) fournit les applications macOS et Windows, les notes de version et `SHA256SUMS.txt` lorsqu’une version est publiée. GitHub ajoute aussi les archives du code source correspondant au tag. En l’absence de release, utilisez les instructions de construction ci-dessous.
 
 ## Installer un agent
 
@@ -57,7 +51,7 @@ npm test
 ./Scripts/package_app.sh
 ```
 
-Le résultat se trouve dans `build/CTRL KANB.app`.
+Le résultat se trouve dans `dist/CTRL KANB.app`.
 
 ## Windows
 

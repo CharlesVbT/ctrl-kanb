@@ -12,8 +12,8 @@ Ce document sépare les comportements contrôlés automatiquement, les observati
 
 | Plateforme | Environnement observé | Résultat |
 |---|---|---|
-| macOS | macOS 26.6.2, Apple Silicon arm64, Apple clang 21, Node.js 26, Python 3.14.3 | suite `npm test`, construction de l’application et vérification de la signature ad hoc réussies |
-| Windows | Windows 11 Professionnel x64, build 26200, WebView2, Node.js 22.22.3, Rust 1.98.1 | contrôles JavaScript/Rust et construction de l’installateur NSIS réussis |
+| macOS | macOS sur Apple Silicon et runner GitHub macOS | suite `npm test`, construction de l’application et vérification du bundle réussies |
+| Windows | Windows 11 x64 avec WebView2 et runner GitHub Windows | contrôles JavaScript/Rust et construction de l’installateur NSIS réussis |
 
 Le minimum déclaré par l’application macOS est macOS 14. Windows 11 x64 est la seule version Windows incluse dans la validation actuelle.
 
@@ -60,12 +60,10 @@ Les détails techniques sont consignés dans [WINDOWS-PORT.md](WINDOWS-PORT.md).
 
 ## Points encore ouverts
 
-- signature Developer ID et notarisation des paquets macOS publics ;
-- signature Authenticode de l’exécutable et de l’installateur Windows ;
 - validation d’un Mac Intel ;
 - essais prolongés veille/réveil, réseau intermittent et changement de fuseau sur plusieurs jours ;
 - contrôle visuel Windows matériel aux échelles 125 %, 150 % et 200 % ;
 - réponse finale réussie des deux agents sur la machine Windows avec des comptes connectés et des quotas disponibles ;
-- mécanisme de mise à jour automatique signé.
+- mécanisme de mise à jour automatique vérifié.
 
 Ces points ne doivent pas être présentés comme terminés dans une release. La [liste de publication](RELEASE-CHECKLIST.md) reste la source de contrôle avant chaque paquet public.

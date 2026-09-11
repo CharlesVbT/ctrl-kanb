@@ -60,6 +60,6 @@ npm --prefix Platforms/Windows run build
 - mettre à jour la version et les notes de version ;
 - confirmer que le dépôt reste privé tant que les paquets, la documentation et le signalement de sécurité ne sont pas prêts ;
 - activer le signalement privé de vulnérabilités et protéger la branche `main` avant le passage public ;
-- pour une application précompilée, signer avec Developer ID, notariser et vérifier le téléchargement sur un autre Mac ;
-- signer l’exécutable et l’installateur Windows avec Authenticode, puis vérifier le téléchargement sur une autre machine ;
-- ne publier les mises à jour automatiques qu’après mise en place d’un flux signé et vérifié.
+- déclencher le workflow de release depuis un tag, contrôler les deux paquets et leurs empreintes, puis publier manuellement le brouillon ;
+- vérifier chaque téléchargement sur un environnement distinct de celui qui a produit le paquet ;
+- ne publier les mises à jour automatiques qu’après mise en place d’un flux vérifié.

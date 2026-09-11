@@ -34,4 +34,14 @@ with tempfile.TemporaryDirectory(prefix="ctrl-kanb-privacy-test-") as folder:
     assert result.returncode == 1, result.stdout
     assert "chemin utilisateur absolu" in result.stderr, result.stderr
 
-print("PASS le contrôle de confidentialité accepte les données neutres et bloque un chemin local")
+    leak.write_text("C:" + "\\Users\\example\\Documents\\private.txt\n", encoding="utf-8")
+    result = subprocess.run(["python3", str(scanner)], capture_output=True, text=True)
+    assert result.returncode == 1, result.stdout
+    assert "chemin utilisateur Windows" in result.stderr, result.stderr
+
+    leak.write_text("Hôte " + "192" + ".168.2.10\n", encoding="utf-8")
+    result = subprocess.run(["python3", str(scanner)], capture_output=True, text=True)
+    assert result.returncode == 1, result.stdout
+    assert "adresse reseau privee" in result.stderr, result.stderr
+
+print("PASS le contrôle de confidentialité bloque chemins locaux et adresses privées")

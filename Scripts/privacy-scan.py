@@ -22,6 +22,9 @@ TEXT_PATTERNS = {
     "jeton GitHub": re.compile(r"\b(?:ghp|github_pat)_[A-Za-z0-9_]{20,}\b"),
     "cle OpenAI": re.compile(r"\bsk-[A-Za-z0-9_-]{20,}\b"),
     "cle AWS": re.compile(r"\bAKIA[0-9A-Z]{16}\b"),
+    "chemin utilisateur Windows": re.compile(r"(?i)\b[A-Z]:\\+Users\\+(?!Test(?:\\+|$))[^\\\r\n]+\\+"),
+    "adresse reseau privee": re.compile(r"\b(?:10(?:\.\d{1,3}){3}|192\.168(?:\.\d{1,3}){2}|172\.(?:1[6-9]|2\d|3[01])(?:\.\d{1,3}){2})\b"),
+    "identifiant de machine prive": re.compile(r"(?i)\b(?:Mini-de-Charles|Minisforum|nipogi|aspire-go-ts|Predator SSD)\b"),
 }
 
 

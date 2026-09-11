@@ -9,7 +9,7 @@
     "build": "./Scripts/package_app.sh",
     "test": "npm run test:static && npm run test:ui && npm run test:native && npm run test:privacy",
     "test:static": "node Scripts/xss-scan.js && node Scripts/i18n-scan.js && node Scripts/wiring-audit.js && node Scripts/test-windows-contract.js",
-    "test:ui": "node Scripts/smoke-ui.js && node Scripts/test-accessibility.js && node Scripts/test-experience.js && node Scripts/test-conversation.js && node Scripts/test-sync.js && node Scripts/test-resilience.js",
+    "test:ui": "node Scripts/smoke-ui.js && node Scripts/test-accessibility.js && node Scripts/test-experience.js && node Scripts/test-conversation.js && node Scripts/test-sync.js && node Scripts/test-resilience.js && node Scripts/test-windows-ui.js",
     "test:native": "python3 Scripts/test-security-boundaries.py && python3 Scripts/test-cli-concurrency.py && python3 Scripts/test-codex-runner.py && python3 Scripts/test-claude-runner.py && ./Scripts/test-notifications.sh",
     "test:privacy": "python3 Scripts/privacy-scan.py && python3 Scripts/test-privacy-scan.py && python3 Scripts/test-security-docs.py"
   },

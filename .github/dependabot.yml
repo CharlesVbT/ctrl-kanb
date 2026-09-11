@@ -3,16 +3,52 @@ updates:
   - package-ecosystem: npm
     directory: /
     schedule:
-      interval: monthly
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Europe/Paris
+    open-pull-requests-limit: 5
+    groups:
+      npm-compatible-updates:
+        update-types: [minor, patch]
+    commit-message:
+      prefix: "Met à jour"
   - package-ecosystem: npm
     directory: /Platforms/Windows
     schedule:
-      interval: monthly
+      interval: weekly
+      day: monday
+      time: "06:10"
+      timezone: Europe/Paris
+    open-pull-requests-limit: 5
+    groups:
+      windows-npm-compatible-updates:
+        update-types: [minor, patch]
+    commit-message:
+      prefix: "Met à jour"
   - package-ecosystem: cargo
     directory: /Platforms/Windows/src-tauri
     schedule:
-      interval: monthly
+      interval: weekly
+      day: monday
+      time: "06:20"
+      timezone: Europe/Paris
+    open-pull-requests-limit: 5
+    groups:
+      rust-compatible-updates:
+        update-types: [minor, patch]
+    commit-message:
+      prefix: "Met à jour"
   - package-ecosystem: github-actions
     directory: /
     schedule:
-      interval: monthly
+      interval: weekly
+      day: monday
+      time: "06:30"
+      timezone: Europe/Paris
+    open-pull-requests-limit: 5
+    groups:
+      github-actions-updates:
+        patterns: ["*"]
+    commit-message:
+      prefix: "Met à jour"

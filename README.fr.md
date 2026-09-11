@@ -6,13 +6,13 @@
 
 **Le poste de pilotage local pour organiser, planifier et suivre le travail confié à Codex et Claude sur macOS et Windows.**
 
-> **Statut — version 6.11.2 candidate.** Le code source fonctionne sur macOS et Windows et les principaux parcours sont couverts par des contrôles automatisés et des essais réels. Aucun binaire signé n’est encore publié. Consultez [la compatibilité et les validations](docs/COMPATIBILITY.md) avant toute utilisation importante.
+> **Statut — version 6.11.2 candidate.** Le code source fonctionne sur macOS et Windows et les principaux parcours sont couverts par des contrôles automatisés et des essais réels. Consultez [la compatibilité et les validations](docs/COMPATIBILITY.md) avant toute utilisation importante.
 
 ## Pourquoi CTRL KANB existe
 
 Codex et Claude savent accomplir des tâches complexes. Dès que plusieurs projets, conversations, validations et routines s’accumulent, leurs files d’attente ne suffisent plus à donner une vue claire du travail en cours.
 
-CTRL KANB est né de ce problème. **Charles VbT**, utilisateur régulier de ces agents sans être développeur de métier, n’a trouvé aucun Kanban qui réunissait l’organisation par projet, les conversations, les tâches programmées et les routines. Le projet a donc été construit avec l’aide intensive de Codex et Claude, puis consolidé par des contrôles d’interface, de fonctionnement et de sécurité.
+CTRL KANB est une proposition parmi les outils qui existent déjà. Hermes et d’autres projets montrent plusieurs façons d’organiser le travail avec des agents. **Charles VbT**, utilisateur régulier de Codex et Claude sans être développeur de métier, cherchait une approche simple et locale qui réunisse précisément les critères utiles à son quotidien : projets, conversations, tâches programmées et routines. Ne trouvant pas cette combinaison sous la forme qui lui convenait, il a façonné CTRL KANB avec l’aide intensive de Codex et Claude, puis l’a consolidé par des contrôles d’interface, de fonctionnement et de sécurité.
 
 L’application réunit :
 
@@ -74,6 +74,14 @@ CTRL KANB fonctionne avec Codex seul, Claude seul, les deux, ou sans agent pour 
 
 Les versions testées et les limites observées sont consignées dans [COMPATIBILITY.md](docs/COMPATIBILITY.md).
 
+## Télécharger CTRL KANB
+
+- **Applications prêtes à installer** : la page [Releases](https://github.com/charlesvbtpro-ship-it/ctrl-kanb/releases/latest) regroupe les paquets macOS et Windows, les notes de version et le fichier `SHA256SUMS.txt` de chaque version publiée.
+- **Sources d’une version** : chaque release GitHub propose automatiquement les archives `Source code (zip)` et `Source code (tar.gz)` correspondant à son tag.
+- **Code courant** : le bouton **Code → Download ZIP** de GitHub ou [l’archive de `main`](https://github.com/charlesvbtpro-ship-it/ctrl-kanb/archive/refs/heads/main.zip) permet de télécharger le dépôt sans utiliser Git.
+
+Tant qu’aucune release n’est publiée, l’installation se fait depuis les sources. Le dépôt reste privé pendant sa préparation ; ces liens deviendront accessibles aux visiteurs lors de son ouverture.
+
 ## Démarrage rapide
 
 ### Agents facultatifs
@@ -110,10 +118,6 @@ cd ctrl-kanb\Platforms\Windows
 ```
 
 L’installateur est créé sous `Platforms\Windows\src-tauri\target\release\bundle\nsis`.
-
-### Binaires précompilés
-
-Consultez la page **Releases**. En l’absence de release signée et accompagnée d’une empreinte SHA-256, construisez depuis les sources. Les paquets locaux actuels utilisent une signature ad hoc sur macOS et aucune signature Authenticode sur Windows ; ils conviennent au développement et aux essais.
 
 Le guide détaillé couvre l’installation, les mises à jour et la suppression : [INSTALLATION.md](docs/INSTALLATION.md).
 
@@ -207,7 +211,6 @@ Consultez [CONTRIBUTING.md](CONTRIBUTING.md) avant une modification.
 - le terminal intégré est un shell complet, pas un bac à sable ;
 - modèles, quotas et services dépendent du fournisseur ;
 - WSL n’est pas pris en charge ;
-- les paquets ne sont pas encore signés pour une distribution publique fluide ;
 - les essais prolongés veille/réveil et plusieurs échelles Windows restent à compléter.
 
 ## Indépendance et licence

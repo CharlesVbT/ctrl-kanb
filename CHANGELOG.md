@@ -5,7 +5,7 @@ Ce fichier suit les changements visibles de CTRL KANB. Le projet utilise une num
 ## Non publié
 
 - préparation de la première publication GitHub ;
-- signature et notarisation des paquets publics à mettre en place ;
+- préparation automatisée des paquets et empreintes de release ;
 - validation prolongée veille, réseau et échelles Windows à compléter.
 
 ## 6.11.2 — 10 septembre 2026

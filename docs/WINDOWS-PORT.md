@@ -89,9 +89,8 @@ L’installateur est produit sous `src-tauri\target\release\bundle\nsis`. Pour v
 
 Ce contrôle installe le paquet silencieusement, lance deux ouvertures dans la session interactive, puis vérifie l’instance unique, le processus, la séparation des données et l’empreinte SHA-256.
 
-## Limites avant publication binaire
+## Limites observées
 
-- l’installateur local n’a pas encore de signature Authenticode ;
 - un cycle veille/réveil prolongé et les échelles Windows 125 %, 150 % et 200 % doivent encore être observés sur du matériel réel ;
 - un résultat complet de tâche Codex demande un quota disponible, et Claude Code CLI doit être connecté sur la machine de test ;
 - WSL n’est pas pris en charge dans cette première version ;
