@@ -77,6 +77,8 @@ Les versions testées et les limites observées sont consignées dans [COMPATIBI
 ## Télécharger CTRL KANB
 
 - **Applications prêtes à installer** : la page [Releases](https://github.com/CharlesVbT/ctrl-kanb/releases/latest) regroupe les paquets macOS et Windows, les notes de version et le fichier `SHA256SUMS.txt` de chaque version publiée.
+- **Paquet macOS** : `CTRL-KANB-<version>-macOS-arm64.zip` contient l’application pour Mac Apple Silicon.
+- **Installateur Windows** : `CTRL-KANB-<version>-Windows-x64-setup.exe` installe l’application 64 bits avec NSIS.
 - **Sources d’une version** : chaque release GitHub propose automatiquement les archives `Source code (zip)` et `Source code (tar.gz)` correspondant à son tag.
 - **Code courant** : le bouton **Code → Download ZIP** de GitHub ou [l’archive de `main`](https://github.com/CharlesVbT/ctrl-kanb/archive/refs/heads/main.zip) permet de télécharger le dépôt sans utiliser Git.
 

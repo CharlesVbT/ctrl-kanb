@@ -77,6 +77,8 @@ The exact versions tested and the remaining limitations are recorded in [COMPATI
 ## Download CTRL KANB
 
 - **Ready-to-install applications:** the [Releases](https://github.com/CharlesVbT/ctrl-kanb/releases/latest) page collects the macOS and Windows packages, release notes, and `SHA256SUMS.txt` file for every published version.
+- **macOS package:** `CTRL-KANB-<version>-macOS-arm64.zip` contains the Apple Silicon application.
+- **Windows installer:** `CTRL-KANB-<version>-Windows-x64-setup.exe` installs the 64-bit application through NSIS.
 - **Versioned source:** every GitHub release automatically includes `Source code (zip)` and `Source code (tar.gz)` archives for its tag.
 - **Current source:** use GitHub’s **Code → Download ZIP** button or download the [`main` archive](https://github.com/CharlesVbT/ctrl-kanb/archive/refs/heads/main.zip) without installing Git.
 

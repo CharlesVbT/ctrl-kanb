@@ -6,6 +6,9 @@ CTRL KANB fonctionne sans compte propre. Codex et Claude sont facultatifs. Les f
 
 La page [Releases](https://github.com/CharlesVbT/ctrl-kanb/releases/latest) fournit les applications macOS et Windows, les notes de version et `SHA256SUMS.txt` pour chaque version disponible. GitHub ajoute aussi les archives du code source correspondant au tag. Pour une révision sans paquet, utilisez les instructions de construction ci-dessous.
 
+- macOS Apple Silicon : `CTRL-KANB-<version>-macOS-arm64.zip` ;
+- Windows 11 x64 : `CTRL-KANB-<version>-Windows-x64-setup.exe`.
+
 ## Installer un agent
 
 Suivez la documentation de l’éditeur, puis connectez l’outil dans un terminal :
