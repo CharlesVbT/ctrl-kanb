@@ -133,27 +133,27 @@ pub(crate) fn executable(engine: &str) -> Option<PathBuf> {
     }
     #[cfg(target_os = "windows")]
     {
-        if let Some(root) = env::var_os("LOCALAPPDATA") {
-            if name == "codex" {
-                let root = PathBuf::from(root);
-                let managed = root.join("OpenAI/Codex/bin");
-                let mut current = fs::read_dir(&managed)
-                    .into_iter()
-                    .flatten()
-                    .filter_map(Result::ok)
-                    .map(|entry| entry.path().join("codex.exe"))
-                    .filter(|path| path.is_file())
-                    .collect::<Vec<_>>();
-                current.sort_by_key(|path| {
-                    std::cmp::Reverse(
-                        fs::metadata(path)
-                            .and_then(|metadata| metadata.modified())
-                            .unwrap_or(std::time::SystemTime::UNIX_EPOCH),
-                    )
-                });
-                candidates.extend(current);
-                candidates.push(root.join("Programs/OpenAI/Codex/bin/codex.exe"));
-            }
+        if let Some(root) = env::var_os("LOCALAPPDATA")
+            && name == "codex"
+        {
+            let root = PathBuf::from(root);
+            let managed = root.join("OpenAI/Codex/bin");
+            let mut current = fs::read_dir(&managed)
+                .into_iter()
+                .flatten()
+                .filter_map(Result::ok)
+                .map(|entry| entry.path().join("codex.exe"))
+                .filter(|path| path.is_file())
+                .collect::<Vec<_>>();
+            current.sort_by_key(|path| {
+                std::cmp::Reverse(
+                    fs::metadata(path)
+                        .and_then(|metadata| metadata.modified())
+                        .unwrap_or(std::time::SystemTime::UNIX_EPOCH),
+                )
+            });
+            candidates.extend(current);
+            candidates.push(root.join("Programs/OpenAI/Codex/bin/codex.exe"));
         }
         if let Some(root) = env::var_os("USERPROFILE") {
             candidates.push(PathBuf::from(root).join(format!(".local/bin/{name}.exe")));
@@ -855,17 +855,16 @@ fn handle_claude(
         }
     }
     let session = string(message, "/session_id");
-    if !session.is_empty() {
-        if let Ok(mut ctx) = context.lock() {
-            if ctx.thread_id != session {
-                ctx.thread_id = session.clone();
-                emit(
-                    app,
-                    "conversationAssociated",
-                    json!({"cardID":ctx.card_id,"threadID":session,"engine":"claude-code","name":ctx.card.get("title").and_then(Value::as_str).unwrap_or("Session Claude"),"cwd":display_root(&ctx.space),"projectName":ctx.space.get("name").and_then(Value::as_str).unwrap_or(""),"accountID":ctx.card.get("accountID").and_then(Value::as_str).unwrap_or("")}),
-                );
-            }
-        }
+    if !session.is_empty()
+        && let Ok(mut ctx) = context.lock()
+        && ctx.thread_id != session
+    {
+        ctx.thread_id = session.clone();
+        emit(
+            app,
+            "conversationAssociated",
+            json!({"cardID":ctx.card_id,"threadID":session,"engine":"claude-code","name":ctx.card.get("title").and_then(Value::as_str).unwrap_or("Session Claude"),"cwd":display_root(&ctx.space),"projectName":ctx.space.get("name").and_then(Value::as_str).unwrap_or(""),"accountID":ctx.card.get("accountID").and_then(Value::as_str).unwrap_or("")}),
+        );
     }
     if kind == "assistant" {
         if let Some(content) = message
@@ -879,15 +878,15 @@ fn handle_claude(
                         .and_then(Value::as_str)
                         .unwrap_or("")
                         .to_string();
-                    if !text.is_empty() {
-                        if let Ok(mut ctx) = context.lock() {
-                            ctx.latest = text.clone();
-                            emit(
-                                app,
-                                "runnerEvent",
-                                json!({"cardID":ctx.card_id,"message":text}),
-                            );
-                        }
+                    if !text.is_empty()
+                        && let Ok(mut ctx) = context.lock()
+                    {
+                        ctx.latest = text.clone();
+                        emit(
+                            app,
+                            "runnerEvent",
+                            json!({"cardID":ctx.card_id,"message":text}),
+                        );
                     }
                 }
             }
@@ -902,10 +901,9 @@ fn handle_claude(
             .get("result")
             .and_then(Value::as_str)
             .filter(|v| !v.is_empty())
+            && let Ok(mut ctx) = context.lock()
         {
-            if let Ok(mut ctx) = context.lock() {
-                ctx.latest = text.to_string();
-            }
+            ctx.latest = text.to_string();
         }
         let error = if success {
             None
@@ -1145,10 +1143,8 @@ fn start(
     request["space"]["displayRootPath"] = json!(string(&request, "/space/rootPath"));
     request["space"]["rootPath"] = json!(root);
     let start = reserve_or_queue(manager, request.clone())?;
-    if start {
-        if let Err(error) = launch(manager, request.clone(), app) {
-            fail_start(manager, app, &request, error);
-        }
+    if start && let Err(error) = launch(manager, request.clone(), app) {
+        fail_start(manager, app, &request, error);
     }
     let inner = manager
         .inner
