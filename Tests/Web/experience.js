@@ -1,12 +1,12 @@
 // Run with jsdom 26.1.0 available on NODE_PATH (test dependency only).
 const fs=require('fs'),path=require('path'),assert=require('node:assert/strict');
 const {JSDOM,VirtualConsole}=require('jsdom');
-const root=path.join(__dirname,'..');
+const root=path.join(__dirname,'..','..');
 const errors=[],messages=[],vc=new VirtualConsole();vc.on('jsdomError',error=>errors.push(error));
-const dom=new JSDOM(fs.readFileSync(path.join(root,'Resources/index.html'),'utf8'),{url:'https://ctrl-kanb.test',runScripts:'outside-only',pretendToBeVisual:true,virtualConsole:vc});
+const dom=new JSDOM(fs.readFileSync(path.join(root,'Shared/Web/index.html'),'utf8'),{url:'https://ctrl-kanb.test',runScripts:'outside-only',pretendToBeVisual:true,virtualConsole:vc});
 const w=dom.window,d=w.document;w.structuredClone=structuredClone;w.setInterval=()=>0;w.setTimeout=()=>0;w.requestAnimationFrame=fn=>fn();
 w.webkit={messageHandlers:{bridge:{postMessage:message=>messages.push(structuredClone(message))}}};
-w.eval(fs.readFileSync(path.join(root,'Resources/app.js'),'utf8'));
+w.eval(fs.readFileSync(path.join(root,'Shared/Web/app.js'),'utf8'));
 const state={version:18,spaces:[{id:'p',name:'Projet café',rootPath:'/tmp/projet café',accentHex:'237466'}],cards:[],templates:[],validations:[],settings:{autoSync:false,backgroundSchedulerEnabled:false,maxConcurrency:2},modifiedAt:new Date().toISOString()};
 w.CodexBoard.load(state);
 const click=selector=>{const el=d.querySelector(selector);assert.ok(el,selector);el.click();};

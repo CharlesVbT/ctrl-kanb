@@ -9,12 +9,12 @@ import tempfile
 from pathlib import Path
 
 
-source = Path(__file__).with_name("privacy-scan.py")
+source = Path(__file__).with_name("scan.py")
 with tempfile.TemporaryDirectory(prefix="ctrl-kanb-privacy-test-") as folder:
     root = Path(folder)
-    scripts = root / "Scripts"
-    scripts.mkdir()
-    scanner = scripts / "privacy-scan.py"
+    scripts = root / "Tests" / "Privacy"
+    scripts.mkdir(parents=True)
+    scanner = scripts / "scan.py"
     shutil.copy2(source, scanner)
 
     safe = root / "README.md"

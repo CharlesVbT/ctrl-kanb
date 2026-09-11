@@ -45,7 +45,7 @@ jobs:
           set -euo pipefail
           version="${RELEASE_TAG#v}"
           test "$(node -p "require('./package.json').version")" = "$version"
-          test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' Resources/Info.plist)" = "$version"
+          test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' Platforms/macOS/Resources/Info.plist)" = "$version"
           mkdir -p release-assets
           ditto -c -k --sequesterRsrc --keepParent "dist/CTRL KANB.app" "release-assets/CTRL-KANB-${version}-macOS.zip"
 

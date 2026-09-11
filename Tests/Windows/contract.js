@@ -1,7 +1,7 @@
 const fs = require("fs");
 const vm = require("vm");
 
-const source = fs.readFileSync("Resources/platform.js", "utf8");
+const source = fs.readFileSync("Shared/Web/platform.js", "utf8");
 const invoked = [];
 const received = [];
 let nativeListener = null;

@@ -15,7 +15,7 @@ def probe(command, environment, timeout=10):
     return run
 
 project = pathlib.Path(__file__).resolve().parents[1]
-fake_server = project / "Tests" / "fake-codex-app-server.py"
+fake_server = project / "Tests" / "Fixtures" / "fake-codex-app-server.py"
 
 with tempfile.TemporaryDirectory(prefix="ctrl-kanb-codex-test-") as temporary:
     temporary_path = pathlib.Path(temporary)

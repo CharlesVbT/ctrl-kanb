@@ -1,15 +1,15 @@
 // Run with jsdom 26.1.0 available on NODE_PATH (test dependency only).
 const fs=require('fs'),path=require('path'),assert=require('node:assert/strict');
 const {JSDOM,VirtualConsole}=require('jsdom');
-const root=path.join(__dirname,'..'),messages=[],errors=[],timers=[];
+const root=path.join(__dirname,'..','..'),messages=[],errors=[],timers=[];
 const consoleSink=new VirtualConsole();consoleSink.on('jsdomError',error=>errors.push(error));
-const dom=new JSDOM(fs.readFileSync(path.join(root,'Resources/index.html'),'utf8'),{url:'https://ctrl-kanb.windows',runScripts:'outside-only',pretendToBeVisual:true,virtualConsole:consoleSink});
+const dom=new JSDOM(fs.readFileSync(path.join(root,'Shared/Web/index.html'),'utf8'),{url:'https://ctrl-kanb.windows',runScripts:'outside-only',pretendToBeVisual:true,virtualConsole:consoleSink});
 const w=dom.window,d=w.document;
 w.structuredClone=structuredClone;w.setInterval=()=>0;w.setTimeout=(callback,delay)=>{timers.push({callback,delay});return timers.length};w.requestAnimationFrame=callback=>callback();
 w.CTRL_KANB_PLATFORM='windows';
 w.ctrlKanbNative={postMessage:message=>messages.push(structuredClone(message))};
-w.eval(fs.readFileSync(path.join(root,'Resources/i18n.js'),'utf8'));
-w.eval(fs.readFileSync(path.join(root,'Resources/app.js'),'utf8'));
+w.eval(fs.readFileSync(path.join(root,'Shared/Web/i18n.js'),'utf8'));
+w.eval(fs.readFileSync(path.join(root,'Shared/Web/app.js'),'utf8'));
 const rawClaudeError=JSON.stringify({type:'error',status:401,error:{message:'OAuth access token has been revoked. Run claude auth login.'}});
 const state={version:22,spaces:[{id:'project',name:'Projet Windows',rootPath:'C:\\Users\\Test\\Projet',accentHex:'527A9A'}],cards:[{id:'failed-card',spaceID:'project',boardPresetID:'classic',title:'Tâche à reprendre',prompt:'Vérifier le projet',status:'needsInput',priorityLevelID:'normal',priorityNumber:1,labels:[],subtasks:[],dependencies:[],categoryAssignments:{},agentEngine:'claude-code',launchMode:'manual',recurrence:'none',runMode:'workspaceWrite',conversations:[],lastRun:{exitCode:1,summary:'Not logged in · Please run /login'},createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()}],utilityChats:[],templates:[],validations:[],settings:{autoSync:false,backgroundSchedulerEnabled:false,maxConcurrencyCodex:2,maxConcurrencyClaude:1,accounts:[],activeAccount:{},accountChecks:{'claude-code:default':{engine:'claude-code',account:'claude-code:default',state:'blocked',detail:rawClaudeError,at:new Date().toISOString()}},conversationSyncChecks:{},language:'fr'},modifiedAt:new Date().toISOString()};
 state.cards.push({...structuredClone(state.cards[0]),id:'model-card',title:'Moteur à actualiser',priorityNumber:2,agentEngine:'codex',lastRun:{exitCode:1,summary:JSON.stringify({type:'error',status:400,error:{message:"The 'gpt-5.6-sol' model requires a newer version of Codex. Please upgrade to the latest app or CLI and try again."}})}});

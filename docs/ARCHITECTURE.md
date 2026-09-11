@@ -2,13 +2,13 @@
 
 ## Composants
 
-- `Sources/App/main.m` : fenêtre macOS, pont WebKit, App Server, file, synchronisation, stockage et notifications.
-- `Sources/App/AppServerClient.m` : client JSONL pour `codex app-server --stdio`.
-- `Sources/Helper/main.m` : watchdog macOS court, lancé par `launchd` uniquement après activation volontaire.
-- `Resources/app.js` : état du Kanban, migration, Agenda, centres de validations et de suivi, ordre, épinglage, liste progressive et menu des projets, deux tableaux fixes indépendants, priorités, taxonomie, planificateur local, cartes, récurrence, conversations et interactions.
-- `Resources/app.css` : navigation repliable, barres d'actions, interfaces Agenda/Tableau/Flux/Validations/Suivi, Réglages et panneau de conversation.
-- `Sources/CLI/main.m` : commandes déterministes pour l’automatisation locale.
-- `Resources/platform.js` : adaptateur léger qui dirige le pont vers WebKit sur macOS ou Tauri sur Windows.
+- `Shared/Web/app.js` : état du Kanban, migration, Agenda, centres de validations et de suivi, ordre, épinglage, liste progressive et menu des projets, deux tableaux fixes indépendants, priorités, taxonomie, planificateur local, cartes, récurrence, conversations et interactions.
+- `Shared/Web/app.css` : navigation repliable, barres d'actions, interfaces Agenda/Tableau/Flux/Validations/Suivi, Réglages et panneau de conversation.
+- `Shared/Web/platform.js` : adaptateur léger qui dirige le pont vers WebKit sur macOS ou Tauri sur Windows.
+- `Platforms/macOS/Sources/App/main.m` : fenêtre macOS, pont WebKit, App Server, file, synchronisation, stockage et notifications.
+- `Platforms/macOS/Sources/App/AppServerClient.m` : client JSONL pour `codex app-server --stdio`.
+- `Platforms/macOS/Sources/Helper/main.m` : watchdog macOS court, lancé par `launchd` uniquement après activation volontaire.
+- `Platforms/macOS/Sources/CLI/main.m` : commandes déterministes pour l’automatisation locale.
 - `Platforms/Windows/src-tauri` : hôte Windows Tauri 2, contrat natif fermé, processus agents, ConPTY et stockage local atomique.
 
 ## Détection des agents

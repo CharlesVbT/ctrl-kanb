@@ -3,7 +3,7 @@
 // Le francais est la langue source : la cle EST la chaine francaise. Une entree
 // absente rend donc la chaine d origine plutot qu un identifiant technique.
 //
-// Scripts/i18n-scan.js verifie la couverture par pseudo-localisation : il entoure
+// Tests/Web/i18n-scan.js verifie la couverture par pseudo-localisation : il entoure
 // chaque traduction de marqueurs et rend l application dans cette langue truquee.
 // Tout texte affiche sans marqueur n est pas passe par une traduction.
 //

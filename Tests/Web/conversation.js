@@ -1,13 +1,13 @@
 // DOM regression tests for continuing a conversation from Suivi (jsdom 26.1.0 on NODE_PATH).
 const fs=require('fs'),path=require('path'),assert=require('node:assert/strict');
 const {JSDOM,VirtualConsole}=require('jsdom');
-const root=path.join(__dirname,'..'),messages=[],errors=[],vc=new VirtualConsole();
+const root=path.join(__dirname,'..','..'),messages=[],errors=[],vc=new VirtualConsole();
 vc.on('jsdomError',error=>errors.push(error));
-const dom=new JSDOM(fs.readFileSync(path.join(root,'Resources/index.html'),'utf8'),{url:'https://ctrl-kanb.test',runScripts:'outside-only',pretendToBeVisual:true,virtualConsole:vc});
+const dom=new JSDOM(fs.readFileSync(path.join(root,'Shared/Web/index.html'),'utf8'),{url:'https://ctrl-kanb.test',runScripts:'outside-only',pretendToBeVisual:true,virtualConsole:vc});
 const w=dom.window,d=w.document;
 w.structuredClone=structuredClone;w.setInterval=()=>0;w.setTimeout=()=>0;w.requestAnimationFrame=fn=>fn();
 w.webkit={messageHandlers:{bridge:{postMessage:message=>messages.push(structuredClone(message))}}};
-w.eval(fs.readFileSync(path.join(root,'Resources/app.js'),'utf8'));
+w.eval(fs.readFileSync(path.join(root,'Shared/Web/app.js'),'utf8'));
 const threadID='87654321-1234-4234-8234-123456789abc',otherID='aaaaaaaa-1234-4234-8234-123456789abc';
 const card={id:'follow-test',spaceID:'project',title:'Résultat à poursuivre',prompt:'Objectif initial',status:'needsInput',agentEngine:'codex',runMode:'readOnly',conversations:[{id:threadID,engine:'codex',name:'Conversation principale',role:'main'},{id:otherID,engine:'codex',name:'Autre conversation',role:'attempt'}],activeConversationID:threadID,lastRun:{summary:'Résultat précédent',exitCode:1},createdAt:new Date().toISOString()};
 w.CodexBoard.load({version:18,spaces:[{id:'project',name:'Projet exact',rootPath:'/private/tmp/projet exact'}],cards:[card],templates:[],validations:[],settings:{autoSync:false,backgroundSchedulerEnabled:false,language:'fr'},modifiedAt:new Date().toISOString()});

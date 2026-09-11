@@ -2,15 +2,15 @@
 // Run with jsdom 26.1.0 available on NODE_PATH (test dependency only).
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 const {JSDOM,VirtualConsole}=require('jsdom');
-const root=path.resolve(__dirname,'..'),errors=[],messages=[],issues=[],vc=new VirtualConsole();
+const root=path.resolve(__dirname,'..','..'),errors=[],messages=[],issues=[],vc=new VirtualConsole();
 vc.on('jsdomError',error=>errors.push(error));
-const dom=new JSDOM(fs.readFileSync(path.join(root,'Resources/index.html'),'utf8'),{runScripts:'outside-only',url:'file:///app/index.html',pretendToBeVisual:true,virtualConsole:vc});
+const dom=new JSDOM(fs.readFileSync(path.join(root,'Shared/Web/index.html'),'utf8'),{runScripts:'outside-only',url:'file:///app/index.html',pretendToBeVisual:true,virtualConsole:vc});
 const w=dom.window,d=w.document;
 w.matchMedia=()=>({matches:false,addEventListener(){},removeEventListener(){}});
 w.webkit={messageHandlers:{bridge:{postMessage(message){messages.push(structuredClone(message))}}}};
 w.requestAnimationFrame=callback=>{callback();return 1};
-w.eval(fs.readFileSync(path.join(root,'Resources/i18n.js'),'utf8'));
-w.eval(fs.readFileSync(path.join(root,'Resources/app.js'),'utf8'));
+w.eval(fs.readFileSync(path.join(root,'Shared/Web/i18n.js'),'utf8'));
+w.eval(fs.readFileSync(path.join(root,'Shared/Web/app.js'),'utf8'));
 
 const now=new Date().toISOString(),space={id:'project',name:'Projet accessible',rootPath:'/private/tmp/projet-accessible',accentHex:'5477A8'};
 const base={version:22,spaces:[space],cards:[

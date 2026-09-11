@@ -47,7 +47,7 @@ const context = {
   setTimeout() { return 0; }, clearTimeout() {}, setInterval() { return 0; }, requestAnimationFrame() { return 0; },
 };
 context.window.document = document;
-const applicationScript = process.argv[2] || `${__dirname}/../Resources/app.js`;
+const applicationScript = process.argv[2] || `${__dirname}/../../Shared/Web/app.js`;
 vm.createContext(context);
 vm.runInContext(fs.readFileSync(applicationScript, "utf8"), context, { filename: applicationScript });
 

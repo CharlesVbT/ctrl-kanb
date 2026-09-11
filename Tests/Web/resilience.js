@@ -2,12 +2,12 @@
 // Run with jsdom 26.1.0 available on NODE_PATH (test dependency only).
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 const {JSDOM,VirtualConsole}=require('jsdom');
-const root=path.resolve(__dirname,'..'),runtimeErrors=[],bridgeMessages=[],vc=new VirtualConsole();vc.on('jsdomError',error=>runtimeErrors.push(error));
-const dom=new JSDOM(fs.readFileSync(path.join(root,'Resources/index.html'),'utf8'),{runScripts:'outside-only',url:'file:///app/index.html',pretendToBeVisual:true,virtualConsole:vc});
+const root=path.resolve(__dirname,'..','..'),runtimeErrors=[],bridgeMessages=[],vc=new VirtualConsole();vc.on('jsdomError',error=>runtimeErrors.push(error));
+const dom=new JSDOM(fs.readFileSync(path.join(root,'Shared/Web/index.html'),'utf8'),{runScripts:'outside-only',url:'file:///app/index.html',pretendToBeVisual:true,virtualConsole:vc});
 const w=dom.window,d=w.document;
 w.matchMedia=()=>({matches:false,addEventListener(){},removeEventListener(){}});w.requestAnimationFrame=callback=>{callback();return 1};
 w.webkit={messageHandlers:{bridge:{postMessage(message){bridgeMessages.push(structuredClone(message))}}}};
-w.eval(fs.readFileSync(path.join(root,'Resources/i18n.js'),'utf8'));w.eval(fs.readFileSync(path.join(root,'Resources/app.js'),'utf8'));
+w.eval(fs.readFileSync(path.join(root,'Shared/Web/i18n.js'),'utf8'));w.eval(fs.readFileSync(path.join(root,'Shared/Web/app.js'),'utf8'));
 
 const instant='2026-10-25T01:30:00.000Z',space={id:'project',name:'Projet endurance',rootPath:'/private/tmp/ctrl-kanb-resilience',accentHex:'5477A8'};
 const cards=Array.from({length:180},(_,index)=>({id:`card-${index}`,spaceID:space.id,boardPresetID:index%3?'classic':'routines',title:`Tâche ${index+1}`,prompt:'Contrôler le comportement.',status:index%7===0?'done':'ready',priorityLevelID:'normal',priorityNumber:index+1,agentEngine:index%2?'codex':'claude-code',model:index%2?'gpt-5.6-sol':'sonnet',reasoningEffort:'medium',runMode:'readOnly',launchMode:index%3?'manual':'scheduled',scheduledAt:index%3?'':instant,recurrence:index%9===0?'weekly':'none',recurrenceSource:'board',recurrenceSeriesID:index%9===0?`series-${index}`:'',scheduleState:index%3?'':'pending',durationMinutes:60,labels:[],subtasks:[],dependencies:[],categoryAssignments:{},conversations:index===1?[{id:'aaaaaaaa-1234-4234-8234-123456789abc',engine:'codex',name:'Conversation réseau'}]:[],createdAt:instant,updatedAt:instant,completedAt:index%7===0?instant:''}));

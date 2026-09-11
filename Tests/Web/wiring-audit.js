@@ -47,7 +47,7 @@ const context = {
   setTimeout() { return 0; }, clearTimeout() {}, setInterval() { return 0; }, requestAnimationFrame() { return 0; },
 };
 context.window.document = document;
-const applicationScript = process.argv[2] || `${__dirname}/../Resources/app.js`;
+const applicationScript = process.argv[2] || `${__dirname}/../../Shared/Web/app.js`;
 vm.createContext(context);
 vm.runInContext(fs.readFileSync(applicationScript, "utf8"), context, { filename: applicationScript });
 
@@ -74,11 +74,11 @@ const click = dataset => listeners.click({target:target(dataset),preventDefault(
 // disparait en silence. Ces trois cas ne se voient pas a la relecture, mais se
 // prouvent par recoupement entre le rendu, le code JS et le code Objective-C.
 // ---------------------------------------------------------------------------
-vm.runInContext(fs.readFileSync(`${__dirname}/../Resources/i18n.js`, "utf8"), context, { filename: "i18n.js" });
+vm.runInContext(fs.readFileSync(`${__dirname}/../../Shared/Web/i18n.js`, "utf8"), context, { filename: "i18n.js" });
 context.window.navigator = { language: "fr-FR" };
 
-const appSource = fs.readFileSync(`${__dirname}/../Resources/app.js`, "utf8");
-const nativeSource = fs.readFileSync(`${__dirname}/../Sources/App/main.m`, "utf8");
+const appSource = fs.readFileSync(`${__dirname}/../../Shared/Web/app.js`, "utf8");
+const nativeSource = fs.readFileSync(`${__dirname}/../../Platforms/macOS/Sources/App/main.m`, "utf8");
 const problems = [];
 const note = (kind, detail) => problems.push(`${kind} — ${detail}`);
 
@@ -216,7 +216,7 @@ for (const [action, extra] of panels) {
 
 // 3. Tout bouton affiche a un gestionnaire, tout gestionnaire a un bouton.
 const shown = new Set();
-for (const m of fs.readFileSync(`${__dirname}/../Resources/index.html`, "utf8").matchAll(/data-action="([a-z-]+)"/g)) shown.add(m[1]);
+for (const m of fs.readFileSync(`${__dirname}/../../Shared/Web/index.html`, "utf8").matchAll(/data-action="([a-z-]+)"/g)) shown.add(m[1]);
 for (const [, html] of rendered)
   for (const m of html.matchAll(/data-action="([a-z-]+)"/g)) shown.add(m[1]);
 const handled = new Set([...appSource.matchAll(/action\s*===\s*"([a-z-]+)"/g)].map(m => m[1]));
@@ -279,7 +279,7 @@ for (const [nom, motif] of [["icon", /\bicon\(\s*t\(/g], ["engineKey", /\bengine
 // Une hauteur fixe par cellule imposait 792px pour six semaines : les deux
 // dernieres tombaient sous la ligne de flottaison d une fenetre courante.
 // Verifie sur navigateur a 560, 800 et 1150px de haut.
-const feuille = fs.readFileSync(`${__dirname}/../Resources/app.css`, "utf8");
+const feuille = fs.readFileSync(`${__dirname}/../../Shared/Web/app.css`, "utf8");
 const regleJour = feuille.match(/^\.agenda-month-day \{[^}]*\}/m)?.[0] || "";
 const hauteurFixe = regleJour.match(/min-height:\s*(\d+)px/);
 if (hauteurFixe && Number(hauteurFixe[1]) > 0)

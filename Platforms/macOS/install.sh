@@ -5,7 +5,8 @@
 # fichier telecharge : l application demarre sans passer par Reglages Systeme.
 set -euo pipefail
 
-PROJECT_DIR="${0:A:h:h}"
+MACOS_DIR="${0:A:h}"
+PROJECT_DIR="${MACOS_DIR:h:h}"
 APP_NAME="CTRL KANB.app"
 DESTINATION="${CTRL_KANB_INSTALL_DIR:-/Applications}"
 
@@ -37,7 +38,7 @@ print -r -- "  compilation…"
 # codesign ecrit « replacing existing signature » sur la sortie d erreur :
 # on la garde de cote pour ne la montrer qu en cas d echec.
 build_log="$(mktemp)"
-if ! built="$("$PROJECT_DIR/Scripts/package_app.sh" 2>"$build_log")"; then
+if ! built="$("$MACOS_DIR/build.sh" 2>"$build_log")"; then
   cat "$build_log" >&2
   rm -f "$build_log"
   print -r -- "La compilation a echoue." >&2
@@ -52,7 +53,7 @@ if command -v node >/dev/null 2>&1; then
   # montre sa sortie, sinon l installation semble avoir reussi alors qu elle n a
   # rien installe.
   for suite in smoke-ui xss-scan i18n-scan wiring-audit; do
-    if ! output="$(node "$PROJECT_DIR/Scripts/$suite.js" 2>&1)"; then
+    if ! output="$(node "$PROJECT_DIR/Tests/Web/$suite.js" 2>&1)"; then
       print -r -- ""
       print -r -- "Le contrôle « $suite » a échoué ; rien n'a été installé." >&2
       print -r -- "$output" | tail -20 >&2
@@ -60,8 +61,8 @@ if command -v node >/dev/null 2>&1; then
     fi
   done
   if [[ -d "$PROJECT_DIR/node_modules/jsdom" ]]; then
-    for suite in test-accessibility test-experience test-conversation test-sync test-resilience; do
-      if ! output="$(node "$PROJECT_DIR/Scripts/$suite.js" 2>&1)"; then
+    for suite in accessibility experience conversation sync resilience; do
+      if ! output="$(node "$PROJECT_DIR/Tests/Web/$suite.js" 2>&1)"; then
         print -r -- ""
         print -r -- "Le contrôle « $suite » a échoué ; rien n'a été installé." >&2
         print -r -- "$output" | tail -20 >&2
@@ -80,8 +81,8 @@ fi
 # vrai client et le font parler a un faux App Server.
 if command -v python3 >/dev/null 2>&1; then
   print -r -- "  tests du pont natif…"
-  for suite in test-security-boundaries test-cli-concurrency test-codex-runner test-claude-runner; do
-    if ! output="$(python3 "$PROJECT_DIR/Scripts/$suite.py" 2>&1)"; then
+  for suite in security-boundaries cli-concurrency codex-runner claude-runner; do
+    if ! output="$(python3 "$MACOS_DIR/Tests/$suite.py" 2>&1)"; then
       print -r -- ""
       print -r -- "Le contrôle « $suite » a échoué ; rien n'a été installé." >&2
       print -r -- "$output" | tail -20 >&2
@@ -94,7 +95,7 @@ else
 fi
 
 print -r -- "  tests des notifications…"
-if ! output="$($PROJECT_DIR/Scripts/test-notifications.sh 2>&1)"; then
+if ! output="$("$MACOS_DIR/Tests/notifications.sh" 2>&1)"; then
   print -r -- ""
   print -r -- "Le contrôle « test-notifications » a échoué ; rien n'a été installé." >&2
   print -r -- "$output" | tail -20 >&2

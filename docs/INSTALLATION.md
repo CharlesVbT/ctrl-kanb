@@ -32,7 +32,7 @@ La version actuellement validée l’a été sur Apple Silicon. Les Mac Intel ne
 git clone https://github.com/charlesvbtpro-ship-it/ctrl-kanb.git
 cd ctrl-kanb
 npm ci
-./Scripts/install.sh
+npm run install:macos
 ```
 
 `npm ci` installe les dépendances de test verrouillées. Le script exécute ensuite les contrôles installés, compile l’application et la copie dans `/Applications`.
@@ -40,7 +40,7 @@ npm ci
 Pour une installation réservée au compte courant :
 
 ```sh
-CTRL_KANB_INSTALL_DIR="$HOME/Applications" ./Scripts/install.sh
+CTRL_KANB_INSTALL_DIR="$HOME/Applications" npm run install:macos
 ```
 
 Pour produire uniquement le paquet local :
@@ -48,7 +48,7 @@ Pour produire uniquement le paquet local :
 ```sh
 npm ci
 npm test
-./Scripts/package_app.sh
+npm run build
 ```
 
 Le résultat se trouve dans `dist/CTRL KANB.app`.
@@ -100,7 +100,7 @@ Depuis une copie Git :
 
 ```sh
 git pull --ff-only
-./Scripts/install.sh
+npm run install:macos
 ```
 
 Sous Windows, récupérez la nouvelle version puis reconstruisez et réexécutez l’installateur. Les données sont séparées du programme et sont conservées pendant la mise à jour.

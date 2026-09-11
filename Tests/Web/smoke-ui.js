@@ -53,7 +53,7 @@ const context = {
   setInterval(callback, delay) { intervals.push({callback, delay}); return intervals.length; },
 };
 context.window.document = document;
-const applicationScript = process.argv[2] || `${__dirname}/../Resources/app.js`;
+const applicationScript = process.argv[2] || `${__dirname}/../../Shared/Web/app.js`;
 vm.createContext(context);
 vm.runInContext(fs.readFileSync(applicationScript, "utf8"), context, { filename: applicationScript });
 
@@ -84,7 +84,7 @@ const fireInterval = delay => { for (const entry of intervals) if (entry.delay =
 let checks = 0;
 const assert = (condition,message) => {checks += 1; if(!condition)throw new Error(message);};
 const occurrences = (value,fragment) => (value.match(new RegExp(fragment,"g"))||[]).length;
-const stylesheet = fs.readFileSync(`${__dirname}/../Resources/app.css`,"utf8").replace(/\r\n?/g,"\n");
+const stylesheet = fs.readFileSync(`${__dirname}/../../Shared/Web/app.css`,"utf8").replace(/\r\n?/g,"\n");
 const actionColor = stylesheet.match(/--action-primary:(#[0-9a-f]{6})/i)?.[1];
 const actionInk = stylesheet.match(/--action-primary-ink:(#[0-9a-f]{6})/i)?.[1];
 const darkThemeBlock=stylesheet.match(/:root\[data-theme="dark"\]\{([\s\S]*?)\n\}/)?.[1]||"";
@@ -111,7 +111,7 @@ for(const [name,block] of lightThemeBlocks){
   assert(background&&surface&&secondary&&contrast(secondary,surface)>=4.5,`Le texte secondaire de la palette claire ${name} manque de contraste sur les surfaces nuancees.`);
   assert(background&&accent&&contrast(accent,background)>=4.5,`L accent de la palette claire ${name} manque de contraste sur le fond principal.`);
 }
-assert(!fs.readFileSync(`${__dirname}/../Resources/index.html`,"utf8").includes("LOCAL, PAR NATURE."),"L'ancienne signature occupe encore le bas du panneau lateral.");
+assert(!fs.readFileSync(`${__dirname}/../../Shared/Web/index.html`,"utf8").includes("LOCAL, PAR NATURE."),"L'ancienne signature occupe encore le bas du panneau lateral.");
 context.window.CodexBoard.appInfo({version:"6.6.1"});
 assert(element("[data-app-version]").textContent==="Version 6.6.1","Le panneau lateral n'affiche pas le numero de version complet.");
 
@@ -421,7 +421,7 @@ assert(bridgeMessages.every(message => message.action!=="save"),"Le verrou ne do
 
 // --- Langue -----------------------------------------------------------------
 // La table de traduction est chargee comme le fait index.html.
-vm.runInContext(fs.readFileSync(`${__dirname}/../Resources/i18n.js`, "utf8"), context, { filename: "i18n.js" });
+vm.runInContext(fs.readFileSync(`${__dirname}/../../Shared/Web/i18n.js`, "utf8"), context, { filename: "i18n.js" });
 context.window.navigator = { language: "fr-FR" };
 
 load([card("t1","Carte","ready")]);
@@ -516,7 +516,7 @@ assert(activeEntry(element("#sidebar-nav").innerHTML,"settings-security"),"Le me
 
 // Le menu reste complet et direct : aucune barre de recherche sans valeur.
 assert(!element("#sidebar-nav").innerHTML.includes('id="settings-search"'),"La recherche inutile des reglages subsiste.");
-assert(!fs.readFileSync(`${__dirname}/../Resources/index.html`,"utf8").includes('id="sidebar-command"'),"La recherche permanente inutile subsiste dans le panneau lateral.");
+assert(!fs.readFileSync(`${__dirname}/../../Shared/Web/index.html`,"utf8").includes('id="sidebar-command"'),"La recherche permanente inutile subsiste dans le panneau lateral.");
 
 // Un reglage s applique au changement, sans passer par un bouton d enregistrement.
 const prefsForm = values => ({id:"preferences-form",dataset:{},formValues:{defaultModel:"gpt-5.6-sol",defaultEffort:"medium",maxConcurrency:"1",defaultBoardPreset:"classic",autoArchiveCompletedDays:"0",theme:"auto",themePalette:"graphite",language:"fr",inAppNotifications:"all",systemNotificationsEnabled:"on",notificationWhen:"background",notificationEvent__taskComplete:"on",notificationEvent__taskFailed:"on",notificationEvent__approval:"on",notificationEvent__chatReply:"on",notificationEvent__scheduleIssue:"on",...values}});
@@ -618,7 +618,7 @@ assert(enginesPage.includes("GPT-5.6 Sol"),"Les modeles Codex ont disparu des re
 assert(enginesPage.includes('class="engine-logo codex-logo"')&&enginesPage.includes('class="engine-logo claude-code-logo"'),"Les icones fonctionnelles des deux moteurs manquent dans les reglages.");
 assert(!enginesPage.includes('src="Brands/'),"Un logo de fournisseur est encore embarque dans les reglages.");
 assert(enginesPage.includes("Connexion locale via Claude Code CLI"),"La provenance technique de l integration Claude manque dans les reglages.");
-assert(!fs.existsSync(`${__dirname}/../Resources/Brands`),"Des ressources de marque tierces restent embarquees.");
+assert(!fs.existsSync(`${__dirname}/../../Shared/Web/Brands`),"Des ressources de marque tierces restent embarquees.");
 assert(!enginesPage.includes("settings-acp")&&!enginesPage.includes("settings-providers"),"Les agents externes sont encore visibles.");
 
 load([card("claude-route","Route Claude","ready",{agentEngine:"claudeCode",model:"gpt-5.6-sol"})],{defaultModelClaude:"default"});
@@ -1124,14 +1124,14 @@ assert(utilityPanel().innerHTML.includes("Dossier choisi")&&utilityPanel().inner
 const customFiles=bridgeMessages.filter(message=>message.action==="listProjectFiles").at(-1);
 assert(customFiles?.spaceID==="utility-custom"&&customFiles.rootPath==="/private/tmp/dossier-libre","Le navigateur ne suit pas le dossier libre choisi.");
 
-const nativeSource=fs.readFileSync(`${__dirname}/../Sources/App/main.m`,"utf8");
-const cliSource=fs.readFileSync(`${__dirname}/../Sources/CLI/main.m`,"utf8");
-const packageScript=fs.readFileSync(`${__dirname}/package_app.sh`,"utf8");
-const windowsAgentSource=fs.readFileSync(`${__dirname}/../Platforms/Windows/src-tauri/src/agents.rs`,"utf8");
-const windowsConversationSource=fs.readFileSync(`${__dirname}/../Platforms/Windows/src-tauri/src/conversations.rs`,"utf8");
+const nativeSource=fs.readFileSync(`${__dirname}/../../Platforms/macOS/Sources/App/main.m`,"utf8");
+const cliSource=fs.readFileSync(`${__dirname}/../../Platforms/macOS/Sources/CLI/main.m`,"utf8");
+const packageScript=fs.readFileSync(`${__dirname}/../../Platforms/macOS/build.sh`,"utf8");
+const windowsAgentSource=fs.readFileSync(`${__dirname}/../../Platforms/Windows/src-tauri/src/agents.rs`,"utf8");
+const windowsConversationSource=fs.readFileSync(`${__dirname}/../../Platforms/Windows/src-tauri/src/conversations.rs`,"utf8");
 assert(nativeSource.includes('snapshot[@"version"] = @22;')&&nativeSource.includes('@{ @"version":@22'),"L application native ne conserve pas le schema 22 lors d une sauvegarde ou d une premiere ouverture.");
 assert(cliSource.includes('board[@"version"] = @22;')&&!cliSource.includes('board[@"version"] = @19;'),"L outil en ligne de commande peut encore ramener les donnees au schema 19.");
-assert(!packageScript.includes('Resources/Brands'),"Le paquet macOS copie encore des ressources de marque tierces.");
+assert(!packageScript.includes('/Brands'),"Le paquet macOS copie encore des ressources de marque tierces.");
 assert(nativeSource.includes('@"name":@"ctrl-kanb"')&&!nativeSource.includes('@"name":@"Codex Desktop"'),"Le client macOS ne s identifie pas correctement auprès de Codex App Server.");
 assert(windowsAgentSource.includes('"name":"ctrl-kanb"')&&windowsConversationSource.includes('"name":"ctrl-kanb"')&&!windowsAgentSource.includes('"name":"Codex Desktop"')&&!windowsConversationSource.includes('"name":"Codex Desktop"'),"Le client Windows ne s identifie pas correctement auprès de Codex App Server.");
 for(const title of ["Fichier", "Édition", "Affichage", "Fenêtre", "Aide"])

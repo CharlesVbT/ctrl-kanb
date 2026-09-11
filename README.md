@@ -99,13 +99,13 @@ CTRL KANB does not provide a subscription, quota, or credentials for either serv
 git clone https://github.com/charlesvbtpro-ship-it/ctrl-kanb.git
 cd ctrl-kanb
 npm ci
-./Scripts/install.sh
+npm run install:macos
 ```
 
 The script builds the application, runs the installed checks, and installs it in `/Applications`. To install it for the current user instead:
 
 ```sh
-CTRL_KANB_INSTALL_DIR="$HOME/Applications" ./Scripts/install.sh
+CTRL_KANB_INSTALL_DIR="$HOME/Applications" npm run install:macos
 ```
 
 ### Build the Windows installer
@@ -181,6 +181,7 @@ The full technical and user documentation is currently maintained in French:
 | [Compatibility](docs/COMPATIBILITY.md) | tested systems, evidence, and open limits |
 | [Troubleshooting](docs/TROUBLESHOOTING.md) | detection, authentication, models, sync, scheduling, and terminal |
 | [Architecture](docs/ARCHITECTURE.md) | native hosts, storage, queues, permissions, and scheduler |
+| [Repository structure](docs/REPOSITORY-STRUCTURE.md) | shared code, macOS and Windows ownership, tests, and tools |
 | [Data model](docs/DATA-MODEL.md) | persistent schema and migrations |
 | [macOS background engine](docs/BACKGROUND-ENGINE.md) | optional `launchd` behavior |
 | [Windows port](docs/WINDOWS-PORT.md) | Tauri host implementation and real-machine validation |
@@ -212,13 +213,15 @@ npm --prefix Platforms/Windows run build
 Repository layout:
 
 ```text
-Resources/  shared interface, styles, translations, and icons
-Scripts/    build, install, documentation, and verification scripts
-Sources/    macOS host, helper, and local CLI
-Platforms/  Windows Tauri host and PowerShell scripts
-Tests/      native scenarios and test doubles
-docs/       user and technical documentation
+Shared/Web/       interface, styles, translations, and platform adapter shared by both apps
+Platforms/macOS/  native AppKit/WebKit host, helper, CLI, Apple resources, and macOS tests
+Platforms/Windows/ Tauri/Rust host, Windows resources, and PowerShell build scripts
+Tests/            cross-platform interface, Windows contract, and privacy checks
+Tools/            maintainers' documentation utilities
+docs/             user, architecture, compatibility, and release documentation
 ```
+
+The two native applications are peers under `Platforms/`; neither platform is hidden at the repository root. See [Repository structure](docs/REPOSITORY-STRUCTURE.md) for the responsibility of each folder.
 
 Read [CONTRIBUTING.md](CONTRIBUTING.md) before submitting a change.
 

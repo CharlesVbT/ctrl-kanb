@@ -2,10 +2,10 @@
 import pathlib
 
 
-project = pathlib.Path(__file__).resolve().parents[1]
+project = pathlib.Path(__file__).resolve().parents[2]
 readme = (project / "README.md").read_text(encoding="utf-8")
 privacy = (project / "PRIVACY.md").read_text(encoding="utf-8")
-interface = (project / "Resources" / "app.js").read_text(encoding="utf-8")
+interface = (project / "Shared" / "Web" / "app.js").read_text(encoding="utf-8")
 
 assert "terminal zsh et navigateur de fichiers limités" not in readme
 assert "terminal démarre dans ce dossier mais reste un shell complet" in privacy

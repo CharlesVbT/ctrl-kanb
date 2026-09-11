@@ -1,15 +1,15 @@
 // DOM regression tests for visible Codex synchronization feedback.
 const fs=require('fs'),path=require('path'),assert=require('node:assert/strict');
 const {JSDOM,VirtualConsole}=require('jsdom');
-const root=path.join(__dirname,'..'),messages=[],errors=[],vc=new VirtualConsole();
+const root=path.join(__dirname,'..','..'),messages=[],errors=[],vc=new VirtualConsole();
 vc.on('jsdomError',error=>errors.push(error));
-const dom=new JSDOM(fs.readFileSync(path.join(root,'Resources/index.html'),'utf8'),{
+const dom=new JSDOM(fs.readFileSync(path.join(root,'Shared/Web/index.html'),'utf8'),{
   url:'https://ctrl-kanb.test',runScripts:'outside-only',pretendToBeVisual:true,virtualConsole:vc
 });
 const w=dom.window,d=w.document;
 w.structuredClone=structuredClone;w.setInterval=()=>0;w.setTimeout=()=>0;w.requestAnimationFrame=fn=>fn();
 w.webkit={messageHandlers:{bridge:{postMessage:message=>messages.push(structuredClone(message))}}};
-w.eval(fs.readFileSync(path.join(root,'Resources/app.js'),'utf8'));
+w.eval(fs.readFileSync(path.join(root,'Shared/Web/app.js'),'utf8'));
 
 const mainID='11111111-1234-4234-8234-123456789abc';
 const attemptID='22222222-1234-4234-8234-123456789abc';

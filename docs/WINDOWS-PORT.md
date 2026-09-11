@@ -9,14 +9,14 @@ Le contrôle du 10 septembre 2026 a été réalisé sur Windows 11 Professionnel
 ## Architecture
 
 ```text
-Resources/                         Interface et logique partagées
-Sources/App/                       Hôte macOS AppKit et WebKit
+Shared/Web/                        Interface et logique partagées
+Platforms/macOS/                   Hôte macOS AppKit et WebKit
 Platforms/Windows/src-tauri/       Hôte Windows Tauri, Rust et WebView2
 Platforms/Windows/                 Scripts de préparation et de validation
-Scripts/                           Contrôles partagés
+Tests/                             Contrôles transversaux et propres aux hôtes
 ```
 
-`Resources/platform.js` dirige chaque demande du pont vers WebKit sur macOS ou vers Tauri sur Windows. L’interface n’accède directement ni à Node.js ni au système. L’hôte Windows accepte une liste fermée de 44 actions natives.
+`Shared/Web/platform.js` dirige chaque demande du pont vers WebKit sur macOS ou vers Tauri sur Windows. L’interface n’accède directement ni à Node.js ni au système. L’hôte Windows accepte une liste fermée de 44 actions natives.
 
 Les données sont conservées dans `%LOCALAPPDATA%\CTRL KANB Data`, séparément du programme installé. Les écritures sont verrouillées, validées, atomiques et précédées d’une sauvegarde de l’état antérieur.
 

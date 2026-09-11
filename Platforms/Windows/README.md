@@ -1,6 +1,6 @@
 # Hôte Windows
 
-Ce dossier contient l’hôte Tauri 2 de CTRL KANB. Il charge l’interface partagée depuis `Resources/` et conserve les données utilisateur dans `%LOCALAPPDATA%\CTRL KANB Data`, séparément du programme.
+Ce dossier contient l’hôte Tauri 2 de CTRL KANB. Il charge l’interface partagée depuis [`Shared/Web`](../../Shared/Web) et conserve les données utilisateur dans `%LOCALAPPDATA%\CTRL KANB Data`, séparément du programme.
 
 ## Installer CTRL KANB (utilisateur)
 

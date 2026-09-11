@@ -8,7 +8,7 @@ const path = require("node:path");
 const { pathToFileURL } = require("node:url");
 
 const project = path.resolve(__dirname, "..");
-const resources = path.join(project, "Resources");
+const resources = path.join(project, "Shared", "Web");
 const output = path.join(project, "docs", "assets");
 const chrome = process.env.CHROME_BIN || "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 

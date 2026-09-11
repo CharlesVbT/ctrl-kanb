@@ -49,7 +49,7 @@ N’ajoutez jamais :
 Les captures de documentation se génèrent avec des données fictives :
 
 ```sh
-node Scripts/capture-docs.js
+npm run docs:screenshots
 npm run test:privacy
 ```
 

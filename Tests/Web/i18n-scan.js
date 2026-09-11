@@ -47,7 +47,7 @@ const context = {
   setTimeout() { return 0; }, clearTimeout() {}, setInterval() { return 0; }, requestAnimationFrame() { return 0; },
 };
 context.window.document = document;
-const applicationScript = process.argv[2] || `${__dirname}/../Resources/app.js`;
+const applicationScript = process.argv[2] || `${__dirname}/../../Shared/Web/app.js`;
 vm.createContext(context);
 vm.runInContext(fs.readFileSync(applicationScript, "utf8"), context, { filename: applicationScript });
 
@@ -79,7 +79,7 @@ const modal = () => element("#modal-root").innerHTML;
 // soit jamais passe par t(), soit passe sans entree dans la table. Aucune
 // heuristique de langue n intervient.
 // ---------------------------------------------------------------------------
-vm.runInContext(fs.readFileSync(`${__dirname}/../Resources/i18n.js`, "utf8"), context, { filename: "i18n.js" });
+vm.runInContext(fs.readFileSync(`${__dirname}/../../Shared/Web/i18n.js`, "utf8"), context, { filename: "i18n.js" });
 const OPEN = "⟦", CLOSE = "⟧";
 const real = context.window.CTRL_KANB_TRANSLATIONS.en;
 context.window.CTRL_KANB_TRANSLATIONS.en = Object.fromEntries(

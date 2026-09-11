@@ -4,6 +4,7 @@ Ce fichier suit les changements visibles de CTRL KANB. Le projet utilise une num
 
 ## Non publié
 
+- organisation explicite du dépôt entre interface partagée, hôtes macOS et Windows, tests transversaux et outils de documentation ;
 - maintenance des livrables GitHub ;
 - préparation automatisée des paquets et empreintes de release ;
 - validation prolongée veille, réseau et échelles Windows à compléter.

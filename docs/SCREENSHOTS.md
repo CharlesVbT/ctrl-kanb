@@ -9,16 +9,16 @@ La bannière `docs/assets/ctrl-kanb-banner.png` est une illustration marketing s
 Sur macOS avec Google Chrome :
 
 ```sh
-node Scripts/capture-docs.js
+npm run docs:screenshots
 ```
 
 Pour utiliser un autre navigateur Chromium :
 
 ```sh
-CHROME_BIN="/chemin/vers/chromium" node Scripts/capture-docs.js
+CHROME_BIN="/chemin/vers/chromium" npm run docs:screenshots
 ```
 
-Le script charge les fichiers présents dans `Resources/`, injecte temporairement les projets **Atelier Atlas**, **Lumen Studio** et **Signal Notes**, puis écrit une série anglaise et une série française :
+Le script charge l’interface présente dans `Shared/Web/`, injecte temporairement les projets **Atelier Atlas**, **Lumen Studio** et **Signal Notes**, puis écrit une série anglaise et une série française :
 
 ```text
 docs/assets/ctrl-kanb-hero.png

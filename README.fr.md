@@ -97,13 +97,13 @@ CTRL KANB ne fournit aucun abonnement, quota ou identifiant pour ces services.
 git clone https://github.com/charlesvbtpro-ship-it/ctrl-kanb.git
 cd ctrl-kanb
 npm ci
-./Scripts/install.sh
+npm run install:macos
 ```
 
 Pour installer dans le compte courant :
 
 ```sh
-CTRL_KANB_INSTALL_DIR="$HOME/Applications" ./Scripts/install.sh
+CTRL_KANB_INSTALL_DIR="$HOME/Applications" npm run install:macos
 ```
 
 ### Windows depuis les sources
@@ -175,6 +175,7 @@ Consultez [PRIVACY.md](PRIVACY.md) et [SECURITY.md](SECURITY.md).
 | [Compatibilité](docs/COMPATIBILITY.md) | systèmes testés et limites observées |
 | [Dépannage](docs/TROUBLESHOOTING.md) | agents, modèles, synchronisation, Agenda et terminal |
 | [Architecture](docs/ARCHITECTURE.md) | hôtes, stockage, files, permissions et planificateur |
+| [Organisation du dépôt](docs/REPOSITORY-STRUCTURE.md) | code partagé, macOS, Windows, tests et outils |
 | [Modèle de données](docs/DATA-MODEL.md) | schéma persistant et migrations |
 | [Version Windows](docs/WINDOWS-PORT.md) | implémentation et validation Tauri |
 | [Contrôles de version](docs/RELEASE-CHECKLIST.md) | construction, validation et livraison des paquets |
@@ -201,6 +202,19 @@ cargo clippy --manifest-path Platforms/Windows/src-tauri/Cargo.toml --all-target
 cargo test --manifest-path Platforms/Windows/src-tauri/Cargo.toml
 npm --prefix Platforms/Windows run build
 ```
+
+Organisation du dépôt :
+
+```text
+Shared/Web/        interface, styles, traductions et adaptateur communs aux deux applications
+Platforms/macOS/  hôte AppKit/WebKit, helper, CLI, ressources Apple et tests macOS
+Platforms/Windows/ hôte Tauri/Rust, ressources Windows et scripts PowerShell
+Tests/             contrôles transversaux de l’interface, du contrat Windows et de la confidentialité
+Tools/             utilitaires de maintenance de la documentation
+docs/              documentation utilisateur, technique et de publication
+```
+
+macOS et Windows sont deux plateformes de même niveau dans `Platforms/`. Le rôle précis de chaque dossier est décrit dans [Organisation du dépôt](docs/REPOSITORY-STRUCTURE.md).
 
 Consultez [CONTRIBUTING.md](CONTRIBUTING.md) avant une modification.
 

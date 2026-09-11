@@ -6,12 +6,14 @@
   "license": "Apache-2.0",
   "description": "Application locale pour piloter des tâches avec Codex et Claude.",
   "scripts": {
-    "build": "./Scripts/package_app.sh",
+    "build": "./Platforms/macOS/build.sh",
+    "install:macos": "./Platforms/macOS/install.sh",
+    "docs:screenshots": "node Tools/capture-docs.js",
     "test": "npm run test:static && npm run test:ui && npm run test:native && npm run test:privacy",
-    "test:static": "node Scripts/xss-scan.js && node Scripts/i18n-scan.js && node Scripts/wiring-audit.js && node Scripts/test-windows-contract.js",
-    "test:ui": "node Scripts/smoke-ui.js && node Scripts/test-accessibility.js && node Scripts/test-experience.js && node Scripts/test-conversation.js && node Scripts/test-sync.js && node Scripts/test-resilience.js && node Scripts/test-windows-ui.js",
-    "test:native": "python3 Scripts/test-security-boundaries.py && python3 Scripts/test-cli-concurrency.py && python3 Scripts/test-codex-runner.py && python3 Scripts/test-claude-runner.py && ./Scripts/test-notifications.sh",
-    "test:privacy": "python3 Scripts/privacy-scan.py && python3 Scripts/test-privacy-scan.py && python3 Scripts/test-security-docs.py"
+    "test:static": "node Tests/Web/xss-scan.js && node Tests/Web/i18n-scan.js && node Tests/Web/wiring-audit.js && node Tests/Windows/contract.js",
+    "test:ui": "node Tests/Web/smoke-ui.js && node Tests/Web/accessibility.js && node Tests/Web/experience.js && node Tests/Web/conversation.js && node Tests/Web/sync.js && node Tests/Web/resilience.js && node Tests/Windows/ui.js",
+    "test:native": "python3 Platforms/macOS/Tests/security-boundaries.py && python3 Platforms/macOS/Tests/cli-concurrency.py && python3 Platforms/macOS/Tests/codex-runner.py && python3 Platforms/macOS/Tests/claude-runner.py && ./Platforms/macOS/Tests/notifications.sh",
+    "test:privacy": "python3 Tests/Privacy/scan.py && python3 Tests/Privacy/scan-test.py && python3 Tests/Privacy/security-docs.py"
   },
   "devDependencies": {
     "jsdom": "^26.1.0"
