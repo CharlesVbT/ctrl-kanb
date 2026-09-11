@@ -5,7 +5,7 @@ description = "Hôte Windows de CTRL KANB"
 authors = ["Charles VbT"]
 license = "Apache-2.0"
 edition = "2024"
-rust-version = "1.85"
+rust-version = "1.88"
 
 [lib]
 name = "ctrl_kanb_windows_lib"

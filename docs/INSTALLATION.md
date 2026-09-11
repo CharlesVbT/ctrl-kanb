@@ -59,7 +59,7 @@ Le résultat se trouve dans `dist/CTRL KANB.app`.
 
 - Windows 11 x64 ;
 - Git et Node.js 20 ou plus récent ;
-- Rust avec la chaîne `stable-x86_64-pc-windows-msvc` ;
+- Rust 1.88 ou plus récent avec la chaîne `stable-x86_64-pc-windows-msvc` ;
 - Microsoft Visual Studio Build Tools avec **Desktop development with C++** ;
 - Microsoft Edge WebView2 Runtime.
 

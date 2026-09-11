@@ -22,7 +22,7 @@ Si Rust manque :
 .\setup.ps1 -InstallMissing
 ```
 
-La construction demande Git, Node.js, Rust MSVC, WebView2 et les outils **Développement Desktop en C++** de Visual Studio. Aucun de ces outils n’est requis par l’utilisateur d’un installateur déjà construit, à l’exception du runtime WebView2 pris en charge par l’installateur.
+La construction demande Git, Node.js, Rust 1.88 ou plus récent avec la chaîne MSVC, WebView2 et les outils **Développement Desktop en C++** de Visual Studio. Aucun de ces outils n’est requis par l’utilisateur d’un installateur déjà construit, à l’exception du runtime WebView2 pris en charge par l’installateur.
 
 ## Développer et construire
 

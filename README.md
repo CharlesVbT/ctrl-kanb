@@ -110,7 +110,7 @@ CTRL_KANB_INSTALL_DIR="$HOME/Applications" npm run install:macos
 
 ### Build the Windows installer
 
-Run this in PowerShell with Git, Node.js, Rust MSVC, WebView2, and the Visual Studio C++ build tools installed:
+Run this in PowerShell with Git, Node.js, Rust 1.88 or later using MSVC, WebView2, and the Visual Studio C++ build tools installed:
 
 ```powershell
 git clone https://github.com/charlesvbtpro-ship-it/ctrl-kanb.git

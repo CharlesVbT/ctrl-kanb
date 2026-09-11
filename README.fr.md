@@ -108,7 +108,7 @@ CTRL_KANB_INSTALL_DIR="$HOME/Applications" npm run install:macos
 
 ### Windows depuis les sources
 
-Avec Git, Node.js, Rust MSVC, WebView2 et les outils C++ de Visual Studio :
+Avec Git, Node.js, Rust 1.88 ou plus récent avec MSVC, WebView2 et les outils C++ de Visual Studio :
 
 ```powershell
 git clone https://github.com/charlesvbtpro-ship-it/ctrl-kanb.git

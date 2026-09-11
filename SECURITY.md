@@ -55,3 +55,7 @@ CTRL KANB est une application locale, mais les processus qu’elle lance ne sont
 - sérialisation des instructions visant une même conversation ;
 - demandes d’autorisation liées à leur identifiant natif exact ;
 - contrôle `npm run test:privacy` sur l’ensemble des fichiers suivis par Git.
+
+## Dépendances
+
+Les dépendances JavaScript et Rust sont verrouillées et surveillées par Dependabot. Une alerte est corrigée dès qu’une version compatible existe. Le `Cargo.lock` de l’hôte Windows peut aussi référencer des bibliothèques propres à d’autres cibles de Tauri : elles sont évaluées selon la plateforme réellement compilée et le contenu du paquet distribué.
