@@ -84,7 +84,7 @@ Depuis `Platforms\Windows` dans PowerShell :
 L’installateur est produit sous `src-tauri\target\release\bundle\nsis`. Pour vérifier un paquet installé :
 
 ```powershell
-.\validate-installed.ps1 -Installer "chemin\vers\CTRL KANB_6.11.2_x64-setup.exe"
+.\validate-installed.ps1 -Installer "chemin\vers\CTRL KANB_6.11.3_x64-setup.exe"
 ```
 
 Ce contrôle installe le paquet silencieusement, lance deux ouvertures dans la session interactive, puis vérifie l’instance unique, le processus, la séparation des données et l’empreinte SHA-256.

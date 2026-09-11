@@ -6,7 +6,7 @@
 
 **A local control center for organizing, scheduling, and tracking work delegated to Codex and Claude on macOS and Windows.**
 
-> **Project status — 6.11.2 release candidate.** The source runs on macOS and Windows. Core flows are covered by automated checks and real-machine testing. Read the [compatibility and validation report](docs/COMPATIBILITY.md) before relying on CTRL KANB for important work.
+> **Project status — 6.11.3 release candidate.** The source runs on macOS and Windows. Core flows are covered by automated checks and real-machine testing. Read the [compatibility and validation report](docs/COMPATIBILITY.md) before relying on CTRL KANB for important work.
 
 ## Why CTRL KANB exists
 

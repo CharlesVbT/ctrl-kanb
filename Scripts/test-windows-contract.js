@@ -103,5 +103,18 @@ setImmediate(() => {
   if (!dataFolder || dataFolder === config.productName) {
     throw new Error("le dossier de données Windows doit rester séparé du dossier d’installation NSIS");
   }
+  const installedValidation = fs.readFileSync("Platforms/Windows/validate-installed.ps1", "utf8");
+  for (const marker of ["uninstall.exe", "$builtExecutable", "$builtHash", "$installedHash", "installerReplacedExecutable"]) {
+    if (!installedValidation.includes(marker)) throw new Error(`validation de mise à jour Windows incomplète : ${marker}`);
+  }
+  if (!installedValidation.includes('Start-Process -FilePath $uninstaller -ArgumentList "/S" -Wait')) {
+    throw new Error("la validation Windows doit retirer silencieusement l’ancienne version");
+  }
+  if (!installedValidation.includes("if ($installedHash -ne $builtHash)")) {
+    throw new Error("la validation Windows doit comparer le binaire installé au binaire construit");
+  }
+  if (/Remove-Item[^\n]*\$dataFolder/.test(installedValidation)) {
+    throw new Error("la validation Windows ne doit jamais supprimer le dossier de données utilisateur");
+  }
   console.log(`PASS adaptateur Tauri et ${actions.length} actions Windows déclarées`);
 });

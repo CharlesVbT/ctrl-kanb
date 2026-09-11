@@ -1,6 +1,6 @@
 [package]
 name = "ctrl-kanb-windows"
-version = "6.11.2"
+version = "6.11.3"
 description = "Hôte Windows de CTRL KANB"
 authors = ["Charles VbT"]
 license = "Apache-2.0"

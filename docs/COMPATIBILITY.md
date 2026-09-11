@@ -4,7 +4,7 @@ Ce document sépare les comportements contrôlés automatiquement, les observati
 
 ## Version examinée
 
-- CTRL KANB : 6.11.2 candidate ;
+- CTRL KANB : 6.11.3 candidate ;
 - schéma de données : 22 ;
 - date du dernier passage complet : 10 septembre 2026.
 

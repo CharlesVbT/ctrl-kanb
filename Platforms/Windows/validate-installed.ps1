@@ -4,9 +4,14 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+$Installer = (Resolve-Path -LiteralPath $Installer).Path
 $processName = "ctrl-kanb-windows"
 $installFolder = Join-Path $env:LOCALAPPDATA "CTRL KANB"
 $executable = Join-Path $installFolder "ctrl-kanb-windows.exe"
+$uninstaller = Join-Path $installFolder "uninstall.exe"
+$dataFolder = Join-Path $env:LOCALAPPDATA "CTRL KANB Data"
+$releaseFolder = [System.IO.Path]::GetFullPath((Join-Path (Split-Path -Parent $Installer) "..\.."))
+$builtExecutable = Join-Path $releaseFolder "ctrl-kanb-windows.exe"
 $taskNames = @("CTRL KANB Validation A", "CTRL KANB Validation B")
 
 function Get-PeSubsystem {
@@ -26,10 +31,29 @@ function Get-PeSubsystem {
   return [BitConverter]::ToUInt16($bytes, $peOffset + 92)
 }
 
+if (-not (Test-Path -LiteralPath $builtExecutable -PathType Leaf)) {
+  throw "Le programme fraîchement construit est introuvable : $builtExecutable"
+}
+$builtHash = (Get-FileHash $builtExecutable -Algorithm SHA256).Hash
+$dataPresentBeforeInstall = Test-Path -LiteralPath $dataFolder
+
 Get-Process $processName -ErrorAction SilentlyContinue | Stop-Process -Force
+if (Test-Path -LiteralPath $uninstaller -PathType Leaf) {
+  Start-Process -FilePath $uninstaller -ArgumentList "/S" -Wait
+  for ($attempt = 0; $attempt -lt 60 -and (Test-Path -LiteralPath $executable); $attempt++) {
+    Start-Sleep -Milliseconds 500
+  }
+  if (Test-Path -LiteralPath $executable) {
+    throw "L’ancienne version installée n’a pas été retirée : $executable"
+  }
+}
 Start-Process -FilePath $Installer -ArgumentList "/S" -Wait
 if (-not (Test-Path -LiteralPath $executable -PathType Leaf)) {
   throw "Le programme installé est introuvable : $executable"
+}
+$installedHash = (Get-FileHash $executable -Algorithm SHA256).Hash
+if ($installedHash -ne $builtHash) {
+  throw "Le programme installé ne correspond pas au programme fraîchement construit."
 }
 $peSubsystem = Get-PeSubsystem -Path $executable
 if ($peSubsystem -ne 2) {
@@ -54,10 +78,13 @@ $result = [ordered]@{
   processCount = $processes.Count
   sessionIDs = @($processes | Select-Object -ExpandProperty SessionId -Unique)
   responding = -not ($processes | Where-Object { -not $_.Responding })
-  executableSHA256 = (Get-FileHash $executable -Algorithm SHA256).Hash
+  executableSHA256 = $installedHash
+  builtExecutableSHA256 = $builtHash
+  installerReplacedExecutable = $installedHash -eq $builtHash
   peSubsystem = $peSubsystem
   graphicalExecutable = $peSubsystem -eq 2
-  dataSeparated = Test-Path (Join-Path $env:LOCALAPPDATA "CTRL KANB Data")
+  dataSeparated = Test-Path -LiteralPath $dataFolder
+  dataPreserved = (-not $dataPresentBeforeInstall) -or (Test-Path -LiteralPath $dataFolder)
   strayBoardInInstallFolder = [bool](Get-ChildItem $installFolder -Filter "board*.json" -ErrorAction SilentlyContinue)
 }
 

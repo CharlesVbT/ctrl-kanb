@@ -6,7 +6,7 @@
 
 **Le poste de pilotage local pour organiser, planifier et suivre le travail confié à Codex et Claude sur macOS et Windows.**
 
-> **Statut — version 6.11.2 candidate.** Le code source fonctionne sur macOS et Windows et les principaux parcours sont couverts par des contrôles automatisés et des essais réels. Consultez [la compatibilité et les validations](docs/COMPATIBILITY.md) avant toute utilisation importante.
+> **Statut — version 6.11.3 candidate.** Le code source fonctionne sur macOS et Windows et les principaux parcours sont couverts par des contrôles automatisés et des essais réels. Consultez [la compatibilité et les validations](docs/COMPATIBILITY.md) avant toute utilisation importante.
 
 ## Pourquoi CTRL KANB existe
 

@@ -213,7 +213,7 @@ const demo = String.raw`
     modifiedAt: instant(0, 8, 45)
   };
   window.CodexBoard.load(board);
-  window.CodexBoard.appInfo({ version: "6.11.2" });
+  window.CodexBoard.appInfo({ version: "6.11.3" });
   window.CodexBoard.agentStatus({ codex: true, claude: true });
   window.CodexBoard.securityStatus({ checked: true, lockEnabled: false, biometry: "Touch ID" });
   window.CodexBoard.runsRestored({ running: ["onboarding"], queued: ["screens"] });
