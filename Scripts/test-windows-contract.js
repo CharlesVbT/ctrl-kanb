@@ -104,13 +104,13 @@ setImmediate(() => {
     throw new Error("le dossier de données Windows doit rester séparé du dossier d’installation NSIS");
   }
   const installedValidation = fs.readFileSync("Platforms/Windows/validate-installed.ps1", "utf8");
-  for (const marker of ["uninstall.exe", "$builtExecutable", "$builtHash", "$installedHash", "installerReplacedExecutable"]) {
+  for (const marker of ["uninstall.exe", "$builtExecutable", "$builtNormalizedHash", "$installedNormalizedHash", "BUNDLE_TYPE_VAR_", "installerReplacedExecutable"]) {
     if (!installedValidation.includes(marker)) throw new Error(`validation de mise à jour Windows incomplète : ${marker}`);
   }
   if (!installedValidation.includes('Start-Process -FilePath $uninstaller -ArgumentList "/S" -Wait')) {
     throw new Error("la validation Windows doit retirer silencieusement l’ancienne version");
   }
-  if (!installedValidation.includes("if ($installedHash -ne $builtHash)")) {
+  if (!installedValidation.includes("if ($installedNormalizedHash -ne $builtNormalizedHash)")) {
     throw new Error("la validation Windows doit comparer le binaire installé au binaire construit");
   }
   if (/Remove-Item[^\n]*\$dataFolder/.test(installedValidation)) {

@@ -13,7 +13,7 @@ Ce fichier suit les changements visibles de CTRL KANB. Le projet utilise une num
 ### Corrigé
 
 - remplacement vérifié de l’exécutable lors d’une réinstallation Windows, sans toucher aux données utilisateur ;
-- échec explicite du contrôle d’installation si le binaire présent ne correspond pas au binaire fraîchement construit.
+- échec explicite du contrôle d’installation si le binaire présent diffère du binaire fraîchement construit, hors marqueur NSIS appliqué par Tauri.
 
 ## 6.11.2 — 10 septembre 2026
 

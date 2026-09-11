@@ -31,10 +31,35 @@ function Get-PeSubsystem {
   return [BitConverter]::ToUInt16($bytes, $peOffset + 92)
 }
 
+function Get-NormalizedExecutableHash {
+  param([Parameter(Mandatory = $true)][string]$Path)
+
+  $bytes = [System.IO.File]::ReadAllBytes($Path)
+  $marker = "BUNDLE_TYPE_VAR_"
+  $ascii = [System.Text.Encoding]::ASCII.GetString($bytes)
+  $markerOffset = $ascii.IndexOf($marker, [StringComparison]::Ordinal)
+  if ($markerOffset -lt 0) {
+    throw "Le marqueur de paquetage Tauri est absent : $Path"
+  }
+  $bundleTypeOffset = $markerOffset + $marker.Length
+  $bundleType = [System.Text.Encoding]::ASCII.GetString($bytes, $bundleTypeOffset, 3)
+  if ($bundleType -notin @("UNK", "NSS")) {
+    throw "Le marqueur de paquetage Tauri est inattendu ($bundleType) : $Path"
+  }
+  [System.Text.Encoding]::ASCII.GetBytes("UNK").CopyTo($bytes, $bundleTypeOffset)
+  $sha256 = [System.Security.Cryptography.SHA256]::Create()
+  try {
+    return ([BitConverter]::ToString($sha256.ComputeHash($bytes))).Replace("-", "")
+  } finally {
+    $sha256.Dispose()
+  }
+}
+
 if (-not (Test-Path -LiteralPath $builtExecutable -PathType Leaf)) {
   throw "Le programme fraîchement construit est introuvable : $builtExecutable"
 }
 $builtHash = (Get-FileHash $builtExecutable -Algorithm SHA256).Hash
+$builtNormalizedHash = Get-NormalizedExecutableHash -Path $builtExecutable
 $dataPresentBeforeInstall = Test-Path -LiteralPath $dataFolder
 
 Get-Process $processName -ErrorAction SilentlyContinue | Stop-Process -Force
@@ -52,7 +77,8 @@ if (-not (Test-Path -LiteralPath $executable -PathType Leaf)) {
   throw "Le programme installé est introuvable : $executable"
 }
 $installedHash = (Get-FileHash $executable -Algorithm SHA256).Hash
-if ($installedHash -ne $builtHash) {
+$installedNormalizedHash = Get-NormalizedExecutableHash -Path $executable
+if ($installedNormalizedHash -ne $builtNormalizedHash) {
   throw "Le programme installé ne correspond pas au programme fraîchement construit."
 }
 $peSubsystem = Get-PeSubsystem -Path $executable
@@ -80,7 +106,8 @@ $result = [ordered]@{
   responding = -not ($processes | Where-Object { -not $_.Responding })
   executableSHA256 = $installedHash
   builtExecutableSHA256 = $builtHash
-  installerReplacedExecutable = $installedHash -eq $builtHash
+  normalizedExecutableSHA256 = $installedNormalizedHash
+  installerReplacedExecutable = $installedNormalizedHash -eq $builtNormalizedHash
   peSubsystem = $peSubsystem
   graphicalExecutable = $peSubsystem -eq 2
   dataSeparated = Test-Path -LiteralPath $dataFolder
