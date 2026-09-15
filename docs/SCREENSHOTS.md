@@ -4,12 +4,15 @@ Les images publiées dans le README sont générées depuis l’interface réell
 
 La bannière `docs/assets/ctrl-kanb-banner.png` est une illustration marketing sans texte ni donnée utilisateur. Les huit autres images sont des captures reproductibles de l’interface.
 
+Les GIF `ctrl-kanb-demo.gif` et `ctrl-kanb-demo-fr.gif` sont enregistrés dans l’interface réelle avec le même jeu fictif. Ils montrent une navigation, le déplacement d’une tâche, l’ouverture de l’Agenda et la saisie dans le chat de projet. Ils ne lisent jamais le profil de données installé.
+
 ## Régénérer les images
 
 Sur macOS avec Google Chrome :
 
 ```sh
 npm run docs:screenshots
+npm run docs:demo
 ```
 
 Pour utiliser un autre navigateur Chromium :
@@ -18,7 +21,7 @@ Pour utiliser un autre navigateur Chromium :
 CHROME_BIN="/chemin/vers/chromium" npm run docs:screenshots
 ```
 
-Le script charge l’interface présente dans `Shared/Web/`, injecte temporairement les projets **Atelier Atlas**, **Lumen Studio** et **Signal Notes**, puis écrit une série anglaise et une série française :
+Les scripts chargent l’interface présente dans `Shared/Web/`, injectent temporairement les projets **Atelier Atlas**, **Lumen Studio** et **Signal Notes**, puis écrivent une série anglaise et une série française :
 
 ```text
 docs/assets/ctrl-kanb-hero.png
@@ -31,7 +34,7 @@ docs/assets/ctrl-kanb-agenda-fr.png
 docs/assets/ctrl-kanb-chat-fr.png
 ```
 
-Le dossier temporaire et les profils Chromium de capture sont supprimés à la fin. Le script n’ouvre ni le profil réel de CTRL KANB, ni le profil Chrome de l’utilisateur.
+Les dossiers temporaires, les images intermédiaires et les profils Chromium de capture sont supprimés à la fin. Les scripts n’ouvrent ni le profil réel de CTRL KANB, ni le profil Chrome de l’utilisateur.
 
 ## Contrôle avant commit
 

@@ -4,27 +4,51 @@
 
 ![CTRL KANB — poste de pilotage visuel du travail confié aux agents](docs/assets/ctrl-kanb-banner.png)
 
-**Le poste de pilotage local pour organiser, planifier et suivre le travail confié à Codex et Claude sur macOS et Windows.**
+## Codex et Claude font le travail. CTRL KANB garde la trace de tout ce que vous leur avez confié.
 
-> **Version actuelle — 6.11.3.** Le code source fonctionne sur macOS et Windows et les principaux parcours sont couverts par des contrôles automatisés et des essais réels. Consultez [la compatibilité et les validations](docs/COMPATIBILITY.md) avant toute utilisation importante.
+Quand on utilise quotidiennement des agents de développement, le plus difficile n’est plus de leur faire réaliser une tâche. Il faut se souvenir de ce qui est en cours, de ce qui doit démarrer plus tard, de la conversation associée à chaque projet et des décisions qui attendent une réponse.
 
-## Pourquoi CTRL KANB existe
+**CTRL KANB est l’espace local au-dessus des files d’attente : tâches, conversations, travail programmé, routines, validations et résultats au même endroit.**
 
-Codex et Claude savent accomplir des tâches complexes. Dès que plusieurs projets, conversations, validations et routines s’accumulent, leurs files d’attente ne suffisent plus à donner une vue claire du travail en cours.
+[**Télécharger pour macOS**](https://github.com/CharlesVbT/ctrl-kanb/releases/latest) · [**Télécharger pour Windows**](https://github.com/CharlesVbT/ctrl-kanb/releases/latest) · [Documentation](#documentation)
 
-CTRL KANB est une proposition parmi les outils qui existent déjà. Hermes et d’autres projets montrent plusieurs façons d’organiser le travail avec des agents. **Charles VbT**, utilisateur régulier de Codex et Claude sans être développeur de métier, cherchait une approche simple et locale qui réunisse précisément les critères utiles à son quotidien : projets, conversations, tâches programmées et routines. Ne trouvant pas cette combinaison sous la forme qui lui convenait, il a façonné CTRL KANB avec l’aide intensive de Codex et Claude, puis l’a consolidé par des contrôles d’interface, de fonctionnement et de sécurité.
+![Démonstration de CTRL KANB montrant Flux, Tableau, Agenda et le chat de projet](docs/assets/ctrl-kanb-demo-fr.gif)
 
-L’application réunit :
+*Enregistrée dans l’interface réelle avec des données fictives : passage du Flux au Tableau, déplacement d’une tâche, ouverture de l’Agenda puis saisie dans le chat de projet.*
 
-- un Kanban pensé pour les tâches confiées à des agents ;
-- un agenda pour les lancements programmés, les échéances et les routines ;
-- une vue Flux pour les priorités, exécutions et décisions ;
-- un suivi des résultats et des conversations ;
-- un chat, un terminal et un navigateur de fichiers liés au projet courant ;
-- une prise en charge séparée de Codex et Claude via leurs outils locaux ;
-- un stockage local, sans compte ni serveur CTRL KANB.
+**Créer → Programmer → Déléguer → Valider → Répéter**
 
-L’architecture pourra accueillir d’autres moteurs si leurs permissions, diagnostics et garanties de stockage restent explicites.
+Local · Codex + Claude · macOS + Windows · Apache 2.0
+
+## Quand les files d’attente des agents ne suffisent plus
+
+Codex et Claude savent accomplir des tâches complexes. Le suivi devient plus difficile lorsque le travail s’étend sur plusieurs projets et plusieurs jours :
+
+- Claude attend une réponse dans une conversation ;
+- Codex a terminé une tâche confiée la veille ;
+- un autre travail doit commencer demain matin ;
+- des contrôles doivent revenir chaque semaine ;
+- le résultat doit encore être validé humainement.
+
+CTRL KANB garde ce travail visible pendant que les agents l’exécutent. L’application est pensée pour piloter les tâches déléguées dans le temps, tout en laissant à l’utilisateur le contrôle des lancements, des autorisations et de la validation finale.
+
+| Besoin | Emplacement dans CTRL KANB |
+|---|---|
+| Travail ponctuel confié à un agent | Tableau **Classique** |
+| Travail quotidien, hebdomadaire ou mensuel | Tableau **Routines** |
+| Tâches futures et échéances | **Agenda** |
+| Travail actif ou en attente de décision | **Flux** et **Validations** |
+| Travail terminé | **Suivi** et **Historique** |
+| Contexte du projet | **Conversations**, chat, terminal et fichiers |
+
+## Télécharger CTRL KANB
+
+- **Applications prêtes à installer** : la [dernière release](https://github.com/CharlesVbT/ctrl-kanb/releases/latest) contient les paquets macOS et Windows, les notes de version et `SHA256SUMS.txt`.
+- **macOS** : téléchargez `CTRL-KANB-<version>-macOS-arm64.zip`, décompressez-le puis ouvrez l’application.
+- **Windows** : téléchargez `CTRL-KANB-<version>-Windows-x64-setup.exe` et lancez l’installateur NSIS.
+- **Sources** : chaque release contient également les archives `.zip` et `.tar.gz` de la version correspondante.
+
+Codex et Claude sont facultatifs. Installez et connectez uniquement les agents que vous souhaitez utiliser.
 
 ## L’application en action
 
@@ -74,17 +98,7 @@ CTRL KANB fonctionne avec Codex seul, Claude seul, les deux, ou sans agent pour 
 
 Les versions testées et les limites observées sont consignées dans [COMPATIBILITY.md](docs/COMPATIBILITY.md).
 
-## Télécharger CTRL KANB
-
-- **Applications prêtes à installer** : la page [Releases](https://github.com/CharlesVbT/ctrl-kanb/releases/latest) regroupe les paquets macOS et Windows, les notes de version et le fichier `SHA256SUMS.txt` de chaque version publiée.
-- **Paquet macOS** : `CTRL-KANB-<version>-macOS-arm64.zip` contient l’application pour Mac Apple Silicon.
-- **Installateur Windows** : `CTRL-KANB-<version>-Windows-x64-setup.exe` installe l’application 64 bits avec NSIS.
-- **Sources d’une version** : chaque release GitHub propose automatiquement les archives `Source code (zip)` et `Source code (tar.gz)` correspondant à son tag.
-- **Code courant** : le bouton **Code → Download ZIP** de GitHub ou [l’archive de `main`](https://github.com/CharlesVbT/ctrl-kanb/archive/refs/heads/main.zip) permet de télécharger le dépôt sans utiliser Git.
-
-Si aucun paquet n’est disponible pour la version souhaitée, utilisez les instructions de construction ci-dessous.
-
-## Démarrage rapide
+## Compiler depuis les sources
 
 ### Agents facultatifs
 
@@ -228,6 +242,12 @@ Consultez [CONTRIBUTING.md](CONTRIBUTING.md) avant une modification.
 - modèles, quotas et services dépendent du fournisseur ;
 - WSL n’est pas pris en charge ;
 - les essais prolongés veille/réveil et plusieurs échelles Windows restent à compléter.
+
+## Origine du projet
+
+CTRL KANB est né d’un problème concret. En utilisant régulièrement Codex et Claude, **Charles VbT** n’avait plus seulement besoin de faire réaliser une tâche : il lui fallait un moyen fiable de retrouver tout le travail confié à travers plusieurs projets, conversations, échéances et routines.
+
+Il a façonné l’application pour son propre usage avec l’aide intensive de Codex et Claude, puis en a contrôlé l’interface, le fonctionnement, la sécurité et la confidentialité. Charles n’est pas développeur logiciel de métier et le projet assume clairement sa construction assistée par l’IA. L’application et sa documentation restent ouvertes à l’examen, aux tests et aux contributions.
 
 ## Indépendance et licence
 

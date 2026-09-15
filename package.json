@@ -9,6 +9,7 @@
     "build": "./Platforms/macOS/build.sh",
     "install:macos": "./Platforms/macOS/install.sh",
     "docs:screenshots": "node Tools/capture-docs.js",
+    "docs:demo": "node Tools/render-readme-demo.js",
     "test": "npm run test:static && npm run test:ui && npm run test:native && npm run test:privacy",
     "test:static": "node Tests/Web/xss-scan.js && node Tests/Web/i18n-scan.js && node Tests/Web/wiring-audit.js && node Tests/Windows/contract.js",
     "test:ui": "node Tests/Web/smoke-ui.js && node Tests/Web/accessibility.js && node Tests/Web/experience.js && node Tests/Web/conversation.js && node Tests/Web/sync.js && node Tests/Web/resilience.js && node Tests/Windows/ui.js",
@@ -16,7 +17,8 @@
     "test:privacy": "python3 Tests/Privacy/scan.py && python3 Tests/Privacy/scan-test.py && python3 Tests/Privacy/security-docs.py"
   },
   "devDependencies": {
-    "jsdom": "^26.1.0"
+    "jsdom": "^26.1.0",
+    "ws": "^8.21.3"
   },
   "engines": {
     "node": ">=20"
