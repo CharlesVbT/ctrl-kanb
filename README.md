@@ -4,27 +4,49 @@
 
 ![CTRL KANB — visual control center for agent work](docs/assets/ctrl-kanb-banner.png)
 
-**A local control center for organizing, scheduling, and tracking work delegated to Codex and Claude on macOS and Windows.**
+## Codex and Claude do the work. CTRL KANB keeps track of everything you delegated.
 
-> **Current version — 6.11.3.** The source runs on macOS and Windows. Core flows are covered by automated checks and real-machine testing. Read the [compatibility and validation report](docs/COMPATIBILITY.md) before relying on CTRL KANB for important work.
+When you use coding agents every day, the hard part is no longer getting one task done. It is remembering what is running, what should happen later, which conversation belongs to which project, and what is waiting for you.
 
-## Why CTRL KANB exists
+**CTRL KANB is the local workspace above the queues: tasks, conversations, scheduled work, recurring routines, approvals, and results in one place.**
 
-Codex and Claude can complete complex tasks, but their queues stop being enough when projects, conversations, approvals, scheduled work, and routines accumulate.
+[**Download for macOS**](https://github.com/CharlesVbT/ctrl-kanb/releases/latest) · [**Download for Windows**](https://github.com/CharlesVbT/ctrl-kanb/releases/latest) · [Documentation](#documentation)
 
-CTRL KANB is one proposal among the tools that already exist. Hermes and other projects show different ways to organize work with agents. **Charles VbT** uses Codex and Claude regularly but is not a professional developer. He wanted a simple, local approach that brought together the exact criteria useful in his daily work: projects, conversations, scheduled tasks, and routines. When he could not find that combination in the form he wanted, he shaped CTRL KANB with intensive help from Codex and Claude, then hardened it through interface, functional, and security reviews.
+![CTRL KANB walkthrough showing Flow, Board, Calendar, and project chat](docs/assets/ctrl-kanb-demo.gif)
 
-CTRL KANB brings together:
+**Create → Schedule → Delegate → Review → Repeat**
 
-- a Kanban designed around tasks delegated to coding agents;
-- a calendar for scheduled runs, deadlines, and routines;
-- a Flow view for priorities, active work, and decisions;
-- result and conversation follow-up;
-- a project chat, terminal, and file browser;
-- independent Codex and Claude integration through their local CLIs;
-- local storage with no CTRL KANB account or server.
+Local-first · Codex + Claude · macOS + Windows · Apache 2.0
 
-The architecture may support more engines in the future, provided their permissions, diagnostics, and storage behavior remain explicit.
+## When agent queues stop being enough
+
+Codex and Claude can complete complex tasks. Their queues become harder to follow when work spans several projects and several days:
+
+- Claude is waiting for an answer in one conversation;
+- Codex finished something delegated yesterday;
+- another task should start tomorrow morning;
+- recurring checks must run every week;
+- the result still needs human review.
+
+CTRL KANB keeps that work visible while the agents execute it. It is designed around managing delegated work over time, with the user remaining in control of launches, permissions, and final validation.
+
+| What you need to manage | Where it lives |
+|---|---|
+| One-off delegated work | **Classic** board |
+| Daily, weekly, or monthly work | **Routines** board |
+| Future tasks and deadlines | **Calendar** |
+| Work running or waiting for you | **Flow** and **Approvals** |
+| Completed work | **Results** and **History** |
+| Project context | Linked **Conversations**, chat, terminal, and files |
+
+## Download CTRL KANB
+
+- **Ready-to-install applications:** the [latest release](https://github.com/CharlesVbT/ctrl-kanb/releases/latest) contains the macOS and Windows packages, release notes, and `SHA256SUMS.txt`.
+- **macOS:** download `CTRL-KANB-<version>-macOS-arm64.zip`, extract it, and open the application.
+- **Windows:** download `CTRL-KANB-<version>-Windows-x64-setup.exe` and run the NSIS installer.
+- **Source archives:** every release also provides versioned `.zip` and `.tar.gz` archives.
+
+Codex and Claude are optional. Install and sign in only to the agent CLIs you intend to use.
 
 ## The app in action
 
@@ -74,17 +96,7 @@ CTRL KANB works with Codex alone, Claude alone, both, or neither when used only 
 
 The exact versions tested and the remaining limitations are recorded in [COMPATIBILITY.md](docs/COMPATIBILITY.md). That detailed report is currently maintained in French.
 
-## Download CTRL KANB
-
-- **Ready-to-install applications:** the [Releases](https://github.com/CharlesVbT/ctrl-kanb/releases/latest) page collects the macOS and Windows packages, release notes, and `SHA256SUMS.txt` file for every published version.
-- **macOS package:** `CTRL-KANB-<version>-macOS-arm64.zip` contains the Apple Silicon application.
-- **Windows installer:** `CTRL-KANB-<version>-Windows-x64-setup.exe` installs the 64-bit application through NSIS.
-- **Versioned source:** every GitHub release automatically includes `Source code (zip)` and `Source code (tar.gz)` archives for its tag.
-- **Current source:** use GitHub’s **Code → Download ZIP** button or download the [`main` archive](https://github.com/CharlesVbT/ctrl-kanb/archive/refs/heads/main.zip) without installing Git.
-
-If no package is available for the version you need, use the source build instructions below.
-
-## Quick start
+## Build from source
 
 ### Optional agent CLIs
 
@@ -237,6 +249,12 @@ Read [CONTRIBUTING.md](CONTRIBUTING.md) before submitting a change.
 - long-duration sleep/wake tests and several Windows display scales remain open.
 
 These limits are tracked with their evidence level in [COMPATIBILITY.md](docs/COMPATIBILITY.md).
+
+## Origin
+
+CTRL KANB began with a practical problem. After using Codex and Claude regularly, **Charles VbT** no longer needed help completing a single task; he needed a reliable way to remember everything delegated across projects, conversations, future work, and routines.
+
+He shaped the application for his own workflow with intensive help from Codex and Claude, then reviewed its interface, behavior, security, and privacy. Charles is not a professional software developer, and the project is transparent about its AI-assisted construction. The application and its documentation remain open to inspection, testing, and contributions.
 
 ## Independent project
 

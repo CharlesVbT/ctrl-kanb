@@ -4,12 +4,15 @@ Les images publiées dans le README sont générées depuis l’interface réell
 
 La bannière `docs/assets/ctrl-kanb-banner.png` est une illustration marketing sans texte ni donnée utilisateur. Les huit autres images sont des captures reproductibles de l’interface.
 
+Les GIF `ctrl-kanb-demo.gif` et `ctrl-kanb-demo-fr.gif` sont assemblés uniquement à partir de ces captures fictives. Ils ne lisent jamais le profil de données installé.
+
 ## Régénérer les images
 
 Sur macOS avec Google Chrome :
 
 ```sh
 npm run docs:screenshots
+npm run docs:demo
 ```
 
 Pour utiliser un autre navigateur Chromium :
