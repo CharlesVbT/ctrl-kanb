@@ -14,6 +14,8 @@ When you use coding agents every day, the hard part is no longer getting one tas
 
 ![CTRL KANB walkthrough showing Flow, Board, Calendar, and project chat](docs/assets/ctrl-kanb-demo.gif)
 
+*Recorded in the real interface with fictional data: switch from Flow to Board, move a task, open the Calendar, then continue in the project chat.*
+
 **Create → Schedule → Delegate → Review → Repeat**
 
 Local-first · Codex + Claude · macOS + Windows · Apache 2.0

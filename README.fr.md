@@ -14,6 +14,8 @@ Quand on utilise quotidiennement des agents de développement, le plus difficile
 
 ![Démonstration de CTRL KANB montrant Flux, Tableau, Agenda et le chat de projet](docs/assets/ctrl-kanb-demo-fr.gif)
 
+*Enregistrée dans l’interface réelle avec des données fictives : passage du Flux au Tableau, déplacement d’une tâche, ouverture de l’Agenda puis saisie dans le chat de projet.*
+
 **Créer → Programmer → Déléguer → Valider → Répéter**
 
 Local · Codex + Claude · macOS + Windows · Apache 2.0
